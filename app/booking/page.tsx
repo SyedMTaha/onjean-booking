@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { BookingClient } from "@/components/pages/bookingPage";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Book Your Stay - 78 On Jean",
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function BookingPage() {
-  return <BookingClient />;
+  return (
+  <>
+  <BookingClient />
+  <Footer />
+  </>
+  );
 }

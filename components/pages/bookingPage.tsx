@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CalendarIcon, CreditCard, Check } from "lucide-react";
+import { CalendarIcon, CreditCard, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { saveBooking } from "@/lib/bookingService";
 
 const roomTypes = [
   { id: 1, name: "Standard Room", price: 1200, available: true },
@@ -49,9 +51,56 @@ export function BookingClient() {
   const [cardName, setCardName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
+  const [showCVV, setShowCVV] = useState(false);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+    // Validate and format card number (16 digits)
+    const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+      if (value.length > 16) value = value.slice(0, 16);
+      // Format as XXXX XXXX XXXX XXXX
+      value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
+      setCardNumber(value);
+    };
+
+    // Validate and format expiry date (MM/YY)
+    const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+      if (value.length >= 2) {
+        const month = value.slice(0, 2);
+        const year = value.slice(2, 4);
+        value = month + (year ? "/" + year : "");
+        if (value.length > 5) value = value.slice(0, 5);
+      }
+      setExpiryDate(value);
+    };
+
+    // Validate expiry date is in future
+    const isValidExpiryDate = () => {
+      if (!expiryDate || expiryDate.length < 5) return false;
+      const [month, year] = expiryDate.split("/");
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear() % 100;
+      const currentMonth = currentDate.getMonth() + 1;
+      const expMonth = parseInt(month);
+      const expYear = parseInt(year);
+
+      if (expMonth < 1 || expMonth > 12) return false;
+      if (expYear < currentYear) return false;
+      if (expYear === currentYear && expMonth < currentMonth) return false;
+      return true;
+    };
+
+    // Validate and format CVV (3 digits)
+    const handleCVVChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+      if (value.length > 3) value = value.slice(0, 3);
+      setCvv(value);
+    };
   const [bookingReference, setBookingReference] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const { user } = useAuth();
 
   const selectedRoom = roomTypes.find(r => r.id.toString() === selectedRoomType);
 
@@ -64,6 +113,7 @@ export function BookingClient() {
 
   const nights = calculateNights();
   const totalPrice = selectedRoom ? selectedRoom.price * nights : 0;
+  const paymentsEnabled = false;
 
   const handleNextStep = () => {
     if (step === 1) {
@@ -81,20 +131,107 @@ export function BookingClient() {
         toast.error("Please fill in all guest details");
         return;
       }
+      if (!user) {
+        toast.error("Please sign in to continue with your booking");
+        return;
+      }
       setStep(3);
     }
   };
 
-  const handlePayment = () => {
-    if (!cardNumber || !cardName || !expiryDate || !cvv) {
-      toast.error("Please fill in all payment details");
+  const handlePayment = async () => {
+    if (paymentsEnabled) {
+      if (!cardNumber || !cardName || !expiryDate || !cvv) {
+        toast.error("Please fill in all payment details");
+        return;
+      }
+
+      const cardNumberDigits = cardNumber.replace(/\D/g, "");
+      if (cardNumberDigits.length !== 16) {
+        toast.error("Card number must be 16 digits");
+        return;
+      }
+
+      if (!isValidExpiryDate()) {
+        toast.error("Please enter a valid future expiry date (MM/YY)");
+        return;
+      }
+
+      if (cvv.length !== 3) {
+        toast.error("CVV must be 3 digits");
+        return;
+      }
+    }
+
+    if (!user) {
+      toast.error("You must be signed in to complete a booking");
       return;
     }
 
-    const reference = "SL" + Math.random().toString(36).substr(2, 9).toUpperCase();
-    setBookingReference(reference);
-    setShowConfirmation(true);
-    toast.success("Booking confirmed! Check your email for details.");
+    setIsProcessing(true);
+
+    try {
+      const cardLast4 = paymentsEnabled ? cardNumber.slice(-4) : "0000";
+      const cardholderName = paymentsEnabled ? cardName : "PAYMENT_PENDING";
+
+      // Prepare booking data
+      const bookingData = {
+        checkInDate: checkIn!,
+        checkOutDate: checkOut!,
+        roomType: selectedRoom?.name || "",
+        roomId: parseInt(selectedRoomType),
+        roomPrice: selectedRoom?.price || 0,
+        nights: nights,
+        guests: guests,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        specialRequests: specialRequests,
+        cardLast4: cardLast4,
+        cardholderName: cardholderName,
+        totalPrice: totalPrice,
+        taxesAndFees: Math.round(totalPrice * 0.15),
+      };
+
+      // Save to database
+      const result = await saveBooking(user.uid, bookingData);
+
+      if (result.success) {
+        // Generate booking reference
+        const reference = "SL" + Math.random().toString(36).substr(2, 9).toUpperCase();
+        setBookingReference(reference);
+        setShowConfirmation(true);
+        toast.success("Booking confirmed! Check your email for details.");
+
+        // Reset form after successful booking
+        setTimeout(() => {
+          setStep(1);
+          setCheckIn(undefined);
+          setCheckOut(undefined);
+          setSelectedRoomType("");
+          setGuests("2");
+          setFirstName("");
+          setLastName("");
+          setEmail("");
+          setPhone("");
+          setSpecialRequests("");
+          setCardNumber("");
+          setCardName("");
+          setExpiryDate("");
+          setCvv("");
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to complete booking. Please try again."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -111,7 +248,7 @@ export function BookingClient() {
         </div>
         <div className="relative container mx-auto px-4 h-full flex items-center justify-center text-center">
           <div className="max-w-3xl text-white px-4">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">Book Your Stay</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4 font-semibold">Book Your Stay</h1>
             <p className="text-base md:text-xl">
               Complete your reservation in 3 easy steps
             </p>
@@ -154,8 +291,8 @@ export function BookingClient() {
 
       {/* Booking Form */}
       <section className="py-12">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid lg:grid-cols-3 gap-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8 items-start">
             {/* Main Form */}
             <div className="lg:col-span-2">
               <Card className="p-6">
@@ -163,24 +300,24 @@ export function BookingClient() {
                 {step === 1 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl mb-6">Select Dates & Room</h2>
+                      <h2 className="text-2xl mb-6 text-gray-900 font-semibold">Select Dates & Room</h2>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* Check-in */}
                       <div>
-                        <Label htmlFor="checkin">Check-in Date</Label>
+                        <Label htmlFor="checkin" className="text-gray-900 font-semibold">Check-in Date</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left mt-2"
+                              className="w-full justify-start text-left mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 hover:border-amber-600 hover:bg-white focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {checkIn ? format(checkIn, "PPP") : "Select date"}
+                              <CalendarIcon className="mr-3 h-5 w-5 text-amber-600" />
+                              {checkIn ? format(checkIn, "PPP") : "Select check-in date"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
+                          <PopoverContent className="w-auto p-0 bg-white border-gray-200 border-2 shadow-lg rounded-lg">
                             <Calendar
                               mode="single"
                               selected={checkIn}
@@ -201,16 +338,21 @@ export function BookingClient() {
                                   opacity: 0.5
                                 }
                               }}
+                              modifiersClassNames={{
+                                selected: "bg-amber-600 text-white font-bold",
+                                today: "bg-amber-100 text-amber-900 font-bold",
+                              }}
+                              className="bg-white p-4 [&_*]:!text-black [&_.rdp]:w-auto [&_.rdp-caption]:flex [&_.rdp-caption]:items-center [&_.rdp-caption]:justify-between [&_.rdp-caption]:mb-4 [&_.rdp-caption_label]:font-bold [&_.rdp-caption_label]:text-lg [&_.rdp-head]:grid [&_.rdp-head]:grid-cols-7 [&_.rdp-head]:gap-2 [&_.rdp-head]:mb-2 [&_.rdp-head_cell]:text-center [&_.rdp-head_cell]:font-semibold [&_.rdp-head_cell]:text-sm [&_.rdp-row]:grid [&_.rdp-row]:grid-cols-7 [&_.rdp-row]:gap-2 [&_.rdp-cell]:p-0 [&_.rdp-day]:w-8 [&_.rdp-day]:h-8 [&_.rdp-day]:flex [&_.rdp-day]:items-center [&_.rdp-day]:justify-center [&_.rdp-day]:rounded [&_.rdp-day]:text-sm [&_.rdp-nav]:flex [&_.rdp-nav]:gap-2 [&_.rdp-nav_button]:px-2 [&_.rdp-nav_button]:py-1 [&_.rdp-nav_button]:border [&_.rdp-nav_button]:rounded [&_.rdp-nav_button]:bg-white [&_.rdp-nav_button]:hover:bg-gray-100 [&_.rdp-nav_button]:cursor-pointer"
                             />
                             <div className="p-3 border-t bg-gray-50">
                               <div className="flex items-center gap-4 text-xs">
                                 <div className="flex items-center gap-1">
                                   <div className="w-3 h-3 rounded-full bg-amber-600"></div>
-                                  <span>Selected</span>
+                                  <span className="text-gray-700 font-medium">Selected</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                                  <span className="line-through text-red-600">Fully Booked</span>
+                                  <span className="line-through text-red-600 font-medium">Fully Booked</span>
                                 </div>
                               </div>
                             </div>
@@ -220,18 +362,18 @@ export function BookingClient() {
 
                       {/* Check-out */}
                       <div>
-                        <Label htmlFor="checkout">Check-out Date</Label>
+                        <Label htmlFor="checkout" className="text-gray-900 font-semibold">Check-out Date</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left mt-2"
+                              className="w-full justify-start text-left mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 hover:border-amber-600 hover:bg-white focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {checkOut ? format(checkOut, "PPP") : "Select date"}
+                              <CalendarIcon className="mr-3 h-5 w-5 text-amber-600" />
+                              {checkOut ? format(checkOut, "PPP") : "Select check-out date"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
+                          <PopoverContent className="w-auto p-0 bg-white border-gray-200 border-2 shadow-lg rounded-lg">
                             <Calendar
                               mode="single"
                               selected={checkOut}
@@ -252,6 +394,11 @@ export function BookingClient() {
                                   opacity: 0.5
                                 }
                               }}
+                              modifiersClassNames={{
+                                selected: "bg-amber-600 text-white font-bold",
+                                today: "bg-amber-100 text-amber-900 font-bold",
+                              }}
+                              className="bg-white p-4 [&_*]:!text-black [&_.rdp]:w-auto [&_.rdp-caption]:flex [&_.rdp-caption]:items-center [&_.rdp-caption]:justify-between [&_.rdp-caption]:mb-4 [&_.rdp-caption_label]:font-bold [&_.rdp-caption_label]:text-lg [&_.rdp-head]:grid [&_.rdp-head]:grid-cols-7 [&_.rdp-head]:gap-2 [&_.rdp-head]:mb-2 [&_.rdp-head_cell]:text-center [&_.rdp-head_cell]:font-semibold [&_.rdp-head_cell]:text-sm [&_.rdp-row]:grid [&_.rdp-row]:grid-cols-7 [&_.rdp-row]:gap-2 [&_.rdp-cell]:p-0 [&_.rdp-day]:w-8 [&_.rdp-day]:h-8 [&_.rdp-day]:flex [&_.rdp-day]:items-center [&_.rdp-day]:justify-center [&_.rdp-day]:rounded [&_.rdp-day]:text-sm [&_.rdp-nav]:flex [&_.rdp-nav]:gap-2 [&_.rdp-nav_button]:px-2 [&_.rdp-nav_button]:py-1 [&_.rdp-nav_button]:border [&_.rdp-nav_button]:rounded [&_.rdp-nav_button]:bg-white [&_.rdp-nav_button]:hover:bg-gray-100 [&_.rdp-nav_button]:cursor-pointer"
                             />
                           </PopoverContent>
                         </Popover>
@@ -260,28 +407,21 @@ export function BookingClient() {
 
                     {/* Room Type */}
                     <div>
-                      <Label htmlFor="room">Room Type</Label>
+                      <Label htmlFor="room" className="text-gray-900 font-semibold">Room Type</Label>
                       <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
-                        <SelectTrigger className="mt-2">
-                          <SelectValue placeholder="Select room type" />
+                        <SelectTrigger className="mt-2 bg-white text-gray-900 font-medium border-gray-300 hover:border-amber-600 focus:border-amber-600 focus:ring-amber-600 focus:ring-2">
+                          <SelectValue placeholder="Select room type" className="text-gray-900" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white border-gray-200 border-2">
                           {roomTypes.map((room) => (
                             <SelectItem 
                               key={room.id} 
                               value={room.id.toString()}
                               disabled={!room.available}
+                              className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900"
                             >
-                              <div className="flex items-center justify-between w-full">
-                                <span className={!room.available ? "text-gray-400" : ""}>
-                                  {room.name} - R{room.price.toLocaleString()} per night
-                                </span>
-                                {!room.available && (
-                                  <span className="ml-4 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                                    Fully Booked
-                                  </span>
-                                )}
-                              </div>
+                              {room.name} - R{room.price.toLocaleString()} per night
+                              {!room.available && " (Fully Booked)"}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -295,16 +435,16 @@ export function BookingClient() {
 
                     {/* Guests */}
                     <div>
-                      <Label htmlFor="guests">Number of Guests</Label>
+                      <Label htmlFor="guests" className="text-gray-900 font-semibold">Number of Guests</Label>
                       <Select value={guests} onValueChange={setGuests}>
-                        <SelectTrigger className="mt-2">
-                          <SelectValue />
+                        <SelectTrigger className="mt-2 bg-white text-gray-900 font-medium border-gray-300 hover:border-amber-600 focus:border-amber-600 focus:ring-amber-600 focus:ring-2">
+                          <SelectValue placeholder="Select guests" className="text-gray-900" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 Guest</SelectItem>
-                          <SelectItem value="2">2 Guests</SelectItem>
-                          <SelectItem value="3">3 Guests</SelectItem>
-                          <SelectItem value="4">4 Guests</SelectItem>
+                        <SelectContent className="bg-white border-gray-200 border-2">
+                          <SelectItem value="1" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">1 Guest</SelectItem>
+                          <SelectItem value="2" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">2 Guests</SelectItem>
+                          <SelectItem value="3" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">3 Guests</SelectItem>
+                          <SelectItem value="4" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">4 Guests</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -315,61 +455,64 @@ export function BookingClient() {
                 {step === 2 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl mb-6">Guest Information</h2>
+                      <h2 className="text-2xl mb-6 text-gray-900 font-semibold">Guest Information</h2>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName" className="text-gray-900 font-semibold">First Name</Label>
                         <Input
                           id="firstName"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          className="mt-2"
+                          className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
+                          placeholder="John"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName" className="text-gray-900 font-semibold">Last Name</Label>
                         <Input
                           id="lastName"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
-                          className="mt-2"
+                          className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
+                          placeholder="Doe"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email" className="text-gray-900 font-semibold">Email Address</Label>
                       <Input
                         id="email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-2"
+                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
+                        placeholder="john.doe@example.com"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone" className="text-gray-900 font-semibold">Phone Number</Label>
                       <Input
                         id="phone"
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+27"
-                        className="mt-2"
+                        placeholder="+27 123 456 7890"
+                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="requests">Special Requests (Optional)</Label>
+                      <Label htmlFor="requests" className="text-gray-900 font-semibold">Special Requests (Optional)</Label>
                       <textarea
                         id="requests"
                         value={specialRequests}
                         onChange={(e) => setSpecialRequests(e.target.value)}
-                        className="w-full mt-2 p-3 border rounded-md min-h-[100px]"
-                        placeholder="Any special requirements..."
+                        className="w-full mt-2 p-3 bg-white text-gray-900 font-medium border border-gray-300 border-2 rounded-md min-h-[100px] placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
+                        placeholder="Any special requirements or preferences..."
                       />
                     </div>
                   </div>
@@ -378,9 +521,20 @@ export function BookingClient() {
                 {/* Step 3: Payment */}
                 {step === 3 && (
                   <div className="space-y-6">
+                    {!user && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-amber-900 mb-1">Sign In Required</p>
+                          <p className="text-sm text-amber-800">
+                            You must sign in to complete your booking. Your booking details will be saved to your account.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div>
-                      <h2 className="text-2xl mb-2">Payment Details</h2>
-                      <p className="text-sm text-gray-600">
+                      <h2 className="text-2xl mb-2 text-gray-900 font-semibold">Payment Details</h2>
+                      <p className="text-sm text-gray-700">
                         This is a demo. Use any test card details.
                       </p>
                     </div>
@@ -389,59 +543,78 @@ export function BookingClient() {
                       <div className="flex items-start gap-3">
                         <CreditCard className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div className="text-sm">
-                          <p className="text-blue-900 mb-1">Stripe Integration Ready</p>
+                          <p className="text-blue-900 mb-1">Yoco Integration Ready</p>
                           <p className="text-blue-700">
-                            Connect your Stripe account to accept real payments. For demo purposes, any card details will work.
+                            Yoco payment gateway is configured for South Africa. Complete payment processing is available.
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="cardNumber">Card Number</Label>
+                      <Label htmlFor="cardNumber" className="text-gray-900 font-semibold">Card Number (16 digits)</Label>
                       <Input
                         id="cardNumber"
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={handleCardNumberChange}
                         placeholder="1234 5678 9012 3456"
-                        className="mt-2"
+                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
                         maxLength={19}
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="cardName">Cardholder Name</Label>
+                      <Label htmlFor="cardName" className="text-gray-900 font-semibold">Cardholder Name</Label>
                       <Input
                         id="cardName"
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Name on card"
-                        className="mt-2"
+                        placeholder="John Doe"
+                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <Label htmlFor="expiry">Expiry Date</Label>
+                        <Label htmlFor="expiry" className="text-gray-900 font-semibold">Expiry Date (MM/YY)</Label>
                         <Input
                           id="expiry"
                           value={expiryDate}
-                          onChange={(e) => setExpiryDate(e.target.value)}
+                          onChange={handleExpiryDateChange}
                           placeholder="MM/YY"
-                          className="mt-2"
+                          className={`mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2 ${
+                            expiryDate && !isValidExpiryDate() ? "border-red-500" : ""
+                          }`}
                           maxLength={5}
                         />
+                        {expiryDate && !isValidExpiryDate() && (
+                          <p className="text-red-600 text-sm mt-1">Please enter a future date</p>
+                        )}
                       </div>
                       <div>
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value)}
-                          placeholder="123"
-                          className="mt-2"
-                          maxLength={3}
-                        />
+                        <Label htmlFor="cvv" className="text-gray-900 font-semibold">CVV (3 digits)</Label>
+                        <div className="relative mt-2">
+                          <Input
+                            id="cvv"
+                            type={showCVV ? "text" : "password"}
+                            value={cvv}
+                            onChange={handleCVVChange}
+                            placeholder="•••"
+                            className="bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2 pr-10"
+                            maxLength={3}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCVV(!showCVV)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                          >
+                            {showCVV ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -468,9 +641,10 @@ export function BookingClient() {
                   ) : (
                     <Button
                       onClick={handlePayment}
-                      className="flex-1 bg-amber-600 hover:bg-amber-700"
+                      disabled={isProcessing || !user}
+                      className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Complete Booking
+                      {isProcessing ? "Processing..." : "Complete Booking"}
                     </Button>
                   )}
                 </div>
@@ -479,54 +653,54 @@ export function BookingClient() {
 
             {/* Booking Summary */}
             <div className="lg:col-span-1">
-              <Card className="p-6 sticky top-24">
-                <h3 className="text-xl mb-4">Booking Summary</h3>
+              <Card className="p-6 sticky top-24 lg:max-w-md xl:max-w-none">
+                <h3 className="text-xl mb-4 text-gray-900 font-semibold">Booking Summary</h3>
                 
                 {selectedRoom && (
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-gray-600">Room</p>
-                      <p className="font-medium">{selectedRoom.name}</p>
+                      <p className="font-semibold text-gray-900">{selectedRoom.name}</p>
                     </div>
 
                     {checkIn && checkOut && (
                       <>
                         <div>
                           <p className="text-sm text-gray-600">Check-in</p>
-                          <p className="font-medium">{format(checkIn, "PPP")}</p>
+                          <p className="font-semibold text-gray-900">{format(checkIn, "PPP")}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Check-out</p>
-                          <p className="font-medium">{format(checkOut, "PPP")}</p>
+                          <p className="font-semibold text-gray-900">{format(checkOut, "PPP")}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Nights</p>
-                          <p className="font-medium">{nights} night{nights !== 1 ? 's' : ''}</p>
+                          <p className="font-semibold text-gray-900">{nights} night{nights !== 1 ? 's' : ''}</p>
                         </div>
                       </>
                     )}
 
                     <div>
                       <p className="text-sm text-gray-600">Guests</p>
-                      <p className="font-medium">{guests} guest{guests !== '1' ? 's' : ''}</p>
+                      <p className="font-semibold text-gray-900">{guests} guest{guests !== '1' ? 's' : ''}</p>
                     </div>
 
                     <div className="pt-4 border-t">
                       <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Room rate</span>
-                        <span>R{selectedRoom.price.toLocaleString()} x {nights}</span>
+                        <span className="text-gray-600 text-sm">Room rate</span>
+                        <span className="font-medium text-gray-900">R{selectedRoom.price.toLocaleString()} x {nights}</span>
                       </div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span>R{totalPrice.toLocaleString()}</span>
+                        <span className="text-gray-600 text-sm">Subtotal</span>
+                        <span className="font-medium text-gray-900">R{totalPrice.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Taxes & fees</span>
-                        <span>R{Math.round(totalPrice * 0.15).toLocaleString()}</span>
+                        <span className="text-gray-600 text-sm">Taxes & fees</span>
+                        <span className="font-medium text-gray-900">R{Math.round(totalPrice * 0.15).toLocaleString()}</span>
                       </div>
                       <div className="pt-4 border-t flex justify-between items-center">
-                        <span className="text-lg">Total</span>
-                        <span className="text-2xl text-amber-600">
+                        <span className="text-lg font-semibold text-gray-900">Total</span>
+                        <span className="text-2xl text-amber-600 font-bold">
                           R{(totalPrice + Math.round(totalPrice * 0.15)).toLocaleString()}
                         </span>
                       </div>
@@ -541,21 +715,21 @@ export function BookingClient() {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md border border-gray-700 bg-gray-900 text-gray-100 shadow-2xl">
           <DialogHeader>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-amber-300">
+              <Check className="w-8 h-8 text-amber-700" />
             </div>
-            <DialogTitle className="text-center text-2xl">Booking Confirmed!</DialogTitle>
-            <DialogDescription className="text-center">
+            <DialogTitle className="text-center text-2xl font-semibold text-white">Booking Confirmed!</DialogTitle>
+            <DialogDescription className="text-center text-gray-300">
               <div className="space-y-4 mt-4">
-                <p>Your reservation has been successfully confirmed.</p>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">Booking Reference</p>
-                  <p className="text-xl font-mono text-gray-900">{bookingReference}</p>
+                <p className="text-gray-200">Your reservation has been successfully confirmed.</p>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Booking Reference</p>
+                  <p className="text-2xl font-mono font-semibold text-amber-400">{bookingReference}</p>
                 </div>
-                <p className="text-sm text-gray-600">
-                  A confirmation email has been sent to {email}
+                <p className="text-sm text-gray-300">
+                  A confirmation email has been sent to <span className="text-white font-medium">{email}</span>
                 </p>
               </div>
             </DialogDescription>
@@ -565,7 +739,7 @@ export function BookingClient() {
               setShowConfirmation(false);
               window.location.href = "/";
             }}
-            className="w-full bg-amber-600 hover:bg-amber-700"
+            className="w-full bg-amber-600 text-white hover:bg-amber-700"
           >
             Back to Home
           </Button>

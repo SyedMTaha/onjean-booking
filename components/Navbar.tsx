@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
-import { Montserrat } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +22,11 @@ import { SignUpModal } from "./auth/SignUpModal";
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 export function Navigation() {
@@ -70,27 +75,38 @@ export function Navigation() {
               alt="78 On Jean Logo" 
               className="h-14 w-auto object-contain"
             />
+            <div className="w-px h-8 bg-gray-700" />
+            <div className="flex flex-col">
+              <span className={`${playfair.className} text-lg md:text-xl font-semibold text-white leading-tight`}>
+                78 ON JEAN
+              </span>
+              <span className="text-[8px] text-gray-400 uppercase tracking-wider">
+                Boutique Hotel
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                href={link.path}
-                className={`relative px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors after:absolute after:left-2 after:right-2 after:-bottom-0.5 after:h-px after:bg-[linear-gradient(to_right,transparent,#9ca3af,transparent)] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 ${
-                  isActive(link.path)
-                    ? "text-gray-100 after:scale-x-100"
-                    : "text-gray-200 hover:text-gray-100"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          {/* Right Section - Nav Links + Auth */}
+          <div className="flex items-center gap-6">
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`relative px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors after:absolute after:left-2 after:right-2 after:-bottom-0.5 after:h-px after:bg-[linear-gradient(to_right,transparent,#9ca3af,transparent)] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 ${
+                    isActive(link.path)
+                      ? "text-gray-100 after:scale-x-100"
+                      : "text-gray-200 hover:text-gray-100"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-3">
+            {/* Auth Section */}
+            <div className="flex items-center gap-3">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -105,19 +121,19 @@ export function Navigation() {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel className="text-gray-900 font-semibold">
+                <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700">
+                  <DropdownMenuLabel className="text-white font-bold">
                     {user.displayName || "My Account"}
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <Link href="/profile" className="text-gray-200 hover:text-white hover:bg-gray-800">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/booking">My Bookings</Link>
+                    <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-gray-200 hover:text-white hover:bg-gray-800">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -146,6 +162,7 @@ export function Navigation() {
                 <Menu className="w-6 h-6" />
               )}
             </button>
+            </div>
           </div>
         </div>
 

@@ -187,7 +187,7 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Why Choose Us</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A] ">Why Choose Us</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Experience world-class hospitality with premium amenities
             </p>
@@ -205,7 +205,7 @@ export function HomeClient() {
                   <div className="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-amber-600 transition-all duration-300">
                     <Icon className="w-10 h-10 text-amber-600 group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-xl mb-2 font-semibold text-[#0A0A0A]">{item.title}</h3>
+                  <h3 className="text-xl mb-2 font-medium text-[#0A0A0A]">{item.title}</h3>
                   <p className="text-gray-600">{item.description}</p>
                 </div>
               );
@@ -219,13 +219,13 @@ export function HomeClient() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
             <div>
-              <h2 className="text-4xl md:text-5xl mb-3 text-amber-600">Luxury Accommodations</h2>
+              <h2 className="text-4xl md:text-5xl mb-3 text-[#0A0A0A]">Luxury Accommodations</h2>
               <p className="text-gray-600 text-lg">
                 Beautifully designed rooms and suites
               </p>
             </div>
             <Link href="/rooms">
-              <Button variant="outline" className="border-2 hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors">
+              <Button variant="outline" className="border-2 bg-gray-900  hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors">
                 View All Rooms <ChevronRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
@@ -260,7 +260,7 @@ export function HomeClient() {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-2xl mb-3 text-amber-600">{room.title}</h3>
+                  <h3 className="text-2xl mb-3 text-[#0A0A0A]">{room.title}</h3>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {room.features.map((feature, i) => (
                       <span key={i} className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
@@ -294,7 +294,7 @@ export function HomeClient() {
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                 Award-Winning Cuisine
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Culinary Excellence</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Culinary Excellence</h2>
               <p className="text-gray-600 text-lg mb-8">
                 From hearty breakfasts to elegant dinners, our menu features locally-sourced 
                 ingredients and international flavors. Experience culinary artistry at every meal.
@@ -310,7 +310,7 @@ export function HomeClient() {
                   return (
                     <div key={i} className="bg-gray-50 p-5 rounded-xl">
                       <Icon className="w-5 h-5 text-amber-600 mb-2" />
-                      <h4 className="font-semibold mb-1 text-amber-600">{item.label}</h4>
+                      <h4 className="font-semibold mb-1 text-[#0A0A0A]">{item.label}</h4>
                       <p className="text-sm text-gray-600">{item.time}</p>
                     </div>
                   );
@@ -351,7 +351,7 @@ export function HomeClient() {
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                 Premium Wellness
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Spa & Wellness</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Spa & Wellness</h2>
               <p className="text-gray-600 text-lg mb-8">
                 Our world-class spa offers a range of treatments designed to help you
                 unwind and refresh. From massages to manicures, we have everything you
@@ -387,7 +387,7 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Guest Reviews</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Guest Reviews</h2>
             <p className="text-gray-600 text-lg">
               What our guests say about their experience
             </p>
@@ -402,15 +402,15 @@ export function HomeClient() {
             }}>
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2 sm:px-3 md:px-4">
-                  <Card className="p-8 hover:shadow-xl transition-all duration-300 border-0 bg-gray-50 h-full">
+                  <Card className="p-8 hover:shadow-xl transition-all duration-300 border-0 bg-gray-50 h-full flex flex-col">
                     <div className="flex gap-1 mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
-                    <p className="text-gray-700 mb-6 leading-relaxed">"{testimonial.comment}"</p>
+                    <p className="text-gray-700 mb-6 leading-relaxed flex-1">"{testimonial.comment}"</p>
                     <div className="flex items-center gap-3 pt-6 border-t border-gray-200">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-lg font-semibold">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-shrink-0 items-center justify-center text-white text-lg font-semibold">
                         {testimonial.name.charAt(0)}
                       </div>
                       <div>
