@@ -1,4 +1,5 @@
-import { HomeClient } from "@/components/pages/HomeClient";
+import { HomeClient } from "@/components/pages/homePage";
+import { Footer } from "@/components/Footer";
 
 export const metadata = {
   title: "78 On Jean - Luxury Hotel Booking",
@@ -6,5 +7,10 @@ export const metadata = {
 };
 
 export default function Home() {
-  return <HomeClient />;
+  return (
+    <>
+      <HomeClient />
+      <Footer />
+    </>
+  );
 }

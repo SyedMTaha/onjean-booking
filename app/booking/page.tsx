@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { BookingClient } from "@/components/pages/BookingClient";
+import { BookingClient } from "@/components/pages/bookingPage";
 
 export const metadata: Metadata = {
   title: "Book Your Stay - 78 On Jean",

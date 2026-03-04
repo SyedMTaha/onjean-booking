@@ -28,7 +28,7 @@ export function SearchBar() {
           placeholder="Where are you going?"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-400"
+          className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-gray-900 placeholder:text-gray-400"
         />
       </div>
 
@@ -42,7 +42,7 @@ export function SearchBar() {
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+            className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-gray-900"
           />
         </div>
       </div>
@@ -57,7 +57,7 @@ export function SearchBar() {
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
-            className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+            className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-gray-900"
           />
         </div>
       </div>
@@ -73,7 +73,7 @@ export function SearchBar() {
           min="1"
           value={guests}
           onChange={(e) => setGuests(e.target.value)}
-          className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-400"
+          className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-gray-900 placeholder:text-gray-400"
         />
       </div>
 

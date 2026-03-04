@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Star, Coffee, Utensils, ChevronRight, Award, Users, Clock, CheckCircle2, Sparkles } from "lucide-react";
+import { FaAward } from "react-icons/fa";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "@/components/SearchBar";
@@ -54,7 +55,7 @@ export function HomeClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] md:min-h-[700px] overflow-hidden">
+      <section className="relative h-screen min-h-[700px] md:min-h-[800px] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1592383809697-4986ac3151c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMGxvYmJ5JTIwc291dGglMjBhZnJpY2F8ZW58MXx8fHwxNzcyMjA0MTU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
@@ -69,8 +70,9 @@ export function HomeClient() {
           <div className="flex-1 flex items-center justify-center">
             <div className="max-w-5xl w-full px-2 sm:px-4">
               <div className="text-center text-white mb-8 md:mb-12">
-                <Badge className="mb-4 md:mb-6 bg-gray-800/90 hover:bg-gray-900 text-white border-0 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm backdrop-blur-sm">
-                  ⭐ Award Winning Hotel in South Africa
+                <Badge className="mt-6 md:mt-8 mb-4 md:mb-6 bg-gray-900 hover:bg-black text-white border-0 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm backdrop-blur-sm inline-flex items-center gap-2">
+                  <FaAward className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-300" />
+                  Award Winning Hotel in South Africa
                 </Badge>
                 <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 md:mb-6 leading-tight font-light tracking-tight px-4">
                   Welcome to <span className="block font-semibold mt-2">78 On Jean</span>
@@ -130,7 +132,7 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4">Why Choose Us</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Why Choose Us</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Experience world-class hospitality with premium amenities
             </p>
@@ -162,7 +164,7 @@ export function HomeClient() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
             <div>
-              <h2 className="text-4xl md:text-5xl mb-3">Luxury Accommodations</h2>
+              <h2 className="text-4xl md:text-5xl mb-3 text-amber-600">Luxury Accommodations</h2>
               <p className="text-gray-600 text-lg">
                 Beautifully designed rooms and suites
               </p>
@@ -237,7 +239,7 @@ export function HomeClient() {
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                 Award-Winning Cuisine
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4">Culinary Excellence</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Culinary Excellence</h2>
               <p className="text-gray-600 text-lg mb-8">
                 From hearty breakfasts to elegant dinners, our menu features locally-sourced 
                 ingredients and international flavors. Experience culinary artistry at every meal.
@@ -292,7 +294,7 @@ export function HomeClient() {
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                 Premium Wellness
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4">Spa & Wellness</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Spa & Wellness</h2>
               <p className="text-gray-600 text-lg mb-8">
                 Our world-class spa offers a range of treatments designed to help you
                 unwind and refresh. From massages to manicures, we have everything you
@@ -326,7 +328,7 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4">Guest Reviews</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Guest Reviews</h2>
             <p className="text-gray-600 text-lg">
               What our guests say about their experience
             </p>

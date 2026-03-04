@@ -18,12 +18,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
-                78
-              </div>
-              On Jean
-            </h3>
+            <div className="mb-4">
+              <img 
+                src="/logo/logo-2.png" 
+                alt="78 On Jean Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            </div>
             <p className="text-gray-400">
               Experience luxury hospitality in the heart of South Africa
             </p>
