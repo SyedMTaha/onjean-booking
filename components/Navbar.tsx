@@ -175,7 +175,7 @@ export function Navigation() {
                       setIsSignInOpen(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-1 border-gray-400 text-gray-100 hover:bg-gray-800 uppercase"
+                    className="flex-1 border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 uppercase"
                   >
                     Sign In
                   </Button>

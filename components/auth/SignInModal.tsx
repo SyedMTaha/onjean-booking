@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { X, Mail, Lock } from "lucide-react";
+import { X, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
   const router = useRouter();
   const { signIn, signInWithGoogle, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -169,14 +170,22 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
               <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
                 disabled={loading}
-                className="pl-11 h-12 bg-gray-50 border-gray-200 text-black placeholder:text-gray-500 focus:border-amber-500 focus:ring-amber-500"
+                className="pl-11 pr-11 h-12 bg-gray-50 border-gray-200 text-black placeholder:text-gray-500 focus:border-amber-500 focus:ring-amber-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 

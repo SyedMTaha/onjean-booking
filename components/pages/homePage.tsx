@@ -6,13 +6,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Star, Coffee, Utensils, ChevronRight, Award, Users, Clock, CheckCircle2, Sparkles } from "lucide-react";
-import { FaAward } from "react-icons/fa";
-import { useState } from "react";
+import { FaAward, FaArrowRight } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "@/components/SearchBar";
 
 export function HomeClient() {
   const [email, setEmail] = useState("");
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isHoveringTestimonials, setIsHoveringTestimonials] = useState(false);
+  const [cardsPerView, setCardsPerView] = useState(3);
 
   const stats = [
     { number: "500+", label: "Happy Guests", icon: Users },
@@ -40,7 +43,59 @@ export function HomeClient() {
       rating: 5,
       comment: "A hidden gem! Every detail was perfect. The breakfast was exceptional and the amenities are world-class.",
     },
+    {
+      name: "Michael Chen",
+      location: "Singapore",
+      rating: 5,
+      comment: "Exceptional hospitality and attention to detail. The views are absolutely breathtaking and the staff is incredibly courteous.",
+    },
+    {
+      name: "Isabella Rodriguez",
+      location: "Madrid, Spain",
+      rating: 5,
+      comment: "A luxury experience like no other! The rooms are elegantly furnished and the dining experience is unforgettable.",
+    },
+    {
+      name: "David Thompson",
+      location: "Toronto, Canada",
+      rating: 5,
+      comment: "Truly world-class! Every moment at this hotel was special. Can't wait to return for another amazing stay.",
+    },
   ];
+
+  const maxSlideIndex = Math.max(testimonials.length - cardsPerView, 0);
+
+  useEffect(() => {
+    const updateCardsPerView = () => {
+      if (window.innerWidth < 768) {
+        setCardsPerView(1);
+      } else if (window.innerWidth < 1024) {
+        setCardsPerView(2);
+      } else {
+        setCardsPerView(3);
+      }
+    };
+
+    updateCardsPerView();
+    window.addEventListener("resize", updateCardsPerView);
+
+    return () => window.removeEventListener("resize", updateCardsPerView);
+  }, []);
+
+  useEffect(() => {
+    setCurrentTestimonial((prev) => Math.min(prev, maxSlideIndex));
+  }, [maxSlideIndex]);
+
+  useEffect(() => {
+    if (isHoveringTestimonials) return;
+    
+    const interval = setInterval(() => {
+      if (maxSlideIndex === 0) return;
+      setCurrentTestimonial((prev) => (prev + 1) % (maxSlideIndex + 1));
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, [isHoveringTestimonials, maxSlideIndex]);
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +110,7 @@ export function HomeClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[700px] md:min-h-[800px] overflow-hidden">
+      <section className="relative min-h-[980px] md:min-h-[900px] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1592383809697-4986ac3151c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMGxvYmJ5JTIwc291dGglMjBhZnJpY2F8ZW58MXx8fHwxNzcyMjA0MTU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
@@ -65,9 +120,9 @@ export function HomeClient() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
         </div>
 
-        <div className="relative container mx-auto px-4 h-full flex flex-col">
+        <div className="relative container mx-auto px-4 min-h-[980px] md:min-h-[900px] flex flex-col">
           {/* Hero Content - Centered */}
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-start md:items-center justify-center pt-20 md:pt-0">
             <div className="max-w-5xl w-full px-2 sm:px-4">
               <div className="text-center text-white mb-8 md:mb-12">
                 <Badge className="mt-6 md:mt-8 mb-4 md:mb-6 bg-gray-900 hover:bg-black text-white border-0 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm backdrop-blur-sm inline-flex items-center gap-2">
@@ -88,17 +143,17 @@ export function HomeClient() {
               </div>
 
               <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 px-4">
-                <Link href="/booking">
-                  <Button size="default" className="bg-gray-900 hover:bg-black text-white px-6 py-3">
+                <Link href="/booking" className="w-full sm:w-auto">
+                  <Button size="default" className="w-full sm:w-auto bg-gray-900 hover:bg-black text-white px-6 py-3">
                     Book Your Stay
                     <ChevronRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href="/rooms">
+                <Link href="/rooms" className="w-full sm:w-auto">
                   <Button 
                     size="default" 
                     variant="outline" 
-                    className="bg-transparent hover:bg-white text-white hover:text-[#000B1C] border-white px-6 py-3 transition-all duration-300"
+                    className="w-full sm:w-auto bg-transparent hover:bg-white text-white hover:text-[#000B1C] border-white px-6 py-3 transition-all duration-300"
                     style={{ borderWidth: '1.5px' }}
                   >
                     Explore Rooms
@@ -132,7 +187,7 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4 text-amber-600">Why Choose Us</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Why Choose Us</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Experience world-class hospitality with premium amenities
             </p>
@@ -150,7 +205,7 @@ export function HomeClient() {
                   <div className="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-amber-600 transition-all duration-300">
                     <Icon className="w-10 h-10 text-amber-600 group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-xl mb-2">{item.title}</h3>
+                  <h3 className="text-xl mb-2 font-semibold text-[#0A0A0A]">{item.title}</h3>
                   <p className="text-gray-600">{item.description}</p>
                 </div>
               );
@@ -205,7 +260,7 @@ export function HomeClient() {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-2xl mb-3">{room.title}</h3>
+                  <h3 className="text-2xl mb-3 text-amber-600">{room.title}</h3>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {room.features.map((feature, i) => (
                       <span key={i} className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
@@ -234,7 +289,7 @@ export function HomeClient() {
       {/* Dining Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                 Award-Winning Cuisine
@@ -255,17 +310,19 @@ export function HomeClient() {
                   return (
                     <div key={i} className="bg-gray-50 p-5 rounded-xl">
                       <Icon className="w-5 h-5 text-amber-600 mb-2" />
-                      <h4 className="font-semibold mb-1">{item.label}</h4>
+                      <h4 className="font-semibold mb-1 text-amber-600">{item.label}</h4>
                       <p className="text-sm text-gray-600">{item.time}</p>
                     </div>
                   );
                 })}
               </div>
               <Link href="/menu">
-                <Button className="bg-amber-600 hover:bg-amber-700 text-base px-8 py-6 h-auto">
-                  View Full Menu
-                  <ChevronRight className="ml-2" />
-                </Button>
+                <div className="group">
+                  <Button className="bg-amber-600 hover:bg-amber-700">
+                    View Full Menu
+                    <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
+                  </Button>
+                </div>
               </Link>
             </div>
             <div className="order-1 lg:order-2 h-[500px] rounded-3xl overflow-hidden shadow-xl">
@@ -282,7 +339,7 @@ export function HomeClient() {
       {/* Spa Section */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="h-[500px] rounded-3xl overflow-hidden shadow-xl">
               <img
                 src="https://images.unsplash.com/photo-1757689314932-bec6e9c39e51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcGElMjB3ZWxsbmVzcyUyMG1hc3NhZ2V8ZW58MXx8fHwxNzcyMTg1NzgzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
@@ -314,10 +371,12 @@ export function HomeClient() {
                 ))}
               </ul>
               <Link href="/spa">
-                <Button className="bg-amber-600 hover:bg-amber-700 text-base px-8 py-6 h-auto">
-                  Book Spa Treatment
-                  <ChevronRight className="ml-2" />
-                </Button>
+                <div className="group">
+                  <Button className="bg-amber-600 hover:bg-amber-700">
+                    Book Spa Treatment
+                    <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
+                  </Button>
+                </div>
               </Link>
             </div>
           </div>
@@ -333,26 +392,49 @@ export function HomeClient() {
               What our guests say about their experience
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-8 hover:shadow-xl transition-all duration-300 border-0 bg-gray-50">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                  ))}
+          <div 
+            className="overflow-hidden"
+            onMouseEnter={() => setIsHoveringTestimonials(true)}
+            onMouseLeave={() => setIsHoveringTestimonials(false)}
+          >
+            <div className="flex transition-transform duration-700 ease-out" style={{
+              transform: `translateX(-${(currentTestimonial * 100) / cardsPerView}%)`
+            }}>
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2 sm:px-3 md:px-4">
+                  <Card className="p-8 hover:shadow-xl transition-all duration-300 border-0 bg-gray-50 h-full">
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <p className="text-gray-700 mb-6 leading-relaxed">"{testimonial.comment}"</p>
+                    <div className="flex items-center gap-3 pt-6 border-t border-gray-200">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-lg font-semibold">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                        <div className="text-sm text-gray-500">{testimonial.location}</div>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-                <p className="text-gray-700 mb-6 leading-relaxed">"{testimonial.comment}"</p>
-                <div className="flex items-center gap-3 pt-6 border-t border-gray-200">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-lg font-semibold">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                    <div className="text-sm text-gray-500">{testimonial.location}</div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+              ))}
+            </div>
+            {/* Navigation Dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              {Array.from({ length: maxSlideIndex + 1 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentTestimonial(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentTestimonial ? 'bg-amber-600 w-8' : 'bg-gray-300 hover:bg-amber-400'
+                  }`}
+                  aria-label={`Go to testimonial ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -361,19 +443,19 @@ export function HomeClient() {
       <section className="py-20 bg-gradient-to-br from-amber-600 to-amber-700">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center text-white">
-            <h2 className="text-4xl md:text-5xl mb-4">Stay Connected</h2>
-            <p className="text-xl mb-8 text-amber-50">
+            <h2 className="text-3xl md:text-5xl mb-4">Stay Connected</h2>
+            <p className="text-base md:text-xl mb-8 text-amber-50">
               Subscribe for exclusive offers and updates
             </p>
-            <form onSubmit={handleNewsletter} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
+            <form onSubmit={handleNewsletter} className="flex flex-col sm:flex-row gap-4 max-w-xl w-full mx-auto">
               <Input
                 type="email"
                 placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-14 px-6 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30 backdrop-blur-sm"
+                className="w-full flex-1 h-14 px-6 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30 backdrop-blur-sm"
               />
-              <Button type="submit" size="lg" className="bg-white text-amber-600 hover:bg-gray-50 h-14 px-8">
+              <Button type="submit" size="lg" className="w-full sm:w-auto bg-white text-amber-600 hover:bg-gray-50 h-14 px-8">
                 Subscribe
               </Button>
             </form>
@@ -382,7 +464,7 @@ export function HomeClient() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-gray-900 text-white">
+      {/* <section className="py-24 bg-gray-900 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl mb-6">Ready for Your Perfect Stay?</h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto text-gray-300">
@@ -402,7 +484,7 @@ export function HomeClient() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

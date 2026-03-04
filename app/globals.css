@@ -47,3 +47,26 @@ body {
 .onjean-themed-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #f59e0b, #b45309);
 }
+@keyframes slideArrow {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-arrow {
+  animation: slideArrow 1.5s ease-in-out infinite;
+}
+
+.group:hover .animate-slide-arrow-hover {
+  animation: slideArrow 1.5s ease-in-out infinite;
+}
+
+.animate-slide-arrow-hover {
+  animation: none;
+}
