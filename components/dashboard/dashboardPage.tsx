@@ -14,7 +14,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { ensureDefaultAdminCredentials } from "@/lib/adminService";
 import {
   DashboardOrder,
   getDashboardOrders,
@@ -71,7 +70,6 @@ export function DashboardClient() {
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        await ensureDefaultAdminCredentials();
         const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
         
         if (!hasSession) {
@@ -98,14 +96,6 @@ export function DashboardClient() {
       fetchOrders();
     }
   }, [isAdminAuthenticated]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("dashboardAdminSession");
-    setIsAdminAuthenticated(false);
-    setOrders([]);
-    toast.success("Logged out successfully.");
-    router.push("/");
-  };
 
   const handleStatusUpdate = async (
     order: DashboardOrder,
@@ -181,14 +171,11 @@ export function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 md:py-12">
-      <div className="container mx-auto px-4 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Monitor customer orders and approve bookings.</p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>Logout</Button>
+    <div className="bg-gray-50 py-6 md:py-8">
+      <div className="container mx-auto px-4 lg:px-8 space-y-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Monitor customer orders and approve bookings.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

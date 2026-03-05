@@ -1,7 +1,15 @@
 "use client";
 
+import { Navigation } from "@/components/Navbar";
 import { CartPage } from "@/components/pages/cartPage";
+import { Footer } from "@/components/Footer";
 
 export default function Page() {
-  return <CartPage />;
+   return (
+      <>
+        <Navigation />
+        <CartPage />
+        <Footer />
+      </>
+    );
 }

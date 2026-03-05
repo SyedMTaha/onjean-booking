@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useState, useEffect } from "react";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,14 +33,31 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  // Check for admin session
+  useEffect(() => {
+    const checkAdminSession = () => {
+      const adminSession = localStorage.getItem("dashboardAdminSession") === "true";
+      setIsAdmin(adminSession);
+    };
+    
+    checkAdminSession();
+    // Re-check on storage change (cross-tab sync)
+    window.addEventListener("storage", checkAdminSession);
+    return () => window.removeEventListener("storage", checkAdminSession);
+  }, [user]);
+
+  // Get display name: "Admin" if admin, otherwise user's display name
+  const displayName = isAdmin ? "Admin" : (user?.displayName || "My Account");
+
   const navLinks = [
     { path: "/", label: "Home" },
     { path: "/rooms", label: "Rooms" },
-    { path: "/booking", label: "Book Now" },
+    { path: "/book-now", label: "Book Now" },
     { path: "/spa", label: "Spa" },
     { path: "/menu", label: "Menu" },
     { path: "/gallery", label: "Gallery" },
@@ -57,6 +74,9 @@ export function Navigation() {
   const handleLogout = async () => {
     try {
       await logout();
+      // Clear admin session if present
+      localStorage.removeItem("dashboardAdminSession");
+      setIsAdmin(false);
       toast.success("Signed out successfully");
       router.push("/");
     } catch (error) {
@@ -134,13 +154,13 @@ export function Navigation() {
                   >
                     <User className="w-4 h-4 mr-2" />
                     <span className="max-w-28 truncate font-medium">
-                      {user.displayName || "My Account"}
+                      {displayName}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700">
                   <DropdownMenuLabel className="text-white font-bold">
-                    {user.displayName || "My Account"}
+                    {displayName}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem asChild>
@@ -228,7 +248,21 @@ export function Navigation() {
                   </Button>
                 </div>
               ) : (
-                <div className="px-4">
+                <div className="px-4 space-y-2">
+                  <Link
+                    href="/booking"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
+                  >
+                    My Bookings
+                  </Link>
+                  <Link
+                    href="/cart"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
+                  >
+                    My Cart
+                  </Link>
                   <Button
                     variant="outline"
                     onClick={handleLogout}

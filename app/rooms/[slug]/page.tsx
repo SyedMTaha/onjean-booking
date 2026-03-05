@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Navigation } from "@/components/Navbar";
 import { RoomDetailClient } from "@/components/pages/roomDetailPage";
 import { Footer } from "@/components/Footer";
 import { getRoomBySlug, getAllRoomSlugs } from "@/data/rooms";
@@ -43,6 +44,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   return (
     <>
+      <Navigation />
       <RoomDetailClient room={room} />
       <Footer />
     </>

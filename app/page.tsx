@@ -1,3 +1,4 @@
+import { Navigation } from "@/components/Navbar";
 import { HomeClient } from "@/components/pages/homePage";
 import { Footer } from "@/components/Footer";
 
@@ -9,6 +10,7 @@ export const metadata = {
 export default function Home() {
   return (
     <>
+      <Navigation />
       <HomeClient />
       <Footer />
     </>

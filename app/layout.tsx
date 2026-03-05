@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { Navigation } from "@/components/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { AdminInitializer } from "@/components/AdminInitializer";
 import { Toaster } from "sonner";
 
 const poppins = Poppins({
@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CartProvider>
-            <Navigation />
+            <AdminInitializer />
             {children}
             <Toaster position="top-center" richColors />
           </CartProvider>

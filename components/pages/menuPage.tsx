@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 const menuCategories = ["Breakfast", "Lunch", "Dinner", "Desserts", "Beverages"];
@@ -61,9 +62,15 @@ const menuItemsByCategory: Record<string, Array<{ name: string; price: string; d
 export function MenuClient() {
   const [selectedCategory, setSelectedCategory] = useState("Breakfast");
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const visibleItems = menuItemsByCategory[selectedCategory] || [];
 
   const handleAddToCart = (item: any) => {
+    if (!user) {
+      toast.error("Please sign in before adding food to cart.");
+      return;
+    }
+
     // Extract price as number (remove "R" and convert to float)
     const priceNumber = parseFloat(item.price.replace("R", "").trim());
     
@@ -107,13 +114,13 @@ export function MenuClient() {
           </div>
 
           <div className="mb-10">
-            <div className="w-full bg-gray-200 rounded-2xl p-1 grid grid-cols-5 gap-1">
+            <div className="w-full bg-gray-200 rounded-2xl p-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1">
               {menuCategories.map((category) => (
                 <button
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className={`py-2 px-2 rounded-xl text-sm md:text-base font-medium transition-colors ${
+                  className={`py-3 px-3 rounded-xl text-sm md:text-base font-medium transition-colors ${
                     selectedCategory === category
                       ? "bg-white text-gray-900 shadow-sm"
                       : "bg-transparent text-gray-900 hover:bg-gray-100"

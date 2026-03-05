@@ -103,7 +103,7 @@ export function RoomsClient() {
                             View Details
                           </Button>
                         </Link>
-                        <Link href="/booking" className="flex-1">
+                        <Link href="/book-now" className="flex-1">
                           <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                             Book Now
                           </Button>

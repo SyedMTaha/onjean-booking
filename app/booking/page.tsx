@@ -1,17 +1,19 @@
 import { Metadata } from "next";
-import { BookingClient } from "@/components/pages/bookingPage";
+import { Navigation } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { MyBookingsPage } from "@/components/pages/myBookingsPage";
 
 export const metadata: Metadata = {
-  title: "Book Your Stay - 78 On Jean",
-  description: "Complete your hotel reservation in 3 easy steps.",
+  title: "My Bookings - 78 On Jean",
+  description: "View your room bookings and status updates.",
 };
 
-export default function BookingPage() {
+export default function BookingHistoryPage() {
   return (
-  <>
-  <BookingClient />
-  <Footer />
-  </>
+    <>
+      <Navigation />
+      <MyBookingsPage />
+      <Footer />
+    </>
   );
 }

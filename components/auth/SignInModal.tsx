@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { X, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { verifyAdminCredentials } from "@/lib/adminService";
+import { getDefaultAdminCredentials, verifyAdminCredentials } from "@/lib/adminService";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ interface SignInModalProps {
 
 export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalProps) {
   const router = useRouter();
-  const { signIn, signInWithGoogle, resetPassword } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,25 +30,85 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
     setLoading(true);
 
     try {
-      // Check if these are admin credentials first
-      const isAdmin = await verifyAdminCredentials(formData.email, formData.password);
-      
-      if (isAdmin) {
+      const normalizedEmail = formData.email.trim().toLowerCase();
+      const normalizedPassword = formData.password.trim();
+
+      // Deterministic admin login path so redirect works even if Firestore lookup fails.
+      const defaultAdmin = getDefaultAdminCredentials();
+      if (
+        normalizedEmail === defaultAdmin.email.toLowerCase() &&
+        normalizedPassword === defaultAdmin.password
+      ) {
+        // Sign admin into Firebase so Firestore queries work and user object exists
+        try {
+          await signIn(normalizedEmail, normalizedPassword);
+        } catch (adminSignInError: any) {
+          // If admin user doesn't exist in Firebase Auth, create it
+          if (adminSignInError.code === "auth/user-not-found") {
+            try {
+              await signUp(normalizedEmail, normalizedPassword, "Admin");
+              // Sign in after creating the account
+              await signIn(normalizedEmail, normalizedPassword);
+            } catch (signUpError) {
+              console.error("Failed to create admin user:", signUpError);
+              throw new Error("Failed to initialize admin account");
+            }
+          } else {
+            throw adminSignInError;
+          }
+        }
+        
         localStorage.setItem("dashboardAdminSession", "true");
         toast.success("Admin login successful! Redirecting to dashboard...");
         onClose();
-        router.push("/dashboard");
+        router.replace("/dashboard");
+        router.refresh();
         return;
       }
 
+      // Secondary admin check against Firestore credentials.
+      try {
+        const isAdmin = await verifyAdminCredentials(normalizedEmail, normalizedPassword);
+
+        if (isAdmin) {
+          // Sign admin into Firebase
+          try {
+            await signIn(normalizedEmail, normalizedPassword);
+          } catch (adminSignInError: any) {
+            // If admin user doesn't exist in Firebase Auth, create it
+            if (adminSignInError.code === "auth/user-not-found") {
+              try {
+                await signUp(normalizedEmail, normalizedPassword, "Admin");
+                await signIn(normalizedEmail, normalizedPassword);
+              } catch (signUpError) {
+                console.error("Failed to create admin user:", signUpError);
+                throw new Error("Failed to initialize admin account");
+              }
+            } else {
+              throw adminSignInError;
+            }
+          }
+          
+          localStorage.setItem("dashboardAdminSession", "true");
+          toast.success("Admin login successful! Redirecting to dashboard...");
+          onClose();
+          router.replace("/dashboard");
+          router.refresh();
+          return;
+        }
+      } catch (adminError) {
+        console.error("Admin verification error:", adminError);
+        // Continue to regular authentication if admin check fails
+      }
+
       // If not admin, proceed with regular Firebase authentication
-      await signIn(formData.email, formData.password);
+      await signIn(normalizedEmail, normalizedPassword);
       toast.success("Signed in successfully!");
       onClose();
       router.push("/");
     } catch (error: any) {
       console.error("Sign in error:", error);
-      
+
       if (error.code === "auth/user-not-found") {
         toast.error("No account found with this email.");
       } else if (error.code === "auth/wrong-password") {

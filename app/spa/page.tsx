@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Navigation } from "@/components/Navbar";
 import { SpaClient } from "@/components/pages/spaPage";
 import { Footer } from "@/components/Footer";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function SpaPage() {
   return (
     <>
+      <Navigation />
       <SpaClient />
       <Footer />
     </>

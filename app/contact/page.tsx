@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Navigation } from "@/components/Navbar";
 import { ContactClient } from "@/components/pages/contactPage";
 import { Footer } from "@/components/Footer";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
+      <Navigation />
       <ContactClient />
       <Footer />
     </>
