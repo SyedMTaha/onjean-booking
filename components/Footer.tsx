@@ -48,20 +48,32 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-gray-400">
-              <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-amber-600" />
-                <span>South Africa</span>
+              <li className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-amber-600 mt-1 flex-shrink-0" />
+                <span>78 Jean Avenue, Doringkloof, Centurion</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-amber-600" />
-                <a href="tel:+27123456789" className="hover:text-amber-400">
-                  +27 (0)11 123 4567
+                <Phone className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <a href="tel:0120066778" className="hover:text-amber-400">
+                  012 006 6778
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-600" />
-                <a href="mailto:info@78onjean.com" className="hover:text-amber-400">
-                  info@78onjean.com
+                <Phone className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <a href="tel:0760538540" className="hover:text-amber-400">
+                  076 053 8540
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <a href="mailto:info@78onjean.co.za" className="hover:text-amber-400">
+                  info@78onjean.co.za
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <a href="mailto:bookings@78onjean.co.za" className="hover:text-amber-400">
+                  bookings@78onjean.co.za
                 </a>
               </li>
             </ul>

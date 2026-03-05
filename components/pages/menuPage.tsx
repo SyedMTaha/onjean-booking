@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 const menuCategories = ["Breakfast", "Lunch", "Dinner", "Desserts", "Beverages"];
 
@@ -58,7 +60,26 @@ const menuItemsByCategory: Record<string, Array<{ name: string; price: string; d
 
 export function MenuClient() {
   const [selectedCategory, setSelectedCategory] = useState("Breakfast");
+  const { addToCart } = useCart();
   const visibleItems = menuItemsByCategory[selectedCategory] || [];
+
+  const handleAddToCart = (item: any) => {
+    // Extract price as number (remove "R" and convert to float)
+    const priceNumber = parseFloat(item.price.replace("R", "").trim());
+    
+    addToCart({
+      id: `${selectedCategory}-${item.name}`,
+      name: item.name,
+      price: priceNumber,
+      image: item.image,
+      description: item.description,
+      quantity: 1,
+    });
+
+    toast.success("Item added to cart! Check your profile to view your cart.", {
+      description: `${item.name} has been added.`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -119,7 +140,12 @@ export function MenuClient() {
                 <div className="p-5 h-[40%] flex flex-col">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
                   <p className="text-gray-600 text-sm md:text-base mb-4">{item.description}</p>
-                  <Button className="mt-auto bg-amber-600 hover:bg-amber-700 text-white w-full">Add to Order</Button>
+                  <Button
+                    onClick={() => handleAddToCart(item)}
+                    className="mt-auto bg-amber-600 hover:bg-amber-700 text-white w-full"
+                  >
+                    Add to Cart
+                  </Button>
                 </div>
               </div>
             ))}

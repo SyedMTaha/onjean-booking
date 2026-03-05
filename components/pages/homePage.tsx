@@ -110,7 +110,7 @@ export function HomeClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[980px] md:min-h-[900px] overflow-hidden">
+      <section id="home-hero" className="relative min-h-[980px] md:min-h-[900px] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1592383809697-4986ac3151c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMGxvYmJ5JTIwc291dGglMjBhZnJpY2F8ZW58MXx8fHwxNzcyMjA0MTU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
@@ -316,13 +316,11 @@ export function HomeClient() {
                   );
                 })}
               </div>
-              <Link href="/menu">
-                <div className="group">
-                  <Button className="bg-amber-600 hover:bg-amber-700">
-                    View Full Menu
-                    <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
-                  </Button>
-                </div>
+              <Link href="/menu" className="block">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700">
+                  View Full Menu
+                  <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
+                </Button>
               </Link>
             </div>
             <div className="order-1 lg:order-2 h-[500px] rounded-3xl overflow-hidden shadow-xl">
@@ -370,13 +368,11 @@ export function HomeClient() {
                   </li>
                 ))}
               </ul>
-              <Link href="/spa">
-                <div className="group">
-                  <Button className="bg-amber-600 hover:bg-amber-700">
-                    Book Spa Treatment
-                    <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
-                  </Button>
-                </div>
+              <Link href="/spa" className="block">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700">
+                  Book Spa Treatment
+                  <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
+                </Button>
               </Link>
             </div>
           </div>

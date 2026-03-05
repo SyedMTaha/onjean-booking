@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
-import { useState } from "react";
+import { MouseEvent, useState } from "react";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,12 +64,29 @@ export function Navigation() {
     }
   };
 
+  const handleLogoClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== "/") {
+      return;
+    }
+
+    e.preventDefault();
+    const hero = document.getElementById("home-hero");
+
+    if (hero) {
+      hero.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", "/#home-hero");
+      return;
+    }
+
+    router.push("/#home-hero");
+  };
+
   return (
     <nav className={`${montserrat.className} sticky top-0 z-50 bg-gray-900 border-b border-gray-700 shadow-sm`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/#home-hero" onClick={handleLogoClick} className="flex items-center gap-3">
             <img 
               src="/logo/logo-2.png" 
               alt="78 On Jean Logo" 
@@ -131,6 +148,9 @@ export function Navigation() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/cart" className="text-gray-200 hover:text-white hover:bg-gray-800">My Cart</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem onClick={handleLogout} className="text-gray-200 hover:text-white hover:bg-gray-800">

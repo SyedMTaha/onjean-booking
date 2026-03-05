@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "sonner";
 
 const poppins = Poppins({
@@ -31,9 +32,11 @@ export default function RootLayout({
         style={{ fontFamily: 'var(--font-poppins), sans-serif' }}
       >
         <AuthProvider>
-          <Navigation />
-          {children}
-          <Toaster position="top-center" richColors />
+          <CartProvider>
+            <Navigation />
+            {children}
+            <Toaster position="top-center" richColors />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

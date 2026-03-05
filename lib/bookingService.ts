@@ -57,7 +57,7 @@ type NewBookingData = Omit<
  */
 export async function saveBooking(userId: string, bookingData: NewBookingData) {
   try {
-    const bookingRef = await addDoc(collection(db, "bookings"), {
+    const bookingRef = await addDoc(collection(db, "roomBookings"), {
       ...bookingData,
       userId,
       bookingStatus: "pending",
@@ -90,7 +90,7 @@ export async function saveBooking(userId: string, bookingData: NewBookingData) {
  */
 export async function getUserBookings(userId: string) {
   try {
-    const q = query(collection(db, "bookings"), where("userId", "==", userId));
+    const q = query(collection(db, "roomBookings"), where("userId", "==", userId));
     const querySnapshot = await getDocs(q);
 
     const bookings: any[] = [];
@@ -114,7 +114,7 @@ export async function getUserBookings(userId: string) {
  */
 export async function getAllBookings() {
   try {
-    const querySnapshot = await getDocs(collection(db, "bookings"));
+    const querySnapshot = await getDocs(collection(db, "roomBookings"));
 
     const bookings: any[] = [];
     querySnapshot.forEach((doc) => {
@@ -141,7 +141,7 @@ export async function updateBookingStatus(
   status: "approved" | "rejected" | "cancelled"
 ) {
   try {
-    const bookingRef = doc(db, "bookings", bookingId);
+    const bookingRef = doc(db, "roomBookings", bookingId);
     await updateDoc(bookingRef, {
       bookingStatus: status,
       updatedAt: serverTimestamp(),

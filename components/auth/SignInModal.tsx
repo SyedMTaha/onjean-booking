@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { X, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { verifyAdminCredentials } from "@/lib/adminService";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -29,6 +30,18 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
     setLoading(true);
 
     try {
+      // Check if these are admin credentials first
+      const isAdmin = await verifyAdminCredentials(formData.email, formData.password);
+      
+      if (isAdmin) {
+        localStorage.setItem("dashboardAdminSession", "true");
+        toast.success("Admin login successful! Redirecting to dashboard...");
+        onClose();
+        router.push("/dashboard");
+        return;
+      }
+
+      // If not admin, proceed with regular Firebase authentication
       await signIn(formData.email, formData.password);
       toast.success("Signed in successfully!");
       onClose();
