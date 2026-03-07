@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { getAllBookings } from "@/lib/bookingService";
-import { rooms } from "@/data/rooms";
+import { getAllRooms } from "@/lib/roomService";
 
 interface DayAvailability {
   date: number;
@@ -55,6 +55,7 @@ export function AvailabilityManagementClient() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [bookings, setBookings] = useState<BookingLike[]>([]);
+  const [rooms, setRooms] = useState<Array<{ id: string; name: string; available: boolean }>>([]);
 
   useEffect(() => {
     const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
@@ -75,8 +76,12 @@ export function AvailabilityManagementClient() {
       if (!isAdminAuthenticated) return;
       setIsDataLoading(true);
       try {
-        const allBookings = await getAllBookings();
+        const [allBookings, allRooms] = await Promise.all([
+          getAllBookings(),
+          getAllRooms()
+        ]);
         setBookings(allBookings as BookingLike[]);
+        setRooms(allRooms.filter(room => room.available));
       } catch (error) {
         console.error(error);
         toast.error("Failed to load availability data.");
@@ -100,7 +105,7 @@ export function AvailabilityManagementClient() {
       inventory.set(room.name, (inventory.get(room.name) || 0) + 1);
     });
     return inventory;
-  }, []);
+  }, [rooms]);
 
   const totalRooms = useMemo(
     () => Array.from(roomInventoryByType.values()).reduce((sum, count) => sum + count, 0),
@@ -153,6 +158,9 @@ export function AvailabilityManagementClient() {
       if (!checkIn || !checkOut) return;
       if (!isDateWithinStay(today, checkIn, checkOut)) return;
 
+      // Only count bookings for room types that exist in current inventory
+      if (!roomInventoryByType.has(roomType)) return;
+
       const existing = statsByType.get(roomType) || { occupied: 0, reserved: 0 };
 
       if (booking.bookingStatus === "approved") {
@@ -164,13 +172,9 @@ export function AvailabilityManagementClient() {
       statsByType.set(roomType, existing);
     });
 
-    const roomTypeNames = new Set<string>([
-      ...Array.from(roomInventoryByType.keys()),
-      ...Array.from(statsByType.keys()),
-    ]);
-
-    return Array.from(roomTypeNames).map((name) => {
-      const total = roomInventoryByType.get(name) || (statsByType.get(name)?.occupied || 0) + (statsByType.get(name)?.reserved || 0);
+    // Only show room types that exist in current inventory
+    return Array.from(roomInventoryByType.keys()).map((name) => {
+      const total = roomInventoryByType.get(name) || 0;
       const occupied = statsByType.get(name)?.occupied || 0;
       const reserved = statsByType.get(name)?.reserved || 0;
       const available = Math.max(total - Math.min(total, occupied + reserved), 0);

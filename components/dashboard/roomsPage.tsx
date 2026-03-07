@@ -152,7 +152,16 @@ export function RoomsManagementClient() {
   };
 
   const handleFormChange = (field: keyof RoomForm, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-generate slug from name if name is being changed
+      if (field === "name" && typeof value === "string") {
+        updated.slug = slugify(value);
+      }
+      
+      return updated;
+    });
   };
 
   const submitForm = async () => {
@@ -370,64 +379,81 @@ export function RoomsManagementClient() {
             filteredRooms.map((room) => (
               <Card
                 key={room.id}
-                className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200 relative"
+                className="bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all duration-200 overflow-hidden"
               >
-                <div className="absolute top-4 right-4">
-                  <Badge
-                    variant="outline"
-                    className={`${getStatusBadgeClass(room.available ? "available" : "unavailable")} capitalize text-xs`}
-                  >
-                    {room.available ? "available" : "unavailable"}
-                  </Badge>
+                <div className="relative">
+                  <img src={room.image} alt={room.name} className="w-full h-48 object-cover" />
+                  <div className="absolute top-3 right-3">
+                    <Badge
+                      variant="outline"
+                      className={`${getStatusBadgeClass(room.available ? "available" : "unavailable")} capitalize text-xs backdrop-blur-sm bg-white/90`}
+                    >
+                      {room.available ? "available" : "unavailable"}
+                    </Badge>
+                  </div>
                 </div>
 
-                <div className="space-y-3 mt-6">
-                  <img src={room.image} alt={room.name} className="w-full h-36 object-cover rounded-lg" />
-
-                  <div>
-                    <p className="text-lg font-bold text-gray-900">{room.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">/{room.slug}</p>
+                <div className="p-5 space-y-4">
+                  <div className="h-14">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{room.name}</h3>
+                    <p className="text-xs text-gray-500 truncate">/{room.slug}</p>
                   </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Guests:</span>
-                      <span className="font-medium text-gray-900">{room.maxGuests}</span>
+                  <div className="grid grid-cols-2 gap-3 text-sm h-24">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs mb-1">Guests</span>
+                      <span className="font-semibold text-gray-900 truncate">{room.maxGuests} persons</span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Bed Type:</span>
-                      <span className="font-medium text-gray-900">{room.bedType}</span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs mb-1">Bed Type</span>
+                      <span className="font-semibold text-gray-900 truncate">{room.bedType}</span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Size:</span>
-                      <span className="font-medium text-gray-900">{room.size}</span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs mb-1">Size</span>
+                      <span className="font-semibold text-gray-900 truncate">{room.size}</span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className="text-gray-600">Rate:</span>
-                      <span className="text-lg font-bold text-gray-900">{room.price}/night</span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 text-xs mb-1">View</span>
+                      <span className="font-semibold text-gray-900 truncate">{room.view || "City"}</span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => openEditModal(room)}>
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleToggleAvailability(room)}
-                    >
-                      {room.available ? <XCircle className="h-4 w-4 mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-                      {room.available ? "Disable" : "Enable"}
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDelete(room)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="pt-3 border-t border-gray-100">
+                    <div className="flex items-baseline justify-between mb-3 h-8">
+                      <span className="text-sm text-gray-600">Rate per night</span>
+                      <span className="text-2xl font-bold text-gray-900">{room.price}</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 border-blue-200" onClick={() => openEditModal(room)}>
+                        <Edit3 className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`text-xs bg-white border px-1 ${room.available ? 'hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200' : 'hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200'}`}
+                        onClick={() => handleToggleAvailability(room)}
+                      >
+                        {room.available ? (
+                          <>
+                            <XCircle className="h-3 w-3" />
+                            <span className="ml-1 hidden xl:inline">Off</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span className="ml-1 hidden xl:inline">On</span>
+                          </>
+                        )}
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border-red-200" onClick={() => handleDelete(room)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -437,72 +463,136 @@ export function RoomsManagementClient() {
 
         {isModalOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 bg-white border-gray-200">
-              <div className="flex items-center justify-between mb-4">
+            <Card className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col">
+              {/* Fixed Header */}
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">{mode === "add" ? "Add New Room" : "Edit Room"}</h2>
                 <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
                   Close
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input placeholder="Room name" value={form.name} onChange={(e) => handleFormChange("name", e.target.value)} />
-                <Input placeholder="Slug (optional)" value={form.slug} onChange={(e) => handleFormChange("slug", e.target.value)} />
-                <Input placeholder="Price (e.g. R2,500)" value={form.price} onChange={(e) => handleFormChange("price", e.target.value)} />
-                <Input
-                  placeholder="Max guests"
-                  type="number"
-                  min={1}
-                  value={form.maxGuests}
-                  onChange={(e) => handleFormChange("maxGuests", e.target.value)}
-                />
-                <Input placeholder="Bed type" value={form.bedType} onChange={(e) => handleFormChange("bedType", e.target.value)} />
-                <Input placeholder="Size (e.g. 25 m²)" value={form.size} onChange={(e) => handleFormChange("size", e.target.value)} />
-                <Input placeholder="View" value={form.view} onChange={(e) => handleFormChange("view", e.target.value)} />
-                <Input placeholder="Main image URL/path" value={form.image} onChange={(e) => handleFormChange("image", e.target.value)} />
+              {/* Scrollable Form Body */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Room Name *</label>
+                      <Input placeholder="e.g., Deluxe Suite" value={form.name} onChange={(e) => handleFormChange("name", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">URL Slug (Auto-generated)</label>
+                      <Input placeholder="Auto-generated from room name" value={form.slug} disabled className="text-gray-900 bg-gray-50 cursor-not-allowed" />
+                      <p className="text-xs text-gray-500 mt-1">Used in web address: /rooms/{form.slug || 'url-slug'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Price per Night *</label>
+                      <Input placeholder="e.g., R2,500" value={form.price} onChange={(e) => handleFormChange("price", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Max Guests *</label>
+                      <Input
+                        placeholder="Number of guests"
+                        type="number"
+                        min={1}
+                        value={form.maxGuests}
+                        onChange={(e) => handleFormChange("maxGuests", e.target.value)}
+                        className="text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Bed Type</label>
+                      <Input placeholder="e.g., King Bed" value={form.bedType} onChange={(e) => handleFormChange("bedType", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Room Size</label>
+                      <Input placeholder="e.g., 25 m²" value={form.size} onChange={(e) => handleFormChange("size", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">View</label>
+                      <Input placeholder="e.g., Ocean View" value={form.view} onChange={(e) => handleFormChange("view", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Main Image URL *</label>
+                      <Input placeholder="https://example.com/image.jpg" value={form.image} onChange={(e) => handleFormChange("image", e.target.value)} className="text-gray-900" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Additional Images</label>
+                    <Input
+                      placeholder="Comma-separated image URLs"
+                      value={form.imageList}
+                      onChange={(e) => handleFormChange("imageList", e.target.value)}
+                      className="text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate multiple URLs with commas</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Amenities</label>
+                    <Input
+                      placeholder="e.g., WiFi, Air Conditioning, Mini Bar"
+                      value={form.amenities}
+                      onChange={(e) => handleFormChange("amenities", e.target.value)}
+                      className="text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Features</label>
+                    <Input
+                      placeholder="e.g., Balcony, Sea View, Non-Smoking"
+                      value={form.features}
+                      onChange={(e) => handleFormChange("features", e.target.value)}
+                      className="text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Short Description</label>
+                    <Input
+                      placeholder="Brief room description"
+                      value={form.description}
+                      onChange={(e) => handleFormChange("description", e.target.value)}
+                      className="text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Long Description</label>
+                    <Input
+                      placeholder="Detailed room description"
+                      value={form.longDescription}
+                      onChange={(e) => handleFormChange("longDescription", e.target.value)}
+                      className="text-gray-900"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-3 space-y-3">
-                <Input
-                  placeholder="Image list (comma-separated)"
-                  value={form.imageList}
-                  onChange={(e) => handleFormChange("imageList", e.target.value)}
-                />
-                <Input
-                  placeholder="Amenities (comma-separated)"
-                  value={form.amenities}
-                  onChange={(e) => handleFormChange("amenities", e.target.value)}
-                />
-                <Input
-                  placeholder="Features (comma-separated)"
-                  value={form.features}
-                  onChange={(e) => handleFormChange("features", e.target.value)}
-                />
-                <Input
-                  placeholder="Short description"
-                  value={form.description}
-                  onChange={(e) => handleFormChange("description", e.target.value)}
-                />
-                <Input
-                  placeholder="Long description"
-                  value={form.longDescription}
-                  onChange={(e) => handleFormChange("longDescription", e.target.value)}
-                />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
+              {/* Fixed Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50">
                 <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
                     checked={form.available}
                     onChange={(e) => handleFormChange("available", e.target.checked)}
+                    className="rounded border-gray-300"
                   />
-                  Available
+                  <span className="font-medium">Mark as Available</span>
                 </label>
 
-                <Button onClick={submitForm} disabled={isSaving} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
-                  {isSaving ? "Saving..." : mode === "add" ? "Add Room" : "Save Changes"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
+                    Cancel
+                  </Button>
+                  <Button onClick={submitForm} disabled={isSaving} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
+                    {isSaving ? "Saving..." : mode === "add" ? "Add Room" : "Save Changes"}
+                  </Button>
+                </div>
               </div>
             </Card>
           </div>
