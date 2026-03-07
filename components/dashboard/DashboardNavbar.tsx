@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Bell, User, ChevronDown } from "lucide-react";
+import { Search, User, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -21,7 +20,6 @@ interface DashboardNavbarProps {
 export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
   const router = useRouter();
   const { logout } = useAuth();
-  const [notificationCount] = useState(3); // Example notification count
 
   const handleLogout = async () => {
     try {
@@ -53,22 +51,8 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
           </div>
         </div>
 
-        {/* Right Section - Notifications & Profile */}
+        {/* Right Section - Profile */}
         <div className="flex items-center gap-3">
-          {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative hover:bg-gray-100"
-          >
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notificationCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
-                {notificationCount}
-              </span>
-            )}
-          </Button>
-
           {/* Admin Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
