@@ -7,6 +7,17 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Bell, Lock, Globe, Palette, CreditCard, Mail, User, Building, MapPin, Phone, Mail as MailIcon } from "lucide-react";
 import { toast } from "sonner";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import {
+  DEFAULT_SETTINGS,
+  getDashboardSettings,
+  isPermissionDeniedError,
+  updateAdminCredentialPassword,
+  updateAdminProfileSettings,
+  updateHotelInfoSettings,
+  updateNotificationSettings,
+} from "@/lib/settingsService";
 
 export function SettingsManagementClient() {
   const router = useRouter();
@@ -15,20 +26,10 @@ export function SettingsManagementClient() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Admin Profile State
-  const [adminData, setAdminData] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@hotel.com",
-    phone: "+1 (555) 987-6543",
-  });
+  const [adminData, setAdminData] = useState(DEFAULT_SETTINGS.adminProfile);
 
   // Hotel Information State
-  const [hotelData, setHotelData] = useState({
-    hotelName: "Onjean Hotel",
-    address: "123 Main Street, New York, NY 10001",
-    contactEmail: "contact@onjeahotel.com",
-    phone: "+1 (555) 123-4567",
-  });
+  const [hotelData, setHotelData] = useState(DEFAULT_SETTINGS.hotelInfo);
 
   // Security State
   const [securityData, setSecurityData] = useState({
@@ -39,13 +40,33 @@ export function SettingsManagementClient() {
 
   // Notification Settings State
   const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    desktopNotifications: true,
+    ...DEFAULT_SETTINGS.notifications,
   });
 
   // Admin Profile Changes
   const [adminChanges, setAdminChanges] = useState(adminData);
   const [hotelChanges, setHotelChanges] = useState(hotelData);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const settings = await getDashboardSettings();
+      setAdminData(settings.adminProfile);
+      setHotelData(settings.hotelInfo);
+      setNotifications(settings.notifications);
+      setAdminChanges(settings.adminProfile);
+      setHotelChanges(settings.hotelInfo);
+    } catch (error) {
+      console.error(error);
+      if (isPermissionDeniedError(error)) {
+        toast.error("Settings collection is blocked by Firestore rules. Using default values.");
+      } else {
+        toast.error("Failed to load settings from database.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
@@ -61,6 +82,12 @@ export function SettingsManagementClient() {
     setIsAuthLoading(false);
   }, [router]);
 
+  useEffect(() => {
+    if (isAdminAuthenticated) {
+      loadSettings();
+    }
+  }, [isAdminAuthenticated]);
+
   const handleAdminChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setAdminChanges((prev) => ({ ...prev, [name]: value }));
@@ -71,25 +98,35 @@ export function SettingsManagementClient() {
     setHotelChanges((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveAdminProfile = () => {
+  const handleSaveAdminProfile = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await updateAdminProfileSettings(adminChanges);
       setAdminData(adminChanges);
       toast.success("Admin profile updated successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update admin profile.");
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
-  const handleSaveHotelInfo = () => {
+  const handleSaveHotelInfo = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await updateHotelInfoSettings(hotelChanges);
       setHotelData(hotelChanges);
       toast.success("Hotel information updated successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update hotel information.");
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
     if (!securityData.currentPassword || !securityData.newPassword || !securityData.confirmPassword) {
       toast.error("Please fill all password fields");
       return;
@@ -101,15 +138,47 @@ export function SettingsManagementClient() {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const authEmail = auth.currentUser?.email || adminData.email;
+      await updateAdminCredentialPassword(authEmail, securityData.currentPassword, securityData.newPassword);
+
+      // Keep Firebase Auth password in sync with adminCredentials collection.
+      if (auth.currentUser) {
+        const credential = EmailAuthProvider.credential(
+          auth.currentUser.email || authEmail,
+          securityData.currentPassword
+        );
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        await updatePassword(auth.currentUser, securityData.newPassword);
+      } else {
+        throw new Error("No authenticated admin session found. Please sign in again.");
+      }
+
       setSecurityData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast.success("Password updated successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Failed to update password");
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    setIsLoading(true);
+    try {
+      await updateNotificationSettings(notifications);
+      toast.success("Notification settings updated successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update notification settings.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    return `${firstName?.[0] || "A"}${lastName?.[0] || "D"}`.toUpperCase();
   };
 
   if (isAuthLoading) {
@@ -156,7 +225,7 @@ export function SettingsManagementClient() {
                     <p className="text-sm text-gray-600">Administrator</p>
                   </div>
                 </div>
-                <Button className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl h-10 px-4">Change Photo</Button>
+                {/* <Button className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl h-10 px-4">Change Photo</Button> */}
               </div>
 
               <div className="space-y-4 mb-6">
@@ -208,7 +277,12 @@ export function SettingsManagementClient() {
               </div>
 
               <div className="flex justify-end gap-3">
-                <Button className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl">Cancel</Button>
+                <Button
+                  className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl"
+                  onClick={() => setAdminChanges(adminData)}
+                >
+                  Cancel
+                </Button>
                 <Button onClick={handleSaveAdminProfile} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 rounded-xl">
                   Save Changes
                 </Button>
@@ -320,7 +394,12 @@ export function SettingsManagementClient() {
               </div>
 
               <div className="flex justify-end gap-3">
-                <Button className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl">Cancel</Button>
+                <Button
+                  className="bg-[#F1F5F9] text-gray-900 hover:bg-gray-200 rounded-xl"
+                  onClick={() => setHotelChanges(hotelData)}
+                >
+                  Cancel
+                </Button>
                 <Button onClick={handleSaveHotelInfo} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 rounded-xl">
                   Save Changes
                 </Button>
@@ -378,6 +457,11 @@ export function SettingsManagementClient() {
                       />
                     </button>
                   </div>
+                </div>
+                <div className="border-t border-gray-200 pt-4 flex justify-end">
+                  <Button onClick={handleSaveNotifications} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 rounded-xl">
+                    Save Notification Settings
+                  </Button>
                 </div>
               </div>
             </Card>

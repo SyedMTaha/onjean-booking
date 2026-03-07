@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CalendarIcon, CreditCard, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { CalendarIcon, CreditCard, Check, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { saveBooking } from "@/lib/bookingService";
+import { YocoPaymentForm } from "@/components/YocoPaymentForm";
 
 const roomTypes = [
   { id: 1, name: "Standard Room", price: 1200, available: true },
@@ -34,6 +35,26 @@ const bookedDates = [
   new Date(2026, 2, 7),
 ];
 
+const PENDING_BOOKING_KEY = "pendingBookingDraft";
+const PENDING_CHECKOUT_ID_KEY = "pendingYocoCheckoutId";
+
+type PendingBookingDraft = {
+  checkInDate: string;
+  checkOutDate: string;
+  roomType: string;
+  roomId: number;
+  roomPrice: number;
+  nights: number;
+  guests: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specialRequests: string;
+  totalPrice: number;
+  taxesAndFees: number;
+};
+
 export function BookingClient() {
   const [step, setStep] = useState(1);
   const [checkIn, setCheckIn] = useState<Date>();
@@ -47,56 +68,7 @@ export function BookingClient() {
   const [phone, setPhone] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
 
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [showCVV, setShowCVV] = useState(false);
-
   const [showConfirmation, setShowConfirmation] = useState(false);
-    // Validate and format card number (16 digits)
-    const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
-      if (value.length > 16) value = value.slice(0, 16);
-      // Format as XXXX XXXX XXXX XXXX
-      value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
-      setCardNumber(value);
-    };
-
-    // Validate and format expiry date (MM/YY)
-    const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
-      if (value.length >= 2) {
-        const month = value.slice(0, 2);
-        const year = value.slice(2, 4);
-        value = month + (year ? "/" + year : "");
-        if (value.length > 5) value = value.slice(0, 5);
-      }
-      setExpiryDate(value);
-    };
-
-    // Validate expiry date is in future
-    const isValidExpiryDate = () => {
-      if (!expiryDate || expiryDate.length < 5) return false;
-      const [month, year] = expiryDate.split("/");
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear() % 100;
-      const currentMonth = currentDate.getMonth() + 1;
-      const expMonth = parseInt(month);
-      const expYear = parseInt(year);
-
-      if (expMonth < 1 || expMonth > 12) return false;
-      if (expYear < currentYear) return false;
-      if (expYear === currentYear && expMonth < currentMonth) return false;
-      return true;
-    };
-
-    // Validate and format CVV (3 digits)
-    const handleCVVChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
-      if (value.length > 3) value = value.slice(0, 3);
-      setCvv(value);
-    };
   const [bookingReference, setBookingReference] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -113,7 +85,167 @@ export function BookingClient() {
 
   const nights = calculateNights();
   const totalPrice = selectedRoom ? selectedRoom.price * nights : 0;
-  const paymentsEnabled = false;
+  const taxesAndFees = Math.round(totalPrice * 0.15);
+  const totalAmount = totalPrice + taxesAndFees;
+
+  const savePendingBookingDraft = () => {
+    if (!checkIn || !checkOut || !selectedRoom || !user) {
+      return;
+    }
+
+    const draft: PendingBookingDraft = {
+      checkInDate: checkIn.toISOString(),
+      checkOutDate: checkOut.toISOString(),
+      roomType: selectedRoom.name,
+      roomId: parseInt(selectedRoomType),
+      roomPrice: selectedRoom.price,
+      nights,
+      guests,
+      firstName,
+      lastName,
+      email,
+      phone,
+      specialRequests,
+      totalPrice,
+      taxesAndFees,
+    };
+
+    sessionStorage.setItem(PENDING_BOOKING_KEY, JSON.stringify(draft));
+  };
+
+  const completePendingBooking = async (paymentId: string) => {
+    if (!user) {
+      toast.error("You must be signed in to complete a booking");
+      return;
+    }
+
+    const draftRaw = sessionStorage.getItem(PENDING_BOOKING_KEY);
+    if (!draftRaw) {
+      toast.error("Booking details not found. Please complete booking details again.");
+      return;
+    }
+
+    const draft = JSON.parse(draftRaw) as PendingBookingDraft;
+
+    setIsProcessing(true);
+
+    try {
+      const bookingData = {
+        checkInDate: new Date(draft.checkInDate),
+        checkOutDate: new Date(draft.checkOutDate),
+        roomType: draft.roomType,
+        roomId: draft.roomId,
+        roomPrice: draft.roomPrice,
+        nights: draft.nights,
+        guests: draft.guests,
+        firstName: draft.firstName,
+        lastName: draft.lastName,
+        email: draft.email,
+        phone: draft.phone,
+        specialRequests: draft.specialRequests,
+        transactionId: paymentId,
+        paymentMethod: "yoco" as const,
+        paymentStatus: "completed" as const,
+        totalPrice: draft.totalPrice,
+        taxesAndFees: draft.taxesAndFees,
+        // cardLast4 and cardholderName omitted - not available from Yoco Checkout API
+      };
+
+      const result = await saveBooking(user.uid, bookingData);
+
+      if (!result.success) {
+        throw new Error("Failed to save booking after payment");
+      }
+
+      const reference = "BK" + Math.random().toString(36).substr(2, 9).toUpperCase();
+      setBookingReference(reference);
+
+      // Clean up session storage and URL params
+      sessionStorage.removeItem(PENDING_BOOKING_KEY);
+      sessionStorage.removeItem(PENDING_CHECKOUT_ID_KEY);
+      window.history.replaceState({}, "", "/book-now");
+
+      // Show success message and redirect to bookings page
+      toast.success("Booking confirmed! Redirecting to your bookings...");
+
+      setTimeout(() => {
+        window.location.href = "/booking";
+      }, 1500);
+
+      window.history.replaceState({}, "", "/book-now");
+    } catch (error) {
+      console.error("Booking completion error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to complete booking. Please contact support with your payment proof."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get("payment");
+
+    if (!paymentStatus) {
+      return;
+    }
+
+    if (paymentStatus === "cancelled") {
+      toast.error("Payment was cancelled. You can try again.");
+      window.history.replaceState({}, "", "/book-now");
+      return;
+    }
+
+    if (paymentStatus === "failed") {
+      toast.error("Payment failed. Please try again.");
+      window.history.replaceState({}, "", "/book-now");
+      return;
+    }
+
+    if (paymentStatus !== "success") {
+      return;
+    }
+
+    const checkoutId = sessionStorage.getItem(PENDING_CHECKOUT_ID_KEY);
+    if (!checkoutId) {
+      toast.error("Could not verify payment session. Please contact support if you were charged.");
+      window.history.replaceState({}, "", "/book-now");
+      return;
+    }
+
+    const verifyCheckout = async () => {
+      try {
+        setIsProcessing(true);
+
+        const response = await fetch(`/api/payments?checkoutId=${encodeURIComponent(checkoutId)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to verify payment");
+        }
+
+        if (data?.status !== "completed" || !data?.paymentId) {
+          throw new Error("Payment is not completed yet. Please refresh in a moment.");
+        }
+
+        await completePendingBooking(data.paymentId);
+      } catch (error) {
+        console.error("Payment verification error:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to verify payment status"
+        );
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    verifyCheckout();
+  }, [user]);
 
   const handleNextStep = () => {
     if (step === 1) {
@@ -136,101 +268,6 @@ export function BookingClient() {
         return;
       }
       setStep(3);
-    }
-  };
-
-  const handlePayment = async () => {
-    if (paymentsEnabled) {
-      if (!cardNumber || !cardName || !expiryDate || !cvv) {
-        toast.error("Please fill in all payment details");
-        return;
-      }
-
-      const cardNumberDigits = cardNumber.replace(/\D/g, "");
-      if (cardNumberDigits.length !== 16) {
-        toast.error("Card number must be 16 digits");
-        return;
-      }
-
-      if (!isValidExpiryDate()) {
-        toast.error("Please enter a valid future expiry date (MM/YY)");
-        return;
-      }
-
-      if (cvv.length !== 3) {
-        toast.error("CVV must be 3 digits");
-        return;
-      }
-    }
-
-    if (!user) {
-      toast.error("You must be signed in to complete a booking");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const cardLast4 = paymentsEnabled ? cardNumber.slice(-4) : "0000";
-      const cardholderName = paymentsEnabled ? cardName : "PAYMENT_PENDING";
-
-      // Prepare booking data
-      const bookingData = {
-        checkInDate: checkIn!,
-        checkOutDate: checkOut!,
-        roomType: selectedRoom?.name || "",
-        roomId: parseInt(selectedRoomType),
-        roomPrice: selectedRoom?.price || 0,
-        nights: nights,
-        guests: guests,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: phone,
-        specialRequests: specialRequests,
-        cardLast4: cardLast4,
-        cardholderName: cardholderName,
-        totalPrice: totalPrice,
-        taxesAndFees: Math.round(totalPrice * 0.15),
-      };
-
-      // Save to database
-      const result = await saveBooking(user.uid, bookingData);
-
-      if (result.success) {
-        // Generate booking reference
-        const reference = "SL" + Math.random().toString(36).substr(2, 9).toUpperCase();
-        setBookingReference(reference);
-        setShowConfirmation(true);
-        toast.success("Booking confirmed! Check your email for details.");
-
-        // Reset form after successful booking
-        setTimeout(() => {
-          setStep(1);
-          setCheckIn(undefined);
-          setCheckOut(undefined);
-          setSelectedRoomType("");
-          setGuests("2");
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
-          setSpecialRequests("");
-          setCardNumber("");
-          setCardName("");
-          setExpiryDate("");
-          setCvv("");
-        }, 3000);
-      }
-    } catch (error) {
-      console.error("Booking error:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to complete booking. Please try again."
-      );
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -319,30 +356,18 @@ export function BookingClient() {
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 bg-white border-gray-200 border-2 shadow-lg rounded-lg">
                             <Calendar
-                              mode="single"
-                              selected={checkIn}
-                              onSelect={setCheckIn}
+                              mode="range"
+                              selected={{ from: checkIn || undefined, to: checkOut || undefined }}
+                              onSelect={(range: any) => {
+                                if (range?.from) setCheckIn(range.from);
+                                if (range?.to) setCheckOut(range.to);
+                              }}
                               disabled={(date) => {
                                 if (date < new Date()) return true;
                                 return bookedDates.some(
                                   bookedDate => bookedDate.toDateString() === date.toDateString()
                                 );
                               }}
-                              modifiers={{
-                                booked: bookedDates
-                              }}
-                              modifiersStyles={{
-                                booked: {
-                                  textDecoration: 'line-through',
-                                  color: '#ef4444',
-                                  opacity: 0.5
-                                }
-                              }}
-                              modifiersClassNames={{
-                                selected: "bg-amber-600 text-white font-bold",
-                                today: "bg-amber-100 text-amber-900 font-bold",
-                              }}
-                              className="bg-white p-4 [&_*]:!text-black [&_.rdp]:w-auto [&_.rdp-caption]:flex [&_.rdp-caption]:items-center [&_.rdp-caption]:justify-between [&_.rdp-caption]:mb-4 [&_.rdp-caption_label]:font-bold [&_.rdp-caption_label]:text-lg [&_.rdp-head]:grid [&_.rdp-head]:grid-cols-7 [&_.rdp-head]:gap-2 [&_.rdp-head]:mb-2 [&_.rdp-head_cell]:text-center [&_.rdp-head_cell]:font-semibold [&_.rdp-head_cell]:text-sm [&_.rdp-row]:grid [&_.rdp-row]:grid-cols-7 [&_.rdp-row]:gap-2 [&_.rdp-cell]:p-0 [&_.rdp-day]:w-8 [&_.rdp-day]:h-8 [&_.rdp-day]:flex [&_.rdp-day]:items-center [&_.rdp-day]:justify-center [&_.rdp-day]:rounded [&_.rdp-day]:text-sm [&_.rdp-nav]:flex [&_.rdp-nav]:gap-2 [&_.rdp-nav_button]:px-2 [&_.rdp-nav_button]:py-1 [&_.rdp-nav_button]:border [&_.rdp-nav_button]:rounded [&_.rdp-nav_button]:bg-white [&_.rdp-nav_button]:hover:bg-gray-100 [&_.rdp-nav_button]:cursor-pointer"
                             />
                             <div className="p-3 border-t bg-gray-50">
                               <div className="flex items-center gap-4 text-xs">
@@ -375,30 +400,18 @@ export function BookingClient() {
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 bg-white border-gray-200 border-2 shadow-lg rounded-lg">
                             <Calendar
-                              mode="single"
-                              selected={checkOut}
-                              onSelect={setCheckOut}
+                              mode="range"
+                              selected={{ from: checkIn || undefined, to: checkOut || undefined }}
+                              onSelect={(range: any) => {
+                                if (range?.from) setCheckIn(range.from);
+                                if (range?.to) setCheckOut(range.to);
+                              }}
                               disabled={(date) => {
                                 if (date <= (checkIn || new Date())) return true;
                                 return bookedDates.some(
                                   bookedDate => bookedDate.toDateString() === date.toDateString()
                                 );
                               }}
-                              modifiers={{
-                                booked: bookedDates
-                              }}
-                              modifiersStyles={{
-                                booked: {
-                                  textDecoration: 'line-through',
-                                  color: '#ef4444',
-                                  opacity: 0.5
-                                }
-                              }}
-                              modifiersClassNames={{
-                                selected: "bg-amber-600 text-white font-bold",
-                                today: "bg-amber-100 text-amber-900 font-bold",
-                              }}
-                              className="bg-white p-4 [&_*]:!text-black [&_.rdp]:w-auto [&_.rdp-caption]:flex [&_.rdp-caption]:items-center [&_.rdp-caption]:justify-between [&_.rdp-caption]:mb-4 [&_.rdp-caption_label]:font-bold [&_.rdp-caption_label]:text-lg [&_.rdp-head]:grid [&_.rdp-head]:grid-cols-7 [&_.rdp-head]:gap-2 [&_.rdp-head]:mb-2 [&_.rdp-head_cell]:text-center [&_.rdp-head_cell]:font-semibold [&_.rdp-head_cell]:text-sm [&_.rdp-row]:grid [&_.rdp-row]:grid-cols-7 [&_.rdp-row]:gap-2 [&_.rdp-cell]:p-0 [&_.rdp-day]:w-8 [&_.rdp-day]:h-8 [&_.rdp-day]:flex [&_.rdp-day]:items-center [&_.rdp-day]:justify-center [&_.rdp-day]:rounded [&_.rdp-day]:text-sm [&_.rdp-nav]:flex [&_.rdp-nav]:gap-2 [&_.rdp-nav_button]:px-2 [&_.rdp-nav_button]:py-1 [&_.rdp-nav_button]:border [&_.rdp-nav_button]:rounded [&_.rdp-nav_button]:bg-white [&_.rdp-nav_button]:hover:bg-gray-100 [&_.rdp-nav_button]:cursor-pointer"
                             />
                           </PopoverContent>
                         </Popover>
@@ -533,96 +546,32 @@ export function BookingClient() {
                       </div>
                     )}
                     <div>
-                      <h2 className="text-2xl mb-2 text-gray-900 font-semibold">Payment Details</h2>
+                      <h2 className="text-2xl mb-2 text-gray-900 font-semibold">Secure Payment</h2>
                       <p className="text-sm text-gray-700">
-                        This is a demo. Use any test card details.
+                        Complete your booking with a secure Yoco payment
                       </p>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <CreditCard className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div className="text-sm">
-                          <p className="text-blue-900 mb-1">Yoco Integration Ready</p>
-                          <p className="text-blue-700">
-                            Yoco payment gateway is configured for South Africa. Complete payment processing is available.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="cardNumber" className="text-gray-900 font-semibold">Card Number (16 digits)</Label>
-                      <Input
-                        id="cardNumber"
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="1234 5678 9012 3456"
-                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
-                        maxLength={19}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="cardName" className="text-gray-900 font-semibold">Cardholder Name</Label>
-                      <Input
-                        id="cardName"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="John Doe"
-                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <Label htmlFor="expiry" className="text-gray-900 font-semibold">Expiry Date (MM/YY)</Label>
-                        <Input
-                          id="expiry"
-                          value={expiryDate}
-                          onChange={handleExpiryDateChange}
-                          placeholder="MM/YY"
-                          className={`mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2 ${
-                            expiryDate && !isValidExpiryDate() ? "border-red-500" : ""
-                          }`}
-                          maxLength={5}
-                        />
-                        {expiryDate && !isValidExpiryDate() && (
-                          <p className="text-red-600 text-sm mt-1">Please enter a future date</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="cvv" className="text-gray-900 font-semibold">CVV (3 digits)</Label>
-                        <div className="relative mt-2">
-                          <Input
-                            id="cvv"
-                            type={showCVV ? "text" : "password"}
-                            value={cvv}
-                            onChange={handleCVVChange}
-                            placeholder="•••"
-                            className="bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2 pr-10"
-                            maxLength={3}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCVV(!showCVV)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900"
-                          >
-                            {showCVV ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <YocoPaymentForm
+                      amount={totalAmount}
+                      email={email}
+                      firstName={firstName}
+                      lastName={lastName}
+                      isProcessing={isProcessing}
+                      onCheckoutCreated={(checkoutId) => {
+                        savePendingBookingDraft();
+                        sessionStorage.setItem(PENDING_CHECKOUT_ID_KEY, checkoutId);
+                      }}
+                      onError={(error) => {
+                        toast.error(error);
+                      }}
+                    />
                   </div>
                 )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 mt-8 pt-6 border-t">
-                  {step > 1 && (
+                  {step > 1 && step < 3 && (
                     <Button
                       variant="outline"
                       onClick={() => setStep(step - 1)}
@@ -640,11 +589,11 @@ export function BookingClient() {
                     </Button>
                   ) : (
                     <Button
-                      onClick={handlePayment}
-                      disabled={isProcessing || !user}
-                      className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="outline"
+                      onClick={() => setStep(step - 1)}
+                      className="flex-1"
                     >
-                      {isProcessing ? "Processing..." : "Complete Booking"}
+                      Back to Details
                     </Button>
                   )}
                 </div>
@@ -696,12 +645,12 @@ export function BookingClient() {
                       </div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-600 text-sm">Taxes & fees</span>
-                        <span className="font-medium text-gray-900">R{Math.round(totalPrice * 0.15).toLocaleString()}</span>
+                        <span className="font-medium text-gray-900">R{taxesAndFees.toLocaleString()}</span>
                       </div>
                       <div className="pt-4 border-t flex justify-between items-center">
                         <span className="text-lg font-semibold text-gray-900">Total</span>
                         <span className="text-2xl text-amber-600 font-bold">
-                          R{(totalPrice + Math.round(totalPrice * 0.15)).toLocaleString()}
+                          R{totalAmount.toLocaleString()}
                         </span>
                       </div>
                     </div>

@@ -39,6 +39,15 @@ const ORDER_TYPE_COLORS: Record<string, string> = {
   spa: "#7c3aed",
 };
 
+const INCOME_COLORS = ["#3B82F6", "#A855F7", "#06B6D4", "#10B981", "#F59E0B", "#EF4444"];
+
+function getOrderDate(createdAt: any): Date | null {
+  if (!createdAt) return null;
+  if (createdAt?.toDate) return createdAt.toDate();
+  const parsed = new Date(createdAt);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function formatCreatedAt(createdAt: any) {
   if (!createdAt) return "-";
   if (createdAt?.toDate) {
@@ -158,25 +167,69 @@ export function DashboardClient() {
       .map(([name, value]) => ({ name, value }));
   }, [orders]);
 
-  // Booking Trends Data (mock data for demonstration)
-  const bookingTrendsData = [
-    { month: "Sep", bookings: 45, revenue: 28 },
-    { month: "Oct", bookings: 52, revenue: 35 },
-    { month: "Nov", bookings: 60, revenue: 42 },
-    { month: "Dec", bookings: 78, revenue: 58 },
-    { month: "Jan", bookings: 65, revenue: 48 },
-    { month: "Feb", bookings: 72, revenue: 52 },
-    { month: "Mar", bookings: 88, revenue: 62 },
-  ];
+  const bookingTrendsData = useMemo(() => {
+    const now = new Date();
+    const months = Array.from({ length: 7 }).map((_, index) => {
+      const offset = 6 - index;
+      return new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    });
 
-  // Monthly Income Distribution Data
-  const incomeDistributionData = [
-    { name: "Standard Rooms", value: 35, color: "#3B82F6" },
-    { name: "Deluxe Rooms", value: 28, color: "#A855F7" },
-    { name: "Suites", value: 20, color: "#06B6D4" },
-    { name: "Penthouse", value: 12, color: "#10B981" },
-    { name: "Services", value: 5, color: "#F59E0B" },
-  ];
+    return months.map((monthDate) => {
+      const month = monthDate.toLocaleDateString(undefined, { month: "short" });
+
+      const ordersInMonth = orders.filter((order) => {
+        const date = getOrderDate(order.createdAt);
+        return (
+          date &&
+          date.getMonth() === monthDate.getMonth() &&
+          date.getFullYear() === monthDate.getFullYear()
+        );
+      });
+
+      const bookings = ordersInMonth.length;
+      const revenue =
+        ordersInMonth
+          .filter((order) => order.bookingStatus === "approved")
+          .reduce((sum, order) => sum + (order.totalPrice || 0), 0) / 1000;
+
+      return {
+        month,
+        bookings,
+        revenue: Number(revenue.toFixed(1)),
+      };
+    });
+  }, [orders]);
+
+  const incomeDistributionData = useMemo(() => {
+    const approvedOrders = orders.filter((order) => order.bookingStatus === "approved");
+    const activeOrders = orders.filter(
+      (order) => order.bookingStatus === "approved" || order.bookingStatus === "pending"
+    );
+
+    // If nothing is approved yet, fallback to active bookings so chart is still meaningful.
+    const sourceOrders = approvedOrders.length > 0 ? approvedOrders : activeOrders;
+    const totalRevenue = sourceOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+    const sourceRevenue = new Map<string, number>();
+
+    sourceOrders.forEach((order) => {
+      const sourceName =
+        order.orderType === "room"
+          ? order.details.split(" • ")[0] || "Room"
+          : "Spa Services";
+      sourceRevenue.set(sourceName, (sourceRevenue.get(sourceName) || 0) + (order.totalPrice || 0));
+    });
+
+    return Array.from(sourceRevenue.entries())
+      .map(([name, amount], index) => ({
+        name,
+        value: totalRevenue > 0 ? Number(((amount / totalRevenue) * 100).toFixed(1)) : 0,
+        color: INCOME_COLORS[index % INCOME_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value)
+      .filter((entry) => entry.value > 0)
+      .slice(0, 6);
+  }, [orders]);
 
   const totals = useMemo(() => {
     const totalRooms = rooms.length;
@@ -412,25 +465,31 @@ export function DashboardClient() {
         <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Income Distribution</h2>
           <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={incomeDistributionData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                >
-                  {incomeDistributionData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            {incomeDistributionData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                No income data available yet.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeDistributionData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                  >
+                    {incomeDistributionData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -445,20 +504,19 @@ export function DashboardClient() {
           ) : orders.length === 0 ? (
             <p className="text-sm text-gray-600">No orders found yet.</p>
           ) : (
-            <div className="overflow-x-auto -mx-5 px-5">
-              <div className="inline-block min-w-full align-middle">
-                <table className="min-w-full w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Guest Name</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Order Type</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Check-In Date</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Details</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Price</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Booking Status</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
+            <div className="overflow-x-auto onjean-themed-scrollbar rounded-lg">
+              <table className="w-full min-w-245">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Guest Name</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Order Type</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Check-In Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Details</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Price</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Booking Status</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {orders.map((order) => (
                     <tr key={`${order.orderType}-${order.id}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -516,7 +574,6 @@ export function DashboardClient() {
                   ))}
                 </tbody>
               </table>
-              </div>
             </div>
           )}
         </Card>

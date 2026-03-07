@@ -29,8 +29,11 @@ export interface BookingData {
   specialRequests: string;
 
   // Payment Info
-  cardLast4: string;
-  cardholderName: string;
+  transactionId?: string;
+  paymentMethod?: "yoco" | "card" | "pending";
+  paymentStatus?: "completed" | "pending" | "failed";
+  cardLast4?: string;
+  cardholderName?: string;
 
   // Booking Info
   bookingStatus: "pending" | "approved" | "rejected" | "cancelled"; // Default: "pending"

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { getAllBookings } from "@/lib/bookingService";
+import { rooms } from "@/data/rooms";
 
 interface DayAvailability {
   date: number;
@@ -22,43 +23,38 @@ interface RoomTypeStats {
   reserved: number;
 }
 
+interface BookingLike {
+  roomType?: string;
+  bookingStatus?: "pending" | "approved" | "rejected" | "cancelled";
+  checkInDate?: any;
+  checkOutDate?: any;
+}
+
+function normalizeDate(value: any): Date | null {
+  if (!value) return null;
+  if (value?.toDate) return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function atStartOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isDateWithinStay(day: Date, checkIn: Date, checkOut: Date): boolean {
+  const d = atStartOfDay(day).getTime();
+  const start = atStartOfDay(checkIn).getTime();
+  const end = atStartOfDay(checkOut).getTime();
+  return d >= start && d < end;
+}
+
 export function AvailabilityManagementClient() {
   const router = useRouter();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 2, 1)); // March 2026
-
-  // Mock calendar data
-  const calendarDays: DayAvailability[] = [
-    { date: 1, available: 45, occupied: 25, reserved: 10 },
-    { date: 2, available: 42, occupied: 28, reserved: 10 },
-    { date: 3, available: 38, occupied: 32, reserved: 18 },
-    { date: 4, available: 40, occupied: 30, reserved: 10 },
-    { date: 5, available: 24, occupied: 38, reserved: 18 },
-    { date: 6, available: 28, occupied: 35, reserved: 17 },
-    { date: 7, available: 35, occupied: 30, reserved: 15 },
-    { date: 8, available: 32, occupied: 33, reserved: 15 },
-    { date: 9, available: 30, occupied: 35, reserved: 15 },
-    { date: 10, available: 28, occupied: 37, reserved: 15 },
-  ];
-
-  // Mock room type data
-  const roomTypes: RoomTypeStats[] = [
-    { name: "Standard Rooms", total: 30, available: 9, occupied: 14, reserved: 7 },
-    { name: "Deluxe Rooms", total: 25, available: 8, occupied: 13, reserved: 4 },
-    { name: "Suites", total: 25, available: 7, occupied: 11, reserved: 7 },
-  ];
-
-  const totalStats = {
-    available: roomTypes.reduce((sum, rt) => sum + rt.available, 0),
-    occupied: roomTypes.reduce((sum, rt) => sum + rt.occupied, 0),
-    reserved: roomTypes.reduce((sum, rt) => sum + rt.reserved, 0),
-  };
-
-  const grandTotal = totalStats.available + totalStats.occupied + totalStats.reserved;
-  const availablePercent = ((totalStats.available / grandTotal) * 100).toFixed(1);
-  const occupiedPercent = ((totalStats.occupied / grandTotal) * 100).toFixed(1);
-  const reservedPercent = ((totalStats.reserved / grandTotal) * 100).toFixed(1);
+  const [currentMonth, setCurrentMonth] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [bookings, setBookings] = useState<BookingLike[]>([]);
 
   useEffect(() => {
     const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
@@ -74,11 +70,130 @@ export function AvailabilityManagementClient() {
     setIsAuthLoading(false);
   }, [router]);
 
+  useEffect(() => {
+    const loadAvailabilityData = async () => {
+      if (!isAdminAuthenticated) return;
+      setIsDataLoading(true);
+      try {
+        const allBookings = await getAllBookings();
+        setBookings(allBookings as BookingLike[]);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load availability data.");
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    loadAvailabilityData();
+  }, [isAdminAuthenticated]);
+
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const firstDayOfMonth = currentMonth.getDay();
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+
+  const roomInventoryByType = useMemo(() => {
+    const inventory = new Map<string, number>();
+    rooms.forEach((room) => {
+      inventory.set(room.name, (inventory.get(room.name) || 0) + 1);
+    });
+    return inventory;
+  }, []);
+
+  const totalRooms = useMemo(
+    () => Array.from(roomInventoryByType.values()).reduce((sum, count) => sum + count, 0),
+    [roomInventoryByType]
+  );
+
+  const getDayAvailability = (dayDate: Date) => {
+    let occupied = 0;
+    let reserved = 0;
+
+    bookings.forEach((booking) => {
+      const checkIn = normalizeDate(booking.checkInDate);
+      const checkOut = normalizeDate(booking.checkOutDate);
+      if (!checkIn || !checkOut) return;
+      if (!isDateWithinStay(dayDate, checkIn, checkOut)) return;
+
+      if (booking.bookingStatus === "approved") {
+        occupied += 1;
+      } else if (booking.bookingStatus === "pending") {
+        reserved += 1;
+      }
+    });
+
+    const unavailable = Math.min(totalRooms, occupied + reserved);
+    const available = Math.max(totalRooms - unavailable, 0);
+
+    return { available, occupied, reserved };
+  };
+
+  const calendarDays: DayAvailability[] = useMemo(() => {
+    return Array.from({ length: daysInMonth }).map((_, idx) => {
+      const date = idx + 1;
+      const dayDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), date);
+      const stats = getDayAvailability(dayDate);
+      return {
+        date,
+        ...stats,
+      };
+    });
+  }, [daysInMonth, currentMonth, bookings, totalRooms]);
+
+  const roomTypes: RoomTypeStats[] = useMemo(() => {
+    const today = new Date();
+    const statsByType = new Map<string, { occupied: number; reserved: number }>();
+
+    bookings.forEach((booking) => {
+      const roomType = booking.roomType || "Unknown Room";
+      const checkIn = normalizeDate(booking.checkInDate);
+      const checkOut = normalizeDate(booking.checkOutDate);
+      if (!checkIn || !checkOut) return;
+      if (!isDateWithinStay(today, checkIn, checkOut)) return;
+
+      const existing = statsByType.get(roomType) || { occupied: 0, reserved: 0 };
+
+      if (booking.bookingStatus === "approved") {
+        existing.occupied += 1;
+      } else if (booking.bookingStatus === "pending") {
+        existing.reserved += 1;
+      }
+
+      statsByType.set(roomType, existing);
+    });
+
+    const roomTypeNames = new Set<string>([
+      ...Array.from(roomInventoryByType.keys()),
+      ...Array.from(statsByType.keys()),
+    ]);
+
+    return Array.from(roomTypeNames).map((name) => {
+      const total = roomInventoryByType.get(name) || (statsByType.get(name)?.occupied || 0) + (statsByType.get(name)?.reserved || 0);
+      const occupied = statsByType.get(name)?.occupied || 0;
+      const reserved = statsByType.get(name)?.reserved || 0;
+      const available = Math.max(total - Math.min(total, occupied + reserved), 0);
+
+      return {
+        name,
+        total,
+        available,
+        occupied,
+        reserved,
+      };
+    });
+  }, [bookings, roomInventoryByType]);
+
+  const totalStats = useMemo(() => {
+    const monthSnapshotDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    return getDayAvailability(monthSnapshotDate);
+  }, [currentMonth, bookings, totalRooms]);
+
+  const grandTotal = totalStats.available + totalStats.occupied + totalStats.reserved;
+  const availablePercent = grandTotal > 0 ? ((totalStats.available / grandTotal) * 100).toFixed(1) : "0.0";
+  const occupiedPercent = grandTotal > 0 ? ((totalStats.occupied / grandTotal) * 100).toFixed(1) : "0.0";
+  const reservedPercent = grandTotal > 0 ? ((totalStats.reserved / grandTotal) * 100).toFixed(1) : "0.0";
 
   const handlePrevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
@@ -191,8 +306,7 @@ export function AvailabilityManagementClient() {
                 ))}
 
                 {/* Calendar days */}
-                {Array.from({ length: Math.min(daysInMonth, 10) }).map((_, idx) => {
-                  const dayData = calendarDays[idx];
+                {calendarDays.map((dayData, idx) => {
                   return (
                     <div
                       key={idx}
@@ -240,60 +354,66 @@ export function AvailabilityManagementClient() {
           <Card className="p-6 bg-white border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Room Type Availability</h2>
             <div className="space-y-6">
-              {roomTypes.map((roomType) => {
-                const availablePercent = (roomType.available / roomType.total) * 100;
-                const occupiedPercent = (roomType.occupied / roomType.total) * 100;
-                const reservedPercent = (roomType.reserved / roomType.total) * 100;
+              {isDataLoading ? (
+                <p className="text-sm text-gray-500">Loading room availability...</p>
+              ) : roomTypes.length === 0 ? (
+                <p className="text-sm text-gray-500">No room type data available yet.</p>
+              ) : (
+                roomTypes.map((roomType) => {
+                  const availablePercent = roomType.total > 0 ? (roomType.available / roomType.total) * 100 : 0;
+                  const occupiedPercent = roomType.total > 0 ? (roomType.occupied / roomType.total) * 100 : 0;
+                  const reservedPercent = roomType.total > 0 ? (roomType.reserved / roomType.total) * 100 : 0;
 
-                return (
-                  <div key={roomType.name} className="space-y-3">
-                    <h3 className="font-semibold text-gray-900">{roomType.name}</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total</span>
-                        <span className="font-medium text-gray-900">{roomType.total}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-[#00BC7D]"></div>
-                          <span className="text-gray-600">Available</span>
+                  return (
+                    <div key={roomType.name} className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">{roomType.name}</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total</span>
+                          <span className="font-medium text-gray-900">{roomType.total}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{roomType.available}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-[#E91E63]"></div>
-                          <span className="text-gray-600">Occupied</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-[#00BC7D]"></div>
+                            <span className="text-gray-600">Available</span>
+                          </div>
+                          <span className="font-medium text-gray-900">{roomType.available}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{roomType.occupied}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-[#FF9800]"></div>
-                          <span className="text-gray-600">Reserved</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-[#E91E63]"></div>
+                            <span className="text-gray-600">Occupied</span>
+                          </div>
+                          <span className="font-medium text-gray-900">{roomType.occupied}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{roomType.reserved}</span>
-                      </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-[#FF9800]"></div>
+                            <span className="text-gray-600">Reserved</span>
+                          </div>
+                          <span className="font-medium text-gray-900">{roomType.reserved}</span>
+                        </div>
 
-                      {/* Progress bar */}
-                      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden flex mt-3">
-                        <div
-                          className="h-full bg-[#00BC7D]"
-                          style={{ width: `${availablePercent}%` }}
-                        ></div>
-                        <div
-                          className="h-full bg-[#E91E63]"
-                          style={{ width: `${occupiedPercent}%` }}
-                        ></div>
-                        <div
-                          className="h-full bg-[#FF9800]"
-                          style={{ width: `${reservedPercent}%` }}
-                        ></div>
+                        {/* Progress bar */}
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden flex mt-3">
+                          <div
+                            className="h-full bg-[#00BC7D]"
+                            style={{ width: `${availablePercent}%` }}
+                          ></div>
+                          <div
+                            className="h-full bg-[#E91E63]"
+                            style={{ width: `${occupiedPercent}%` }}
+                          ></div>
+                          <div
+                            className="h-full bg-[#FF9800]"
+                            style={{ width: `${reservedPercent}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </Card>
         </div>

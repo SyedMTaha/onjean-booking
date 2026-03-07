@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Download, Search, Users, TrendingUp, Plus, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { getAllBookings } from "@/lib/bookingService";
+import { getAllSpaBookings } from "@/lib/spaBookingService";
 
 type CustomerTier = "gold" | "silver" | "platinum" | "bronze";
 
@@ -21,77 +23,26 @@ interface Customer {
   bookings: number;
   totalSpent: number;
   lastVisit: string;
+  firstVisit: string;
 }
 
-// Mock customer data
-const mockCustomers: Customer[] = [
-  {
-    id: "1",
-    name: "Michael Chen",
-    email: "michael.chen@email.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, USA",
-    tier: "gold",
-    bookings: 12,
-    totalSpent: 5400,
-    lastVisit: "2026-03-06",
-  },
-  {
-    id: "2",
-    name: "Emma Williams",
-    email: "emma.w@email.com",
-    phone: "+1 (555) 234-5678",
-    location: "Los Angeles, USA",
-    tier: "silver",
-    bookings: 8,
-    totalSpent: 3200,
-    lastVisit: "2026-03-07",
-  },
-  {
-    id: "3",
-    name: "James Rodriguez",
-    email: "james.r@email.com",
-    phone: "+1 (555) 345-6789",
-    location: "Miami, USA",
-    tier: "platinum",
-    bookings: 15,
-    totalSpent: 7800,
-    lastVisit: "2026-03-05",
-  },
-  {
-    id: "4",
-    name: "Sofia Anderson",
-    email: "sofia.a@email.com",
-    phone: "+1 (555) 456-7890",
-    location: "Chicago, USA",
-    tier: "bronze",
-    bookings: 5,
-    totalSpent: 2100,
-    lastVisit: "2026-03-10",
-  },
-  {
-    id: "5",
-    name: "David Kim",
-    email: "david.kim@email.com",
-    phone: "+1 (555) 567-8901",
-    location: "Seattle, USA",
-    tier: "gold",
-    bookings: 10,
-    totalSpent: 4500,
-    lastVisit: "2026-03-08",
-  },
-  {
-    id: "6",
-    name: "Isabella Martinez",
-    email: "isabella.m@email.com",
-    phone: "+1 (555) 678-9012",
-    location: "Boston, USA",
-    tier: "platinum",
-    bookings: 18,
-    totalSpent: 9200,
-    lastVisit: "2026-03-08",
-  },
-];
+function toDate(value: any): Date | null {
+  if (!value) return null;
+  if (value?.toDate) return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function toISODate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
+function getTierFromSpend(totalSpent: number): CustomerTier {
+  if (totalSpent >= 7000) return "platinum";
+  if (totalSpent >= 4000) return "gold";
+  if (totalSpent >= 2000) return "silver";
+  return "bronze";
+}
 
 function getTierColor(tier: CustomerTier): { bg: string; text: string; initials: string } {
   switch (tier) {
@@ -127,14 +78,129 @@ export function CustomersManagementClient() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      // Simulate loading
-      setTimeout(() => {
-        setCustomers(mockCustomers);
-        setIsLoading(false);
-      }, 500);
+      const [roomBookings, spaBookings] = await Promise.all([
+        getAllBookings(),
+        getAllSpaBookings(),
+      ]);
+
+      type CustomerAccumulator = {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        location: string;
+        bookings: number;
+        totalSpent: number;
+        firstVisitDate: Date | null;
+        lastVisitDate: Date | null;
+      };
+
+      const byCustomer = new Map<string, CustomerAccumulator>();
+
+      const upsertCustomer = (input: {
+        idHint?: string;
+        name?: string;
+        email?: string;
+        phone?: string;
+        location?: string;
+        totalPrice?: number;
+        createdAt?: any;
+      }) => {
+        const email = (input.email || "").trim().toLowerCase();
+        const phone = (input.phone || "").trim();
+        const name = (input.name || "Unknown Guest").trim() || "Unknown Guest";
+        const key = email || phone || input.idHint || name;
+        const bookingDate = toDate(input.createdAt);
+
+        const existing = byCustomer.get(key);
+
+        if (!existing) {
+          byCustomer.set(key, {
+            id: key,
+            name,
+            email: email || "-",
+            phone: phone || "-",
+            location: input.location?.trim() || "Not provided",
+            bookings: 1,
+            totalSpent: input.totalPrice || 0,
+            firstVisitDate: bookingDate,
+            lastVisitDate: bookingDate,
+          });
+          return;
+        }
+
+        existing.bookings += 1;
+        existing.totalSpent += input.totalPrice || 0;
+
+        if (bookingDate) {
+          if (!existing.firstVisitDate || bookingDate < existing.firstVisitDate) {
+            existing.firstVisitDate = bookingDate;
+          }
+          if (!existing.lastVisitDate || bookingDate > existing.lastVisitDate) {
+            existing.lastVisitDate = bookingDate;
+          }
+        }
+
+        if (existing.name === "Unknown Guest" && name !== "Unknown Guest") {
+          existing.name = name;
+        }
+        if (existing.email === "-" && email) {
+          existing.email = email;
+        }
+        if (existing.phone === "-" && phone) {
+          existing.phone = phone;
+        }
+      };
+
+      roomBookings.forEach((booking: any) => {
+        upsertCustomer({
+          idHint: booking.userId || booking.id,
+          name: `${booking.firstName || ""} ${booking.lastName || ""}`.trim(),
+          email: booking.email,
+          phone: booking.phone,
+          location: booking.location || booking.city,
+          totalPrice: booking.totalPrice,
+          createdAt: booking.createdAt,
+        });
+      });
+
+      spaBookings.forEach((booking: any) => {
+        upsertCustomer({
+          idHint: booking.userId || booking.id,
+          name: booking.guestName,
+          email: booking.guestEmail,
+          phone: booking.guestPhone,
+          location: booking.location || booking.city,
+          totalPrice: booking.totalPrice,
+          createdAt: booking.createdAt,
+        });
+      });
+
+      const mappedCustomers: Customer[] = Array.from(byCustomer.values())
+        .map((customer) => {
+          const firstVisit = customer.firstVisitDate ? toISODate(customer.firstVisitDate) : "-";
+          const lastVisit = customer.lastVisitDate ? toISODate(customer.lastVisitDate) : "-";
+
+          return {
+            id: customer.id,
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            location: customer.location,
+            tier: getTierFromSpend(customer.totalSpent),
+            bookings: customer.bookings,
+            totalSpent: customer.totalSpent,
+            firstVisit,
+            lastVisit,
+          };
+        })
+        .sort((a, b) => b.totalSpent - a.totalSpent);
+
+      setCustomers(mappedCustomers);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch customers.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -159,30 +225,45 @@ export function CustomersManagementClient() {
     }
   }, [isAdminAuthenticated]);
 
-  const filteredCustomers = customers.filter((customer) => {
+  const filteredCustomers = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (needle.length === 0) return true;
+    if (needle.length === 0) return customers;
 
-    return (
+    return customers.filter((customer) =>
       customer.name.toLowerCase().includes(needle) ||
       customer.email.toLowerCase().includes(needle) ||
       customer.phone.toLowerCase().includes(needle)
     );
-  });
+  }, [customers, search]);
 
-  const totals = {
-    total: customers.length,
-    activeThisMonth: customers.filter((c) => {
+  const totals = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const activeThisMonth = customers.filter((c) => {
+      if (c.lastVisit === "-") return false;
       const lastVisit = new Date(c.lastVisit);
-      const now = new Date();
-      const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      return lastVisit >= monthAgo;
-    }).length,
-    newCustomers: Math.floor(customers.length * 0.065),
-    avgLifetimeValue: Math.round(
-      customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length
-    ),
-  };
+      return lastVisit >= monthStart;
+    }).length;
+
+    const newCustomers = customers.filter((c) => {
+      if (c.firstVisit === "-") return false;
+      const firstVisit = new Date(c.firstVisit);
+      return firstVisit >= monthStart;
+    }).length;
+
+    const avgLifetimeValue =
+      customers.length > 0
+        ? Math.round(customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length)
+        : 0;
+
+    return {
+      total: customers.length,
+      activeThisMonth,
+      newCustomers,
+      avgLifetimeValue,
+    };
+  }, [customers]);
 
   const exportList = () => {
     const rows = filteredCustomers.map((customer) => ({

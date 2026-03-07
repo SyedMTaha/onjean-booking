@@ -1,7 +1,6 @@
 "use client";
 
-import { Search, User, ChevronDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { User, ChevronDown, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,9 +37,9 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
         sidebarOpen ? "left-64" : "left-0 lg:left-20"
       }`}
     >
-      <div className="h-full px-4 lg:px-6 flex items-center justify-between gap-4">
+      <div className="h-full px-4 lg:px-6 flex items-center gap-4">
         {/* Search Bar */}
-        <div className="flex-1 max-w-md">
+        {/* <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
             <Input
@@ -49,10 +48,10 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
               className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-black"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right Section - Profile */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center ml-auto">
           {/* Admin Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -69,9 +68,16 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                Logout
+            <DropdownMenuContent
+              align="end"
+              className="w-44 rounded-xl border border-gray-200 p-1.5 shadow-lg"
+            >
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="group flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-red-600 outline-none hover:bg-red-50 focus:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 text-red-500 group-hover:text-red-600" />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

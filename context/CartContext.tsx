@@ -30,6 +30,15 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code = "code" in error ? String((error as { code?: unknown }).code || "") : "";
+  return code === "permission-denied" || code.endsWith("/permission-denied");
+};
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -99,7 +108,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setItems([]);
         }
       } catch (error) {
-        console.error("Failed to load cart from database:", error);
+        // Some users may not have Firestore cart permissions; fallback to cached cart quietly.
+        if (!isPermissionDeniedError(error)) {
+          console.error("Failed to load cart from database:", error);
+        }
         // Preserve UX if DB read fails temporarily.
         setItems(cachedItems);
       }

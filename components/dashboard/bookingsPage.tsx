@@ -202,7 +202,7 @@ export function BookingsManagementClient() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "all" | BookingStatus | "checked-in")}
-              className="h-10 w-full rounded-md border border-gray-300 bg-white pl-10 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl"
+              className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-10 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All statuses</option>
               <option value="approved">Confirmed</option>
@@ -275,8 +275,8 @@ export function BookingsManagementClient() {
         </div>
 
         <Card className="p-0 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-245 text-sm">
+          <div className="overflow-x-auto onjean-themed-scrollbar">
+            <table className="w-full min-w-[980px] text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr className="text-left text-gray-600">
                   <th className="px-4 py-3 font-semibold">Guest</th>
