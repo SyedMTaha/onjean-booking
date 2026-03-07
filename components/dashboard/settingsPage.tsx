@@ -139,6 +139,10 @@ export function SettingsManagementClient() {
 
     setIsLoading(true);
     try {
+      if (!auth) {
+        throw new Error("Authentication service not available");
+      }
+      
       const authEmail = auth.currentUser?.email || adminData.email;
       await updateAdminCredentialPassword(authEmail, securityData.currentPassword, securityData.newPassword);
 
