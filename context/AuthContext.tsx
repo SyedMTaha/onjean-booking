@@ -48,6 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -57,6 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string) => {
+    if (!auth) {
+      throw new Error("Authentication service not available");
+    }
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
     // Update profile with display name
@@ -71,19 +80,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error("Authentication service not available");
+    }
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signInWithGoogle = async () => {
+    if (!auth) {
+      throw new Error("Authentication service not available");
+    }
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };
 
   const resetPassword = async (email: string) => {
+    if (!auth) {
+      throw new Error("Authentication service not available");
+    }
     await sendPasswordResetEmail(auth, email);
   };
 
   const logout = async () => {
+    if (!auth) {
+      throw new Error("Authentication service not available");
+    }
     await signOut(auth);
   };
 
