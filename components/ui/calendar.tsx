@@ -109,7 +109,7 @@ function MonthGrid({ year, month, fromKey, toKeyProp, hoverKey, onDayClick, onDa
               if (!day) return <div key={ci} />;
               const key = toKey(year, month, day);
               const inRange = rangeFrom && rangeTo && key > rangeFrom && key < rangeTo;
-              return <div key={ci} style={{ background: inRange ? "#fff0e8" : "transparent", height: "100%" }} />;
+              return <div key={ci} style={{ background: inRange ? "#fff7ed" : "transparent", height: "100%" }} />;
             })}
           </div>
 
@@ -139,6 +139,7 @@ function MonthGrid({ year, month, fromKey, toKeyProp, hoverKey, onDayClick, onDa
               const isFrom = key === rangeFrom;
               const isTo = key === rangeTo;
               const inRange = rangeFrom && rangeTo && key > rangeFrom && key < rangeTo;
+              const isHovered = hoverKey === key;
               const isCircle = isFrom || isTo;
               const circleColor = isFrom ? "#3d3d3d" : "#f97316";
               const isPast = parseKey(key) < today;
@@ -152,6 +153,8 @@ function MonthGrid({ year, month, fromKey, toKeyProp, hoverKey, onDayClick, onDa
                     height: 44, display: "flex", alignItems: "center",
                     justifyContent: "center", cursor: isPast ? "default" : "pointer",
                     position: "relative",
+                    background: !isCircle && isHovered ? "#fff7ed" : "transparent",
+                    borderRadius: 8,
                   }}
                 >
                   {isCircle && (
@@ -228,7 +231,7 @@ export default function App({
   }
 
   function handleDayHover(key: string) {
-    if (selecting) setHoverKey(key);
+    setHoverKey(key);
   }
 
   // Use external keys if provided (for wrapper integration)
@@ -329,7 +332,7 @@ export default function App({
             month={currentMonth}
             fromKey={currentFromKey}
             toKeyProp={currentToKey}
-            hoverKey={selecting ? hoverKey : null}
+            hoverKey={hoverKey}
             onDayClick={handleDayClick}
             onDayHover={handleDayHover}
           />

@@ -163,15 +163,23 @@ export function Navigation() {
                     {displayName}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="text-gray-200 hover:text-white hover:bg-gray-800">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/cart" className="text-gray-200 hover:text-white hover:bg-gray-800">My Cart</Link>
-                  </DropdownMenuItem>
+                  {isAdmin ? (
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="text-gray-200 hover:text-white hover:bg-gray-800">Dashboard</Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="text-gray-200 hover:text-white hover:bg-gray-800">Profile</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/cart" className="text-gray-200 hover:text-white hover:bg-gray-800">My Cart</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <DropdownMenuItem onClick={handleLogout} className="text-gray-200 hover:text-white hover:bg-gray-800">
                     <LogOut className="w-4 h-4 mr-2" />
@@ -249,20 +257,32 @@ export function Navigation() {
                 </div>
               ) : (
                 <div className="px-4 space-y-2">
-                  <Link
-                    href="/booking"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
-                  >
-                    My Bookings
-                  </Link>
-                  <Link
-                    href="/cart"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
-                  >
-                    My Cart
-                  </Link>
+                  {isAdmin ? (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
+                    >
+                      Dashboard
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="/booking"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
+                      >
+                        My Bookings
+                      </Link>
+                      <Link
+                        href="/cart"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
+                      >
+                        My Cart
+                      </Link>
+                    </>
+                  )}
                   <Button
                     variant="outline"
                     onClick={handleLogout}

@@ -13,7 +13,8 @@ const firebaseConfig = {
 
 // Initialize Firebase only if it hasn't been initialized yet
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth = getAuth(app);
+// Auth should only be initialized in browser contexts.
+const auth = typeof window !== "undefined" ? getAuth(app) : null;
 const db = getFirestore(app);
 
 export { app, auth, db };

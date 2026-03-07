@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users, Maximize, Bed, Eye, Check, Wifi, Trees, Bath, Wine, Tv } from "lucide-react";
+import { ArrowLeft, Users, Maximize, Bed, Eye, Check, Wifi, Trees, Bath, Wine, Tv, Star, BanIcon, Droplets, Wind, Footprints, Package, Coffee, Snowflake, Clock, Home, Shirt, Armchair, Lightbulb, Gauge, MonitorPlay, Layers, AlertCircle } from "lucide-react";
 import { Room, rooms } from "@/data/rooms";
 import { useState, useMemo } from "react";
 
@@ -24,10 +24,39 @@ interface RoomDetailClientProps {
   room: Room;
 }
 
+// Helper function to get icon for facility
+const getFacilityIcon = (facility: string) => {
+  const lowerFacility = facility.toLowerCase();
+  
+  if (lowerFacility.includes('shower')) return Droplets;
+  if (lowerFacility.includes('bath') && !lowerFacility.includes('room')) return Bath;
+  if (lowerFacility.includes('toilet')) return AlertCircle;
+  if (lowerFacility.includes('hairdryer')) return Wind;
+  if (lowerFacility.includes('towel')) return Layers;
+  if (lowerFacility.includes('slipper')) return Footprints;
+  if (lowerFacility.includes('toiletries')) return Package;
+  if (lowerFacility.includes('tv') || lowerFacility.includes('television')) return Tv;
+  if (lowerFacility.includes('streaming')) return MonitorPlay;
+  if (lowerFacility.includes('refrigerator') || lowerFacility.includes('fridge')) return Snowflake;
+  if (lowerFacility.includes('coffee') || lowerFacility.includes('tea') || lowerFacility.includes('kettle')) return Coffee;
+  if (lowerFacility.includes('minibar') || lowerFacility.includes('bar')) return Wine;
+  if (lowerFacility.includes('fan')) return Gauge;
+  if (lowerFacility.includes('wake') || lowerFacility.includes('alarm') || lowerFacility.includes('clock')) return Clock;
+  if (lowerFacility.includes('wardrobe') || lowerFacility.includes('closet')) return Armchair;
+  if (lowerFacility.includes('clothes rack') || lowerFacility.includes('rack')) return Shirt;
+  if (lowerFacility.includes('ground floor') || lowerFacility.includes('unit')) return Home;
+  if (lowerFacility.includes('linen') || lowerFacility.includes('sheet')) return Layers;
+  if (lowerFacility.includes('wifi') || lowerFacility.includes('internet')) return Wifi;
+  if (lowerFacility.includes('light')) return Lightbulb;
+  
+  return Check; // Default icon
+};
+
 export function RoomDetailClient({ room }: RoomDetailClientProps) {
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(room.images?.[0] || room.image);
   const randomRooms = useMemo(() => getRandomRooms(room.id, 4), [room.id]);
+  const shouldExpandInfoCards = room.slug === "deluxe-double-room-with-extra-bed";
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -122,14 +151,22 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                   </div>
                 </Card>
 
-                <Card className="p-4 bg-white border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                <Card className={`p-4 bg-white border-gray-200 ${shouldExpandInfoCards ? "min-h-[130px]" : ""}`}>
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <Bed className="w-6 h-6 text-amber-600" />
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Bed</p>
-                      <p className="text-sm font-semibold text-gray-900">{room.bedType}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {shouldExpandInfoCards ? (
+                          <>
+                            1 Single Bed<br />& 2 Double Beds
+                          </>
+                        ) : (
+                          room.bedType
+                        )}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -149,48 +186,71 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
 
               {/* Description */}
               <Card className="p-8 bg-white border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Room</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">About This Room</h2>
+                  <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <span className="font-semibold">7.5</span>
+                    <span className="text-xs">Comfy beds</span>
+                  </Badge>
+                </div>
                 <p className="text-gray-700 leading-relaxed mb-4">{room.longDescription || room.description}</p>
               </Card>
 
-              {/* Amenities */}
+              {/* Bathroom Facilities */}
               <Card className="p-8 bg-white border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Amenities</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Bathroom Facilities</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                  {/* WiFi */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Wifi className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">WiFi</span>
-                  </div>
+                  {room.features?.filter(feature => 
+                    feature.toLowerCase().includes('toilet') || 
+                    feature.toLowerCase().includes('shower') || 
+                    feature.toLowerCase().includes('bath') ||
+                    feature.toLowerCase().includes('hairdryer') ||
+                    feature.toLowerCase().includes('slippers') ||
+                    feature.toLowerCase().includes('towel')
+                  ).map((feature, index) => {
+                    const Icon = getFacilityIcon(feature);
+                    return (
+                      <div key={index} className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
+                        <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
+                        <span className="text-sm font-medium text-gray-800">{feature}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
 
-                  {/* Garden View */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Trees className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">Garden View</span>
-                  </div>
+              {/* Room Facilities */}
+              <Card className="p-8 bg-white border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Room Facilities</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                  {room.features?.filter(feature => 
+                    !feature.toLowerCase().includes('toilet') && 
+                    !feature.toLowerCase().includes('shower') && 
+                    !feature.toLowerCase().includes('bath') &&
+                    !feature.toLowerCase().includes('hairdryer') &&
+                    !feature.toLowerCase().includes('slippers') &&
+                    !feature.toLowerCase().includes('towel') &&
+                    !feature.toLowerCase().includes('smoking')
+                  ).map((feature, index) => {
+                    const Icon = getFacilityIcon(feature);
+                    return (
+                      <div key={index} className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
+                        <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
+                        <span className="text-sm font-medium text-gray-800">{feature}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
 
-                  {/* Private Bathroom */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Bath className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">Private Bathroom</span>
-                  </div>
-
-                  {/* Minibar */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Wine className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">Minibar</span>
-                  </div>
-
-                  {/* Flat-screen TV */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Tv className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">Flat-screen TV</span>
-                  </div>
-
-                  {/* Optional: Add more amenities if needed */}
-                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                    <Check className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-800">24/7 Room Service</span>
+              {/* No Smoking Notice */}
+              <Card className="p-6 bg-red-50 border-red-200">
+                <div className="flex items-center gap-3">
+                  <BanIcon className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-red-900">No Smoking</h3>
+                    <p className="text-sm text-red-700">Smoking is not permitted in this room</p>
                   </div>
                 </div>
               </Card>
@@ -223,7 +283,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
-                  <Link href="/booking" className="block">
+                  <Link href={`/book-now?room=${encodeURIComponent(room.name)}`} className="block">
                     <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                       Book Now
                     </Button>
@@ -301,7 +361,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                         View
                       </Button>
                     </Link>
-                    <Link href="/booking" className="flex-1">
+                    <Link href={`/book-now?room=${encodeURIComponent(similarRoom.name)}`} className="flex-1">
                       <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm">
                         Book
                       </Button>

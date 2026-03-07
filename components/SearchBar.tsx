@@ -50,7 +50,28 @@ export function SearchBar() {
   };
 
   const handleSearch = () => {
-    router.push('/booking');
+    const params = new URLSearchParams();
+
+    const selectedRoomData = rooms.find((room) => room.slug === selectedRoom);
+
+    if (selectedRoomData) {
+      params.set('room', selectedRoomData.name);
+    }
+
+    if (dateRange.from) {
+      params.set('checkIn', format(dateRange.from, 'yyyy-MM-dd'));
+    }
+
+    if (dateRange.to) {
+      params.set('checkOut', format(dateRange.to, 'yyyy-MM-dd'));
+    }
+
+    if (guests) {
+      params.set('guests', guests);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/book-now?${query}` : '/book-now');
   };
 
   return (
@@ -66,7 +87,11 @@ export function SearchBar() {
           </SelectTrigger>
           <SelectContent className="bg-white">
             {rooms.map((room) => (
-              <SelectItem key={room.id} value={room.slug} className="text-gray-900">
+              <SelectItem
+                key={room.id}
+                value={room.slug}
+                className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50 data-highlighted:bg-orange-50"
+              >
                 {room.name} - {room.price}/night
               </SelectItem>
             ))}

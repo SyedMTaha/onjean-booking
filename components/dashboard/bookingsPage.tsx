@@ -213,15 +213,15 @@ export function BookingsManagementClient() {
             </select>
           </div>
 
-          <Button variant="outline" onClick={exportCsv} className="h-10 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded-xl ml-77">
+          <Button variant="outline" onClick={exportCsv} className="h-10 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded-xl lg:ml-auto">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
 
-          <Button onClick={() => router.push("/book-now")} className="h-10 bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white rounded-xl"> 
+          {/* <Button onClick={() => router.push("/book-now")} className="h-10 bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white rounded-xl"> 
             <Plus className="h-4 w-4 mr-2" />
             New Booking
-          </Button>
+          </Button> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

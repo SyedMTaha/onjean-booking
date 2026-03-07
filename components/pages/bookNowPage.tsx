@@ -17,13 +17,10 @@ import { saveBooking } from "@/lib/bookingService";
 import { YocoPaymentForm } from "@/components/YocoPaymentForm";
 
 const roomTypes = [
-  { id: 1, name: "Standard Room", price: 1200, available: true },
-  { id: 2, name: "Deluxe Room", price: 1800, available: false },
-  { id: 3, name: "Family Suite", price: 2500, available: true },
-  { id: 4, name: "Executive Suite", price: 3200, available: true },
-  { id: 5, name: "Honeymoon Suite", price: 3800, available: false },
-  { id: 6, name: "Presidential Suite", price: 5000, available: true },
-  { id: 7, name: "Garden View Room", price: 1500, available: true },
+  { id: 1, name: "Deluxe Double Room", price: 1800, available: true },
+  { id: 2, name: "Deluxe Double Room with Bath", price: 2100, available: true },
+  { id: 3, name: "Family Double Room", price: 2500, available: true },
+  { id: 4, name: "Deluxe Double Room with Extra Bed", price: 3200, available: true },
 ];
 
 const bookedDates = [
@@ -73,6 +70,58 @@ export function BookingClient() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    // Do not override state when returning from payment callbacks.
+    if (params.get("payment")) {
+      return;
+    }
+
+    const roomName = params.get("room");
+    const checkInParam = params.get("checkIn");
+    const checkOutParam = params.get("checkOut");
+    const guestsParam = params.get("guests");
+
+    let hasPrefill = false;
+
+    if (roomName) {
+      const matchedRoom = roomTypes.find((room) => room.name === roomName);
+      if (matchedRoom) {
+        setSelectedRoomType(matchedRoom.id.toString());
+        hasPrefill = true;
+      }
+    }
+
+    if (checkInParam) {
+      const parsedCheckIn = new Date(`${checkInParam}T00:00:00`);
+      if (!Number.isNaN(parsedCheckIn.getTime())) {
+        setCheckIn(parsedCheckIn);
+        hasPrefill = true;
+      }
+    }
+
+    if (checkOutParam) {
+      const parsedCheckOut = new Date(`${checkOutParam}T00:00:00`);
+      if (!Number.isNaN(parsedCheckOut.getTime())) {
+        setCheckOut(parsedCheckOut);
+        hasPrefill = true;
+      }
+    }
+
+    if (guestsParam) {
+      const parsedGuests = Number.parseInt(guestsParam, 10);
+      if (Number.isInteger(parsedGuests) && parsedGuests > 0) {
+        setGuests(parsedGuests.toString());
+        hasPrefill = true;
+      }
+    }
+
+    if (hasPrefill) {
+      toast.success("Your search details are prefilled.", { id: "book-now-prefill" });
+    }
+  }, []);
 
   const selectedRoom = roomTypes.find(r => r.id.toString() === selectedRoomType);
 
@@ -251,6 +300,11 @@ export function BookingClient() {
     if (step === 1) {
       if (!checkIn || !checkOut || !selectedRoomType || !guests) {
         toast.error("Please fill in all booking details");
+        return;
+      }
+      const guestCount = Number.parseInt(guests, 10);
+      if (!Number.isInteger(guestCount) || guestCount < 1) {
+        toast.error("Please enter a valid number of guests");
         return;
       }
       if (checkIn >= checkOut) {
@@ -441,7 +495,7 @@ export function BookingClient() {
                       </Select>
                       {selectedRoom && !selectedRoom.available && (
                         <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                          <span>⚠️</span> This room type is currently fully booked for selected dates
+                          <AlertCircle className="h-4 w-4" aria-hidden={true} /> This room type is currently fully booked for selected dates
                         </p>
                       )}
                     </div>
@@ -449,17 +503,18 @@ export function BookingClient() {
                     {/* Guests */}
                     <div>
                       <Label htmlFor="guests" className="text-gray-900 font-semibold">Number of Guests</Label>
-                      <Select value={guests} onValueChange={setGuests}>
-                        <SelectTrigger className="mt-2 bg-white text-gray-900 font-medium border-gray-300 hover:border-amber-600 focus:border-amber-600 focus:ring-amber-600 focus:ring-2">
-                          <SelectValue placeholder="Select guests" className="text-gray-900" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200 border-2">
-                          <SelectItem value="1" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">1 Guest</SelectItem>
-                          <SelectItem value="2" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">2 Guests</SelectItem>
-                          <SelectItem value="3" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">3 Guests</SelectItem>
-                          <SelectItem value="4" className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900">4 Guests</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="guests"
+                        type="number"
+                        min={1}
+                        value={guests}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/[^\d]/g, "");
+                          setGuests(digitsOnly);
+                        }}
+                        className="mt-2 bg-white text-gray-900 font-medium border-gray-300 border-2 placeholder:text-gray-400 focus:border-amber-600 focus:ring-amber-600 focus:ring-2"
+                        placeholder="Enter number of guests"
+                      />
                     </div>
                   </div>
                 )}

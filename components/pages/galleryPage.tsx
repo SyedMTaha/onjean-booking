@@ -7,24 +7,29 @@ type GalleryCategory = "All" | "Rooms" | "Facilities" | "Spa" | "Dining";
 const filters: GalleryCategory[] = ["All", "Rooms", "Facilities", "Spa", "Dining"];
 
 const galleryImages: Array<{ title: string; category: Exclude<GalleryCategory, "All">; image: string }> = [
-  { title: "Deluxe Bedroom", category: "Rooms", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1200&h=800&fit=crop" },
-  { title: "Executive Suite", category: "Rooms", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&h=800&fit=crop" },
-  { title: "King Room", category: "Rooms", image: "https://images.unsplash.com/photo-1616594039964-3f5aa6e5f7bb?w=1200&h=800&fit=crop" },
+  { title: "Deluxe Bedroom", category: "Rooms", image: "/gallery/image-1.jpeg" },
+  { title: "Executive Suite", category: "Rooms", image: "/gallery/image-2.jpeg" },
+  { title: "King Room", category: "Rooms", image: "/gallery/image-3.jpeg" },
+  { title: "Luxury Suite", category: "Rooms", image: "/gallery/image-4.jpeg" },
+  { title: "Premium Room", category: "Rooms", image: "/gallery/image-5.jpeg" },
+  { title: "Elegant Bedroom", category: "Rooms", image: "/gallery/image-6.jpeg" },
+  { title: "Modern Room", category: "Rooms", image: "/gallery/image-7.jpeg" },
+  { title: "Comfort Suite", category: "Rooms", image: "/gallery/image-8.jpeg" },
+  { title: "Spacious Room", category: "Rooms", image: "/gallery/image-9.jpeg" },
+  { title: "Master Suite", category: "Rooms", image: "/gallery/image-10.jpeg" },
   { title: "Pool Lounge", category: "Facilities", image: "https://images.unsplash.com/photo-1601584942745-8880755f5880?w=1200&h=800&fit=crop" },
   { title: "Conference Hall", category: "Facilities", image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop" },
   { title: "Fitness Studio", category: "Facilities", image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&h=800&fit=crop" },
+  { title: "Outdoor Terrace", category: "Facilities", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&h=800&fit=crop" },
+  { title: "Main Lobby", category: "Facilities", image: "https://images.unsplash.com/photo-1592383809697-4986ac3151c6?w=1200&h=800&fit=crop" },
   { title: "Spa Treatment Room", category: "Spa", image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&h=800&fit=crop" },
   { title: "Wellness Retreat", category: "Spa", image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&h=800&fit=crop" },
   { title: "Massage Therapy", category: "Spa", image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=1200&h=800&fit=crop" },
+  { title: "Spa Lounge", category: "Spa", image: "https://images.unsplash.com/photo-1552693673-1bf958298935?w=1200&h=800&fit=crop" },
   { title: "Signature Dining", category: "Dining", image: "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1200&h=800&fit=crop" },
   { title: "Chef's Special", category: "Dining", image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&h=800&fit=crop" },
   { title: "Fine Dining Room", category: "Dining", image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=800&fit=crop" },
-  { title: "Luxury Bedroom", category: "Rooms", image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=1200&h=800&fit=crop" },
-  { title: "Outdoor Terrace", category: "Facilities", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&h=800&fit=crop" },
-  { title: "Spa Lounge", category: "Spa", image: "https://images.unsplash.com/photo-1552693673-1bf958298935?w=1200&h=800&fit=crop" },
   { title: "Breakfast Buffet", category: "Dining", image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&h=800&fit=crop" },
-  { title: "Premium Suite", category: "Rooms", image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1200&h=800&fit=crop" },
-  { title: "Main Lobby", category: "Facilities", image: "https://images.unsplash.com/photo-1592383809697-4986ac3151c6?w=1200&h=800&fit=crop" },
 ];
 
 export function GalleryClient() {
@@ -85,9 +90,7 @@ export function GalleryClient() {
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center px-4">
-                    <h3 className="text-lg md:text-xl font-semibold text-white text-center">{item.title}</h3>
-                  </div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               </div>
             ))}

@@ -276,11 +276,12 @@ export function DashboardClient() {
     <div className="bg-[#F8FAFC] py-6 md:py-8">
       <div className="container mx-auto px-4 lg:px-8 space-y-8">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your hotel today.</p>
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your hotel bookings</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -462,7 +463,7 @@ export function DashboardClient() {
         </div>
 
         {/* Monthly Income Distribution */}
-        <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Income Distribution</h2>
           <div className="h-96">
             {incomeDistributionData.length === 0 ? (
@@ -490,7 +491,7 @@ export function DashboardClient() {
                 </PieChart>
               </ResponsiveContainer>
             )}
-          </div>
+                  </div>
         </Card>
 
         <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
@@ -577,6 +578,7 @@ export function DashboardClient() {
             </div>
           )}
         </Card>
+          </div>
       </div>
     </div>
   );
