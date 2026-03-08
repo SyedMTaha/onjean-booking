@@ -5,9 +5,58 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Users, Maximize, Wifi, Wind, Tv, Coffee, Clock, Maximize2 } from "lucide-react";
-import { rooms } from "@/data/rooms";
+import { getAllRooms, Room } from "@/lib/roomService";
+import { rooms as fallbackRooms } from "@/data/rooms";
+import { useEffect, useState } from "react";
 
 export function RoomsClient() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        const dbRooms = await getAllRooms();
+        
+        if (dbRooms.length === 0) {
+          // Use fallback if DB is empty - convert to match DB format
+          const convertedFallback = fallbackRooms.map(r => ({
+            ...r,
+            id: String(r.id),
+            priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
+            available: true
+          })) as unknown as Room[];
+          setRooms(convertedFallback);
+        } else {
+          // Only show available rooms
+          setRooms(dbRooms.filter(room => room.available));
+        }
+      } catch (error) {
+        // Use fallback on any error - convert to match DB format
+        if (process.env.NODE_ENV === 'development') {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage === 'AUTH_DISABLED') {
+            console.info('ℹ️ Using static room data. Enable Firebase anonymous auth for dynamic data.');
+          } else {
+            console.warn('⚠️ Error loading rooms, using static data:', errorMessage);
+          }
+        }
+        const convertedFallback = fallbackRooms.map(r => ({
+          ...r,
+          id: String(r.id),
+          priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
+          available: true
+        })) as unknown as Room[];
+        setRooms(convertedFallback);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       {/* Hero Section */}
@@ -32,7 +81,34 @@ export function RoomsClient() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {rooms.map((room) => (
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden border border-gray-200 bg-white animate-pulse">
+                  <div className="flex flex-col md:flex-row h-full">
+                    <div className="w-full md:w-[40%] h-[280px] md:h-auto bg-gray-300" />
+                    <div className="w-full md:w-[60%] p-6 flex flex-col">
+                      <div className="h-6 bg-gray-300 rounded mb-3 w-3/4" />
+                      <div className="h-4 bg-gray-200 rounded mb-3 w-1/2" />
+                      <div className="h-4 bg-gray-200 rounded mb-2 w-full" />
+                      <div className="h-4 bg-gray-200 rounded mb-4 w-full" />
+                      <div className="flex gap-2 mb-5">
+                        <div className="h-6 w-16 bg-gray-200 rounded" />
+                        <div className="h-6 w-20 bg-gray-200 rounded" />
+                      </div>
+                      <div className="mt-auto pt-4 border-t">
+                        <div className="h-8 bg-gray-300 rounded mb-4 w-1/3" />
+                        <div className="flex gap-3">
+                          <div className="h-10 bg-gray-200 rounded flex-1" />
+                          <div className="h-10 bg-gray-300 rounded flex-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : rooms.length > 0 ? (
+              rooms.map((room) => (
               <Card key={room.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 bg-white">
                 <div className="flex flex-col md:flex-row h-full">
                   {/* Image - 40% */}
@@ -113,7 +189,12 @@ export function RoomsClient() {
                   </div>
                 </div>
               </Card>
-            ))}
+            ))
+            ) : (
+              <div className="col-span-full text-center py-16">
+                <p className="text-gray-500 text-lg">No rooms available at the moment.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -126,7 +207,7 @@ export function RoomsClient() {
             <p className="text-gray-600 text-lg">Standard amenities in every room</p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
                 <Wifi className="w-10 h-10 text-amber-600" />
@@ -134,12 +215,6 @@ export function RoomsClient() {
               <p className="text-center text-sm font-medium text-gray-700">Free WiFi</p>
             </div>
             
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                <Wind className="w-10 h-10 text-amber-600" />
-              </div>
-              <p className="text-center text-sm font-medium text-gray-700">Air Conditioning</p>
-            </div>
             
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
@@ -154,13 +229,7 @@ export function RoomsClient() {
               </div>
               <p className="text-center text-sm font-medium text-gray-700">Coffee Maker</p>
             </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                <Clock className="w-10 h-10 text-amber-600" />
-              </div>
-              <p className="text-center text-sm font-medium text-gray-700">24/7 Room Service</p>
-            </div>
+
             
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">

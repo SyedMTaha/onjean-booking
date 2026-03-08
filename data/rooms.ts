@@ -36,7 +36,7 @@ export const rooms: Room[] = [
     description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
     longDescription: "Featuring free toiletries, this Deluxe Double Room includes a private bathroom with a shower, hairdryer, slippers, toilet, towels, and toilet paper. The room offers a minibar, tea/coffee maker, wardrobe, refrigerator, fan, flat-screen TV with streaming services, wake-up service, electric kettle, clothes rack, and linen. Entire unit is located on the ground floor. Comfy beds rating: 7.5 (based on 1 review).",
     amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker", "Minibar", "Private Bathroom", "No Smoking"],
-    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Slippers", "Hairdryer", "Towels/Sheets (Extra Fee)", "Toilet Paper", "Streaming Service", "Linen", "TV", "Refrigerator", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Alarm Clock", "Electric Kettle", "Wardrobe or Closet", "Ground Floor Unit", "Clothes Rack", "No Smoking"]
+    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Hairdryer", "Toilet Paper", "Streaming Service", "TV", "Refrigerator", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Alarm Clock", "Electric Kettle", "Wardrobe or Closet", "Clothes Rack", "No Smoking"]
   },
   {
     id: 2,
@@ -59,11 +59,11 @@ export const rooms: Room[] = [
     maxGuests: 2,
     bedType: "1 Double Bed",
     size: "25 m²",
-    view: "Garden View",
+    view: "",
     description: "25 m² Deluxe Double Room with bath, private bathroom, minibar, coffee machine, and free WiFi.",
-    longDescription: "Offering free toiletries, this double room includes a private bathroom with a bath, shower, and hairdryer. The room features a flat-screen TV with streaming services, minibar, tea/coffee maker, coffee machine, wardrobe, and fan. It also includes linen, refrigerator, electric kettle, alarm clock, clothes rack, and is located on the ground floor. Comfy beds rating: 7.5 (based on 1 review).",
+    longDescription: "Enjoy a comfortable and stylish stay in this well-appointed double room, designed with relaxation in mind, the room offers a peaceful retreat for both business and leisure travelers.The room features a private bathroom with bath and shower, complete and a hairdryer. Guests can unwind on comfortable beds with quality linen, ensuring a restful night’s sleep.Modern conveniences include a flat-screen TV with streaming services, free WiFi, minibar, refrigerator, and tea and coffee-making facilities with an electric kettle. The room also offers a wardrobe, safe, clothes rack, and fan for added comfort.Perfect for guests looking for comfort, convenience, and a relaxing stay, this room provides everything needed for a pleasant visit.",
     amenities: ["Bath", "Private Bathroom", "Flat-screen TV", "Coffee Machine", "Minibar", "Free WiFi", "No Smoking"],
-    features: ["Bath", "Free Toiletries", "Shower", "Toilet", "Towels", "Slippers", "Hairdryer", "Towels/Sheets (Extra Fee)", "Toilet Paper", "Streaming Service", "Linen", "TV", "Refrigerator", "Coffee Machine", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Alarm Clock", "Electric Kettle", "Wake-up Service", "Wardrobe or Closet", "Ground Floor Unit", "Clothes Rack", "No Smoking"]
+    features: ["Bath", "Free Toiletries", "Shower", "Toilet", "Towels", "Hairdryer", "Toilet Paper", "Streaming Service",  "TV", "Refrigerator",  "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Electric Kettle", "Wake-up Service", "Wardrobe or Closet",  "Clothes Rack", "No Smoking"]
   },
   {
     id: 3,
@@ -86,7 +86,7 @@ export const rooms: Room[] = [
     description: "25 m² Family Double Room with 2 double beds, private bathroom, minibar, and free WiFi.",
     longDescription: "Providing free toiletries, this family room includes a private bathroom with a shower, hairdryer, and slippers. The room features a flat-screen TV with streaming services, minibar, tea/coffee maker, wardrobe, and fan. It also includes linen, refrigerator, electric kettle, alarm clock, clothes rack, board games/puzzles, and is located on the ground floor. Comfy beds rating: 7.5 (based on 1 review).",
     amenities: ["Private Bathroom", "Flat-screen TV", "Minibar", "Free WiFi", "Board Games/Puzzles", "No Smoking"],
-    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Slippers", "Hairdryer", "Towels/Sheets (Extra Fee)", "Toilet Paper", "Streaming Service", "Linen", "TV", "Refrigerator", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Alarm Clock", "Electric Kettle", "Wake-up Service", "Wardrobe or Closet", "Ground Floor Unit", "Clothes Rack", "Board Games/Puzzles", "No Smoking"]
+    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Hairdryer", "Toilet Paper", "Streaming Service",  "TV", "Refrigerator", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Electric Kettle", "Wake-up Service", "Wardrobe or Closet", "Clothes Rack", "Board Games/Puzzles", "No Smoking"]
   },
   {
     id: 4,
@@ -101,14 +101,14 @@ export const rooms: Room[] = [
       "/rooms/deluxe-extra/deluxe-extra-4.jpg",
       "/rooms/deluxe-extra/deluxe-extra-5.jpg"
     ],
-    maxGuests: 3,
+    maxGuests: 5,
     bedType: "1 Single Bed ",
     size: "25 m²",
     view: "Garden View",
     description: "25 m² Deluxe Double Room with Extra Bed, private bathroom, flat-screen TV, minibar, coffee machine, and free WiFi.",
     longDescription: "Providing free toiletries, this double room includes a private bathroom with a shower, hairdryer, and slippers. The room offers a flat-screen TV with streaming services, minibar, tea/coffee maker, coffee machine, wardrobe, and fan. It also includes linen, refrigerator, electric kettle, alarm clock, clothes rack, and is located on the ground floor. Comfy beds rating: 7.5 (based on 1 review). The unit offers 3 beds.",
     amenities: ["Private Bathroom", "Flat-screen TV", "Coffee Machine", "Minibar", "Free WiFi", "No Smoking"],
-    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Slippers", "Hairdryer", "Towels/Sheets (Extra Fee)", "Toilet Paper", "Streaming Service", "Linen", "TV", "Refrigerator", "Coffee Machine", "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar", "Alarm Clock", "Electric Kettle", "Wake-up Service", "Wardrobe or Closet", "Ground Floor Unit", "Clothes Rack", "No Smoking"]
+    features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Hairdryer",  "Toilet Paper", "Streaming Service", "TV", "Refrigerator",  "Tea/Coffee Maker", "Flat-screen TV", "Fan", "Minibar",  "Electric Kettle", "Wake-up Service", "Wardrobe or Closet",  "Clothes Rack", "No Smoking"]
   },
 ];
 

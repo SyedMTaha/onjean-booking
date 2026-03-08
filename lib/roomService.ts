@@ -50,7 +50,13 @@ async function ensureRoomServiceAuth(): Promise<void> {
     return;
   }
 
-  await signInAnonymously(auth);
+  try {
+    await signInAnonymously(auth);
+  } catch (authError) {
+    // Re-throw with a simpler message that includes the error code
+    const errorCode = (authError as { code?: string })?.code;
+    throw new Error(`AUTH_ERROR:${errorCode || 'unknown'}`);
+  }
 }
 
 /**
@@ -60,8 +66,16 @@ export async function getAllRooms(): Promise<Room[]> {
   try {
     await ensureRoomServiceAuth();
     const roomsCollection = collection(db, ROOMS_COLLECTION);
-    const roomsQuery = query(roomsCollection, orderBy("priceNumeric", "asc"));
-    const snapshot = await getDocs(roomsQuery);
+    
+    // Try with orderBy first, fallback to simple query if it fails
+    let snapshot;
+    try {
+      const roomsQuery = query(roomsCollection, orderBy("priceNumeric", "asc"));
+      snapshot = await getDocs(roomsQuery);
+    } catch (orderError) {
+      // Fallback to simple query without orderBy
+      snapshot = await getDocs(roomsCollection);
+    }
     
     const rooms: Room[] = [];
     snapshot.forEach((doc) => {
@@ -74,14 +88,34 @@ export async function getAllRooms(): Promise<Room[]> {
       } as Room);
     });
     
+    // Sort in memory if we couldn't use orderBy
+    rooms.sort((a, b) => (a.priceNumeric || 0) - (b.priceNumeric || 0));
+    
     return rooms;
   } catch (error) {
-    console.error("Error fetching rooms:", error);
-    const firebaseCode = (error as { code?: string } | null)?.code;
-    if (firebaseCode === "permission-denied") {
-      throw new Error("Missing Firestore read permission for rooms collection.");
+    // Check if it's an auth error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    if (errorMessage.includes('AUTH_ERROR:')) {
+      const errorCode = errorMessage.split(':')[1];
+      if (errorCode === 'auth/admin-restricted-operation') {
+        throw new Error('AUTH_DISABLED');
+      }
+      throw new Error(`AUTH_ERROR:${errorCode}`);
     }
-    throw new Error("Failed to fetch rooms from database");
+    
+    const firebaseCode = (error as { code?: string } | null)?.code;
+    
+    if (firebaseCode === "permission-denied") {
+      throw new Error("PERMISSION_DENIED");
+    }
+    
+    if (firebaseCode === "failed-precondition") {
+      throw new Error("INDEX_REQUIRED");
+    }
+    
+    // Generic error
+    throw error;
   }
 }
 

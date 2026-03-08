@@ -12,7 +12,7 @@ const categoryInfo: Record<string, string> = {
   // Breakfast: "7:00 AM - 11:00 AM daily",
   // Lunch: "12:00 PM - 4:00 PM daily",
   "Light Meals": "All day dining",
-  Dinner: "6:00 PM - 10:30 PM daily",
+  Dinner: " 17:30 PM - 19:30 PM daily",
   Desserts: "No specific timing",
   Beverages: "Alcoholic beverages available for guests 18 years and older",
 };
@@ -35,24 +35,24 @@ const menuItemsByCategory: Record<string, Array<{ name: string; price: string; d
   //   { name: "Mediterranean Wrap", price: "R210", description: "Grilled chicken, hummus, greens, and feta in warm flatbread.", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&h=600&fit=crop" },
   // ],
   "Light Meals": [
-    { name: "Classic Beef Burger", price: "R85", description: "Juicy beef patty with lettuce, tomato, and fries.", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop" },
-    { name: "Chicken Burger", price: "R80", description: "Grilled chicken breast with mayo and fries.", image: "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?w=800&h=600&fit=crop" },
-    { name: "Veggie Burger", price: "R75", description: "Plant-based patty with fresh toppings.", image: "https://images.unsplash.com/photo-1520072959219-c595dc870360?w=800&h=600&fit=crop" },
-    { name: "Chicken Wrap", price: "R70", description: "Grilled chicken, lettuce, and sauce in a wrap.", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&h=600&fit=crop" },
-    { name: "Mediterranean Wrap", price: "R75", description: "Feta, olives, hummus, and veggies in a wrap.", image: "https://images.unsplash.com/photo-1674405660406-cdb1fc8c2487?w=800&h=600&fit=crop" },
-    { name: "Beef Wrap", price: "R80", description: "Seasoned beef strips with fresh vegetables.", image: "https://images.unsplash.com/photo-1599932133652-e0cd0a7ee7f3?w=800&h=600&fit=crop" },
-    { name: "Classic Fries", price: "R35", description: "Crispy golden french fries.", image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&h=600&fit=crop" },
-    { name: "Cheese Fries", price: "R45", description: "Fries topped with melted cheese.", image: "https://images.unsplash.com/photo-1630431341973-02e1d5281d74?w=800&h=600&fit=crop" },
-    { name: "Loaded Fries", price: "R55", description: "Fries with cheese, bacon, and sour cream.", image: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=800&h=600&fit=crop" },
-    { name: "Chicken Wings", price: "R65", description: "Crispy wings with choice of sauce.", image: "https://images.unsplash.com/photo-1608039829572-78524f79c4c7?w=800&h=600&fit=crop" },
-    { name: "Chicken Strips", price: "R60", description: "Breaded chicken tenders with dipping sauce.", image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=800&h=600&fit=crop" },
-    { name: "Onion Rings", price: "R40", description: "Crispy battered onion rings.", image: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=800&h=600&fit=crop" },
-    { name: "Fish & Chips", price: "R90", description: "Battered fish with crispy fries.", image: "https://images.unsplash.com/photo-1580217593608-61931cefc821?w=800&h=600&fit=crop" },
-    { name: "Chicken Quesadilla", price: "R75", description: "Chicken, cheese, and peppers in a tortilla.", image: "https://images.unsplash.com/photo-1618040996337-56904b7850b9?w=800&h=600&fit=crop" },
-    { name: "Nachos Supreme", price: "R70", description: "Tortilla chips with cheese, salsa, and guacamole.", image: "https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=800&h=600&fit=crop" },
-    { name: "Club Sandwich", price: "R85", description: "Triple-decker with chicken, bacon, and veggies.", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&h=600&fit=crop" },
-    { name: "Grilled Cheese Sandwich", price: "R50", description: "Toasted bread with melted cheese.", image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=800&h=600&fit=crop" },
-    { name: "Caesar Salad", price: "R65", description: "Crisp romaine with caesar dressing and croutons.", image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800&h=600&fit=crop" },
+    { name: "Cheese & Tomato", price: "R40", description: "Toasted sandwich with melted cheese and fresh tomato.", image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=800&h=600&fit=crop" },
+    { name: "Chicken & Mayo", price: "R58", description: "Chicken mayo sandwich served fresh.", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&h=600&fit=crop" },
+    { name: "Ham & Cheese", price: "R45", description: "Classic ham and cheese toasted sandwich.", image: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=800&h=600&fit=crop" },
+    { name: "Bacon, Egg & Cheese", price: "R56", description: "Hearty breakfast sandwich with bacon, egg, and cheese.", image: "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&h=600&fit=crop" },
+    { name: "Tuna & Mayo", price: "R48", description: "Creamy tuna mayo sandwich.", image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=800&h=600&fit=crop" },
+    { name: "Lettuce, Cucumber, Tomato, Cheese & Mayo", price: "R56", description: "Fresh veggie and cheese sandwich with mayo.", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&h=600&fit=crop" },
+    { name: "French Toast with Berries", price: "R62", description: "Golden French toast topped with seasonal berries.", image: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=800&h=600&fit=crop" },
+    { name: "Chicken Wings & Chips", price: "R85", description: "Crispy chicken wings served with chips.", image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=800&h=600&fit=crop" },
+    { name: "Chicken Wrap & Salad", price: "R98", description: "Chicken wrap served with a fresh side salad.", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&h=600&fit=crop" },
+    { name: "Beef, Chili & Avo Wrap with Salad", price: "R110", description: "Spiced beef wrap with chili, avocado, and salad.", image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=600&fit=crop" },
+    { name: "Lekker Fish & Chips", price: "R75", description: "Crispy battered fish with golden chips.", image: "https://images.unsplash.com/photo-1579208030886-b937da0925dc?w=800&h=600&fit=crop" },
+    { name: "Halloumi Wrap & Salad", price: "R80", description: "Grilled halloumi wrap served with salad.", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&h=600&fit=crop" },
+    { name: "Chicken & Chili Avo Wrap with Salad", price: "R98", description: "Chicken wrap with chili avocado and side salad.", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop" },
+    { name: "Tuna Pasta Salad", price: "R68", description: "Cold pasta salad with tuna and herbs.", image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&h=600&fit=crop" },
+    { name: "Chicken Burger & Chips", price: "R98", description: "Chicken burger served with crispy chips.", image: "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?w=800&h=600&fit=crop" },
+    { name: "Beef Burger & Chips", price: "R109", description: "Beef burger served with crispy chips.", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop" },
+    { name: "Cheese Burger & Chips", price: "R115", description: "Cheeseburger served with crispy chips.", image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop" },
+    { name: "Veg Burger & Chips", price: "R85", description: "Vegetarian burger served with crispy chips.", image: "https://images.unsplash.com/photo-1520072959219-c595dc870360?w=800&h=600&fit=crop" },
   ],
   Dinner: [
     { name: "Boerewors, Chakalaka & Pap", price: "R68", description: "Traditional boerewors served with chakalaka and pap.", image: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&h=600&fit=crop" },
@@ -88,30 +88,30 @@ const menuItemsByCategory: Record<string, Array<{ name: string; price: string; d
   ],
   Beverages: [
     // Hot Drinks
-    { name: "Five Roses Tea", price: "R22", description: "Classic South African black tea blend.", image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Rooibos Tea", price: "R22", description: "Naturally caffeine-free South African rooibos tea.", image: "https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Filter Coffee", price: "R26", description: "Freshly brewed filter coffee.", image: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Chai Tea", price: "R32", description: "Aromatic spiced tea with milk.", image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Cappuccino", price: "R33", description: "Espresso with steamed milk and foam.", image: "https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Cappuccino & Cream", price: "R36", description: "Cappuccino topped with whipped cream.", image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Hot Chocolate", price: "R38", description: "Rich and creamy hot chocolate.", image: "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
-    { name: "Decaf", price: "R5", description: "Decaffeinated coffee option (add-on).", image: "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
+    { name: "Five Roses Tea", price: "R22", description: "Classic South African black tea blend.", image: "/menu/beverages/hot-drinks/roses-tea.jpeg", subcategory: "Hot Drinks" },
+    { name: "Rooibos Tea", price: "R22", description: "Naturally caffeine-free South African rooibos tea.", image: "/menu/beverages/hot-drinks/rooibos-tea.jpeg", subcategory: "Hot Drinks" },
+    { name: "Filter Coffee", price: "R26", description: "Freshly brewed filter coffee.", image: "/menu/beverages/hot-drinks/filter-coffee.jpeg", subcategory: "Hot Drinks" },
+    { name: "Chai Tea", price: "R32", description: "Aromatic spiced tea with milk.", image: "/menu/beverages/hot-drinks/chai-tea.jpeg", subcategory: "Hot Drinks" },
+    { name: "Cappuccino", price: "R33", description: "Espresso with steamed milk and foam.", image: "/menu/beverages/hot-drinks/cappuccino.jpeg", subcategory: "Hot Drinks" },
+    { name: "Cappuccino & Cream", price: "R36", description: "Cappuccino topped with whipped cream.", image: "/menu/beverages/hot-drinks/cappuccino-cream.jpeg", subcategory: "Hot Drinks" },
+    { name: "Hot Chocolate", price: "R38", description: "Rich and creamy hot chocolate.", image: "/menu/beverages/hot-drinks/hot-chocolate.jpeg", subcategory: "Hot Drinks" },
+    { name: "Decaf", price: "R5", description: "Decaffeinated coffee option (add-on).", image: "/menu/beverages/hot-drinks/decaf-coffee.jpeg", subcategory: "Hot Drinks" },
     { name: "Almond Milk", price: "R6", description: "Dairy-free almond milk alternative (add-on).", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&h=600&fit=crop", subcategory: "Hot Drinks" },
+    { name: "Iced Coffee", price: "R38", description: "Chilled coffee with ice.", image: "/menu/beverages/hot-drinks/ice-coffee.jpeg", subcategory: "Hot Drinks" },
     // Smoothies
-    { name: "Banana Smoothie", price: "R46", description: "Banana, Oats, Dates & Cinnamon", image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800&h=600&fit=crop", subcategory: "Smoothies" },
-    { name: "Green Smoothie", price: "R52", description: "Apple, Cucumber, Banana, Spinach & Chia Seeds", image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=800&h=600&fit=crop", subcategory: "Smoothies" },
-    { name: "Orange Smoothie", price: "R50", description: "Orange, Carrots, Honey, Avocado", image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=600&fit=crop", subcategory: "Smoothies" },
+    { name: "Banana Smoothie", price: "R46", description: "Banana, Oats, Dates & Cinnamon", image: "/menu/beverages/smoothies/banana-smoothie.jpeg", subcategory: "Smoothies" },
+    { name: "Green Smoothie", price: "R52", description: "Apple, Cucumber, Banana, Spinach & Chia Seeds", image: "/menu/beverages/smoothies/green-smoothie.jpeg", subcategory: "Smoothies" },
+    { name: "Orange Smoothie", price: "R50", description: "Orange, Carrots, Honey, Avocado", image: "/menu/beverages/smoothies/orange-smoothie.jpeg", subcategory: "Smoothies" },
     { name: "Beets Smoothie", price: "R49", description: "Beetroot, Mixed Berries, Milk, Banana, Yoghurt", image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=800&h=600&fit=crop", subcategory: "Smoothies" },
-    { name: "Blueberry Smoothie", price: "R52", description: "Blueberries, Almonds, Chia Seeds, Oats", image: "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=800&h=600&fit=crop", subcategory: "Smoothies" },
+    { name: "Blueberry Smoothie", price: "R52", description: "Blueberries, Almonds, Chia Seeds, Oats", image: "/menu/beverages/smoothies/blueberry-smoothie.jpeg", subcategory: "Smoothies" },
     // Fresh Juices
     { name: "Orange Juice", price: "R38", description: "Freshly squeezed orange juice.", image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
-    { name: "Apple Juice", price: "R28", description: "Crisp and refreshing apple juice.", image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
-    { name: "Orange & Pineapple", price: "R30", description: "Tropical blend of orange and pineapple.", image: "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
-    { name: "Carrot & Orange", price: "R32", description: "Healthy combination of carrot and orange.", image: "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
-    { name: "Naartjie & Apple", price: "R30", description: "Sweet naartjie and apple blend.", image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
+    { name: "Apple Juice", price: "R28", description: "Crisp and refreshing apple juice.", image: "/menu/beverages/fresh-juices/apple-juice.jpeg", subcategory: "Fresh Juices" },
+    { name: "Orange & Pineapple", price: "R30", description: "Tropical blend of orange and pineapple.", image: "/menu/beverages/fresh-juices/orange-pineapple.jpeg", subcategory: "Fresh Juices" },
+    { name: "Carrot & Orange", price: "R32", description: "Healthy combination of carrot and orange.", image: "/menu/beverages/fresh-juices/carrot-orange.jpeg", subcategory: "Fresh Juices" },
+    { name: "Naartjie & Apple", price: "R30", description: "Sweet naartjie and apple blend.", image: "/menu/beverages/fresh-juices/naartjie-apple.jpeg", subcategory: "Fresh Juices" },
     { name: "Mixed Berries Juice", price: "R46", description: "Assorted fresh berries juice blend.", image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
     { name: "Mixed Fruits Juice", price: "R46", description: "Variety of fresh fruits juice blend.", image: "https://images.unsplash.com/photo-1546173159-315724a31696?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
-    { name: "Iced Coffee", price: "R38", description: "Chilled coffee with ice.", image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&h=600&fit=crop", subcategory: "Fresh Juices" },
   ],
 };
 
@@ -180,7 +180,7 @@ export function MenuClient() {
           </div>
 
           <div className="mb-10">
-            <div className="w-full bg-gray-200 rounded-2xl p-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1">
+            <div className="w-full bg-gray-200 rounded-2xl p-1 grid grid-cols-2 md:grid-cols-4 gap-1">
               {menuCategories.map((category) => (
                 <button
                   key={category}

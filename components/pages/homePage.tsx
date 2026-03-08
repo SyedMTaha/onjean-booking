@@ -10,12 +10,15 @@ import { FaAward, FaArrowRight } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "@/components/SearchBar";
+import { getAllRooms, Room } from "@/lib/roomService";
 
 export function HomeClient() {
   const [email, setEmail] = useState("");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isHoveringTestimonials, setIsHoveringTestimonials] = useState(false);
   const [cardsPerView, setCardsPerView] = useState(3);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const stats = [
     { number: "500+", label: "Happy Guests", icon: Users },
@@ -97,6 +100,151 @@ export function HomeClient() {
     return () => clearInterval(interval);
   }, [isHoveringTestimonials, maxSlideIndex]);
 
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        const allRooms = await getAllRooms();
+        
+        if (allRooms.length === 0) {
+          // Use fallback dummy data if database is empty
+          const fallbackRooms = [
+            {
+              id: "fallback-1",
+              name: "Deluxe Double Room",
+              slug: "deluxe-double-room",
+              price: "R1,800",
+              priceNumeric: 1800,
+              image: "/rooms/deluxe/deluxe-1.jpg",
+              maxGuests: 2,
+              bedType: "1 Double Bed",
+              size: "30 m²",
+              view: "Garden View",
+              description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
+              amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker"],
+              available: true
+            },
+            {
+              id: "fallback-2",
+              name: "Deluxe Double Room with Bath",
+              slug: "deluxe-double-room-with-bath",
+              price: "R2,100",
+              priceNumeric: 2100,
+              image: "/rooms/deluxe-bath/deluxe-bath-7.jpg",
+              maxGuests: 2,
+              bedType: "1 Double Bed",
+              size: "25 m²",
+              view: "Garden View",
+              description: "25 m² Deluxe Double Room with bath, private bathroom, minibar, coffee machine.",
+              amenities: ["Bath", "Private Bathroom", "Flat-screen TV"],
+              available: true
+            },
+            {
+              id: "fallback-3",
+              name: "Family Double Room",
+              slug: "family-double-room",
+              price: "R2,500",
+              priceNumeric: 2500,
+              image: "/rooms/family/family-6.jpg",
+              maxGuests: 4,
+              bedType: "2 Double Beds",
+              size: "25 m²",
+              view: "Garden View",
+              description: "25 m² Family Double Room with 2 double beds, perfect for families.",
+              amenities: ["Private Bathroom", "Flat-screen TV", "Board Games"],
+              available: true
+            }
+          ] as Room[];
+          setRooms(fallbackRooms);
+          return;
+        }
+        
+        // Only show available rooms and limit to 3 for home page
+        const availableRooms = allRooms.filter(room => room.available).slice(0, 3);
+        
+        if (availableRooms.length === 0) {
+          toast.warning("All rooms are currently unavailable");
+        }
+        
+        setRooms(availableRooms);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load rooms";
+        
+        // Check for specific error types
+        const isAuthDisabled = errorMessage === 'AUTH_DISABLED';
+        const isAuthError = errorMessage.startsWith('AUTH_ERROR:');
+        const isPermissionError = errorMessage === 'PERMISSION_DENIED';
+        
+        // Use fallback on error
+        const fallbackRooms = [
+          {
+            id: "fallback-1",
+            name: "Deluxe Double Room",
+            slug: "deluxe-double-room",
+            price: "R1,800",
+            priceNumeric: 1800,
+            image: "/rooms/deluxe/deluxe-1.jpg",
+            maxGuests: 2,
+            bedType: "1 Double Bed",
+            size: "30 m²",
+            view: "Garden View",
+            description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
+            amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker"],
+            available: true
+          },
+          {
+            id: "fallback-2",
+            name: "Deluxe Double Room with Bath",
+            slug: "deluxe-double-room-with-bath",
+            price: "R2,100",
+            priceNumeric: 2100,
+            image: "/rooms/deluxe-bath/deluxe-bath-7.jpg",
+            maxGuests: 2,
+            bedType: "1 Double Bed",
+            size: "25 m²",
+            view: "Garden View",
+            description: "25 m² Deluxe Double Room with bath, private bathroom, minibar, coffee machine.",
+            amenities: ["Bath", "Private Bathroom", "Flat-screen TV"],
+            available: true
+          },
+          {
+            id: "fallback-3",
+            name: "Family Double Room",
+            slug: "family-double-room",
+            price: "R2,500",
+            priceNumeric: 2500,
+            image: "/rooms/family/family-6.jpg",
+            maxGuests: 4,
+            bedType: "2 Double Beds",
+            size: "25 m²",
+            view: "Garden View",
+            description: "25 m² Family Double Room with 2 double beds, perfect for families.",
+            amenities: ["Private Bathroom", "Flat-screen TV", "Board Games"],
+            available: true
+          }
+        ] as Room[];
+        setRooms(fallbackRooms);
+        
+        // Only log in development mode, no user-facing errors for auth issues
+        if (process.env.NODE_ENV === 'development') {
+          if (isAuthDisabled) {
+            console.info('ℹ️ Firebase anonymous auth is disabled. Using sample data. Enable it in Firebase Console > Authentication > Sign-in method > Anonymous.');
+          } else if (isAuthError) {
+            console.warn('⚠️ Firebase authentication error:', errorMessage);
+          } else if (isPermissionError) {
+            console.error('❌ Firestore permission denied. Check your Firestore rules.');
+          } else {
+            console.error('❌ Error loading rooms:', errorMessage);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
@@ -125,10 +273,6 @@ export function HomeClient() {
           <div className="flex-1 flex items-start md:items-center justify-center pt-20 md:pt-0">
             <div className="max-w-5xl w-full px-2 sm:px-4">
               <div className="text-center text-white mb-8 md:mb-12">
-                <Badge className="mt-6 md:mt-8 mb-4 md:mb-6 bg-gray-900 hover:bg-black text-white border-0 px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm backdrop-blur-sm inline-flex items-center gap-2">
-                  <FaAward className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-300" />
-                  Award Winning Hotel in South Africa
-                </Badge>
                 <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 md:mb-6 leading-tight font-light tracking-tight px-4">
                   Welcome to <span className="block font-semibold mt-2">78 On Jean</span>
                 </h1>
@@ -231,57 +375,73 @@ export function HomeClient() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Standard Room",
-                image: "https://images.unsplash.com/photo-1766928210443-0be92ed5884a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMGJlZHJvb20lMjBtb2Rlcm58ZW58MXx8fHwxNzcyMjA0MTU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-                price: "R1,200",
-                features: ["King Bed", "City View", "25 m²"],
-              },
-              {
-                title: "Deluxe Suite",
-                image: "https://images.unsplash.com/photo-1731336478850-6bce7235e320?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWx1eGUlMjBob3RlbCUyMHN1aXRlJTIwYmVkcm9vbXxlbnwxfHx8fDE3NzIyMDQxNTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-                price: "R2,500",
-                features: ["King Bed", "Ocean View", "35 m²"],
-              },
-              {
-                title: "Presidential Suite",
-                image: "https://images.unsplash.com/photo-1664780476492-fbb9fd277ce8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3RlbCUyMHByZXNpZGVudGlhbCUyMHN1aXRlJTIwbHV4dXJ5fGVufDF8fHx8MTc3MjEyMDA2OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-                price: "R5,000",
-                features: ["King Bed", "Panoramic View", "100 m²"],
-              },
-            ].map((room, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0">
-                <div className="h-64 overflow-hidden relative">
-                  <img
-                    src={room.image}
-                    alt={room.title}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-2xl mb-3 text-[#0A0A0A]">{room.title}</h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {room.features.map((feature, i) => (
-                      <span key={i} className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div>
-                      <span className="text-3xl text-amber-600">{room.price}</span>
-                      <span className="text-gray-500 text-sm ml-2">/ night</span>
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden border-0 animate-pulse">
+                  <div className="h-64 bg-gray-300" />
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-300 rounded mb-3" />
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="h-6 w-20 bg-gray-200 rounded-full" />
+                      <div className="h-6 w-24 bg-gray-200 rounded-full" />
+                      <div className="h-6 w-16 bg-gray-200 rounded-full" />
                     </div>
-                    <Link href="/book-now">
-                      <Button className="bg-amber-600 hover:bg-amber-700">
-                        Book Now
-                      </Button>
-                    </Link>
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="h-8 w-32 bg-gray-300 rounded" />
+                      <div className="h-10 w-24 bg-gray-300 rounded" />
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            ) : rooms.length > 0 ? (
+              rooms.map((room) => (
+                <Card key={room.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 flex flex-col">
+                  <div className="h-64 overflow-hidden relative">
+                    <img
+                      src={room.image}
+                      alt={room.name}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-2xl mb-3 text-[#0A0A0A] min-h-[64px] line-clamp-2">{room.name}</h3>
+                    <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
+                      {room.bedType && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                          {room.bedType}
+                        </span>
+                      )}
+                      {room.view && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                          {room.view}
+                        </span>
+                      )}
+                      {room.size && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                          {room.size}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t mt-auto">
+                      <div>
+                        <span className="text-3xl text-amber-600">{room.price}</span>
+                        <span className="text-gray-500 text-sm ml-2">/ night</span>
+                      </div>
+                      <Link href="/book-now">
+                        <Button className="bg-amber-600 hover:bg-amber-700">
+                          Book Now
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">No rooms available at the moment.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -303,7 +463,7 @@ export function HomeClient() {
                 {[
                   { label: "Breakfast", time: "7:00 AM - 11:00 AM", icon: Coffee },
                   { label: "Lunch", time: "12:00 PM - 4:00 PM", icon: Utensils },
-                  { label: "Dinner", time: "6:00 PM - 10:30 PM", icon: Utensils },
+                  { label: "Dinner", time: "17:30 PM - 19:30 PM", icon: Utensils },
                   { label: "Room Service", time: "24/7 Available", icon: Clock },
                 ].map((item, i) => {
                   const Icon = item.icon;

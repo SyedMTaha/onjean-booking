@@ -118,7 +118,7 @@ export function Navigation() {
                 78 ON JEAN
               </span>
               <span className="text-[8px] text-gray-400 uppercase tracking-wider">
-                Boutique Hotel
+                Guest House
               </span>
             </div>
           </Link>

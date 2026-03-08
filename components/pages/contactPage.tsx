@@ -68,8 +68,7 @@ export function ContactClient() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-xl md:text-2xl text-gray-900 mb-2">Address</h3>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">123 Victoria Street</p>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">Cape Town, 8001</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">78 Jean Avenue, Doringkloof, Centurion</p>
                       <p className="text-gray-600 text-base md:text-lg leading-relaxed">South Africa</p>
                     </div>
                   </div>
@@ -80,8 +79,8 @@ export function ContactClient() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-xl md:text-2xl text-gray-900 mb-2">Phone</h3>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">+27 21 123 4567</p>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">+27 21 123 4568</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">012 006 6778</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">076 053 8540</p>
                     </div>
                   </div>
 
@@ -91,8 +90,8 @@ export function ContactClient() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-xl md:text-2xl text-gray-900 mb-2">Email</h3>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">info@savannalodge.co.za</p>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">reservations@savannalodge.co.za</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">info@78onjean.co.za</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">bookings@78onjean.co.za</p>
                     </div>
                   </div>
 
@@ -104,7 +103,7 @@ export function ContactClient() {
                       <h3 className="font-semibold text-xl md:text-2xl text-gray-900 mb-2">Reception Hours</h3>
                       <p className="text-gray-600 text-base md:text-lg leading-relaxed">24/7 Available</p>
                       <p className="text-gray-600 text-base md:text-lg leading-relaxed">Check-in: 2:00 PM</p>
-                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">Check-out: 11:00 AM</p>
+                      <p className="text-gray-600 text-base md:text-lg leading-relaxed">Check-out: 10:00 AM</p>
                     </div>
                   </div>
                 </div>

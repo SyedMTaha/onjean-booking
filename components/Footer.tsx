@@ -25,7 +25,7 @@ export function Footer() {
                 className="h-16 w-auto object-contain"
               />
             </div>
-            <p className="text-gray-400">
+            <p className="text-gray-400 text-sm">
               Experience luxury hospitality in the heart of South Africa
             </p>
             <div className="flex gap-4 mt-6">
@@ -61,8 +61,8 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-gray-400">
+            <h4 className="font-semibold mb-4 text-base">Quick Links</h4>
+            <ul className="space-y-2 text-gray-400 text-sm">
               {navLinks.map((link) => (
                 <li key={link.path}>
                   <Link href={link.path} className="hover:text-amber-400 transition-colors">
@@ -75,11 +75,11 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-gray-400">
+            <h4 className="font-semibold mb-4 text-base">Contact</h4>
+            <ul className="space-y-2 text-gray-400 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-amber-600 mt-1 flex-shrink-0" />
-                <span className="whitespace-nowrap">78 Jean Avenue, Doringkloof, Centurion</span>
+                <span>78 Jean Avenue, Doringkloof, Centurion</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-amber-600 flex-shrink-0" />
@@ -109,16 +109,15 @@ export function Footer() {
           </div>
 
           {/* Hours - Commented Out */}
-          {/* 
+          
           <div>
-            <h4 className="font-semibold mb-4">Opening Hours</h4>
+            <h4 className="font-semibold mb-4 text-base">Opening Hours</h4>
             <ul className="space-y-1 text-gray-400 text-sm">
-              <li>Mon - Sun: 24/7 Open</li>
-              <li>Check-in: 2:00 PM</li>
-              <li>Check-out: 11:00 AM</li>
+              <li>Operating Hours</li>
+              <li>7:00 AM till 21:00 PM</li>
             </ul>
           </div>
-          */}
+         
         </div>
 
         {/* Copyright */}

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Check } from "lucide-react";
+import { Check, CalendarDays, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
@@ -82,6 +82,8 @@ const timeSlots = [
 
 export function SpaClient() {
   const [step, setStep] = useState(1);
+  const [showOpeningBanner, setShowOpeningBanner] = useState(true);
+  const isSpaBookingOpen = false;
   const [selectedTreatmentIds, setSelectedTreatmentIds] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("February special");
   const [selectedProfessionalId, setSelectedProfessionalId] = useState("");
@@ -157,11 +159,17 @@ export function SpaClient() {
   };
 
   const canContinue =
-    (step === 1 && selectedTreatmentIds.length > 0) ||
-    (step === 2 && !!selectedProfessionalId) ||
-    (step === 3 && !!appointmentDate && !!selectedTime);
+    isSpaBookingOpen &&
+    ((step === 1 && selectedTreatmentIds.length > 0) ||
+      (step === 2 && !!selectedProfessionalId) ||
+      (step === 3 && !!appointmentDate && !!selectedTime));
 
   const handleSubmitSpaBooking = async () => {
+    if (!isSpaBookingOpen) {
+      toast.info("Spa bookings will open in January 2027.");
+      return;
+    }
+
     if (selectedTreatments.length === 0 || !selectedProfessional || !appointmentDate || !selectedTime) {
       toast.error("Please complete all selections before confirming.");
       return;
@@ -241,8 +249,42 @@ export function SpaClient() {
         </div>
       </section>
 
+      {/* Opening Banner */}
+      {showOpeningBanner && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-20 backdrop-blur-[2px]">
+          <div className="w-full max-w-2xl rounded-2xl border border-amber-200 bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4 md:px-6">
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className="mt-0.5 rounded-full bg-amber-100 p-2 text-amber-700">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Spa Announcement</p>
+                  <h2 className="text-xl font-bold text-gray-900 md:text-2xl">OPENING 2027 JANUARY</h2>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOpeningBanner(false)}
+                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Close opening announcement"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-2 px-5 py-4 md:px-6 md:py-5">
+              <p className="text-sm text-gray-700 md:text-base">
+                Our Spa & Wellness facility officially launches in January 2027. Until then, booking is temporarily
+                unavailable while we prepare treatment rooms, therapist schedules, and launch packages.
+              </p>
+              <p className="text-sm font-medium text-amber-700">Bookings are currently disabled until opening.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Progress Steps */}
-      <section className="bg-white border-b">
+      <section className={`bg-white border-b ${!isSpaBookingOpen ? "opacity-70" : ""}`}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-center gap-4">
             {[
@@ -274,9 +316,18 @@ export function SpaClient() {
       </section>
 
       {/* Spa Booking Flow */}
-      <section className="py-12">
+      <section className="relative py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8 items-start">
+          {!isSpaBookingOpen && (
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Spa booking is not available yet. This page is view-only until January 2027.
+            </div>
+          )}
+          <div
+            className={`grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8 items-start ${
+              !isSpaBookingOpen ? "pointer-events-none select-none opacity-60" : ""
+            }`}
+          >
             {/* Left: Steps Content */}
             <div className="lg:col-span-2">
               <Card className="p-6">

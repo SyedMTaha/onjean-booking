@@ -6,19 +6,9 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Users, Maximize, Bed, Eye, Check, Wifi, Trees, Bath, Wine, Tv, Star, BanIcon, Droplets, Wind, Footprints, Package, Coffee, Snowflake, Clock, Home, Shirt, Armchair, Lightbulb, Gauge, MonitorPlay, Layers, AlertCircle } from "lucide-react";
-import { Room, rooms } from "@/data/rooms";
-import { useState, useMemo } from "react";
-
-interface RoomDetailClientProps {
-  room: Room;
-}
-
-// Function to get random different rooms (excluding current room)
-function getRandomRooms(currentRoomId: number, count: number): Room[] {
-  const otherRooms = rooms.filter(r => r.id !== currentRoomId);
-  const shuffled = [...otherRooms].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
+import { getAllRooms, Room } from "@/lib/roomService";
+import { rooms as fallbackRooms } from "@/data/rooms";
+import { useState, useEffect, useMemo } from "react";
 
 interface RoomDetailClientProps {
   room: Room;
@@ -55,8 +45,53 @@ const getFacilityIcon = (facility: string) => {
 export function RoomDetailClient({ room }: RoomDetailClientProps) {
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(room.images?.[0] || room.image);
-  const randomRooms = useMemo(() => getRandomRooms(room.id, 4), [room.id]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
   const shouldExpandInfoCards = room.slug === "deluxe-double-room-with-extra-bed";
+
+  // Fetch all rooms for "You May Also Like" section
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const dbRooms = await getAllRooms();
+        if (dbRooms.length > 0) {
+          setAllRooms(dbRooms.filter(r => r.available && r.id !== room.id));
+        } else {
+          // Use fallback - convert to match DB format
+          const convertedFallback = fallbackRooms
+            .filter(r => String(r.id) !== room.id)
+            .map(r => ({
+              ...r,
+              id: String(r.id),
+              priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
+              available: true
+            })) as unknown as Room[];
+          setAllRooms(convertedFallback);
+        }
+      } catch (error) {
+        // Use fallback on error - convert to match DB format
+        const convertedFallback = fallbackRooms
+          .filter(r => String(r.id) !== room.id)
+          .map(r => ({
+            ...r,
+            id: String(r.id),
+            priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
+            available: true
+          })) as unknown as Room[];
+        setAllRooms(convertedFallback);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+
+    fetchRooms();
+  }, [room.id]);
+
+  // Get random rooms for "You May Also Like"
+  const randomRooms = useMemo(() => {
+    const shuffled = [...allRooms].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4);
+  }, [allRooms]);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -317,7 +352,25 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {randomRooms.map((similarRoom) => (
+            {loadingRooms ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden border border-gray-200 bg-white animate-pulse">
+                  <div className="w-full h-40 bg-gray-300" />
+                  <div className="p-5">
+                    <div className="h-6 bg-gray-300 rounded mb-3" />
+                    <div className="h-4 bg-gray-200 rounded mb-2" />
+                    <div className="h-4 bg-gray-200 rounded mb-4" />
+                    <div className="h-8 bg-gray-300 rounded mb-4" />
+                    <div className="flex gap-2">
+                      <div className="h-10 bg-gray-200 rounded flex-1" />
+                      <div className="h-10 bg-gray-300 rounded flex-1" />
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : randomRooms.length > 0 ? (
+              randomRooms.map((similarRoom) => (
               <Card key={similarRoom.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white flex flex-col">
                 {/* Image - 50% */}
                 <div className="w-full h-40 overflow-hidden">
@@ -369,7 +422,12 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                   </div>
                 </div>
               </Card>
-            ))}
+            ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">No other rooms available at the moment.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Navigation } from "@/components/Navbar";
 import { RoomDetailClient } from "@/components/pages/roomDetailPage";
 import { Footer } from "@/components/Footer";
-import { getRoomBySlug, getAllRoomSlugs } from "@/data/rooms";
+import { getRoomBySlug as getDbRoomBySlug, getAllRooms } from "@/lib/roomService";
+import { getRoomBySlug as getFallbackRoomBySlug, getAllRoomSlugs, rooms as fallbackRooms } from "@/data/rooms";
 
 interface RoomPageProps {
   params: Promise<{
@@ -11,8 +12,41 @@ interface RoomPageProps {
   }>;
 }
 
+// Wrapper function to get room from DB with fallback
+async function getRoomBySlug(slug: string) {
+  try {
+    const dbRoom = await getDbRoomBySlug(slug);
+    if (dbRoom) {
+      return dbRoom;
+    }
+  } catch (error) {
+    // Silently fall back to static data
+    if (process.env.NODE_ENV === 'development') {
+      console.info('ℹ️ Using static room data for slug:', slug);
+    }
+  }
+  
+  // Fallback to static data
+  return getFallbackRoomBySlug(slug);
+}
+
+// Wrapper to get all slugs from DB with fallback
+async function getAllSlugs() {
+  try {
+    const dbRooms = await getAllRooms();
+    if (dbRooms.length > 0) {
+      return dbRooms.map(room => room.slug);
+    }
+  } catch (error) {
+    // Silently fall back to static data
+  }
+  
+  // Fallback to static data
+  return getAllRoomSlugs();
+}
+
 export async function generateStaticParams() {
-  const slugs = getAllRoomSlugs();
+  const slugs = await getAllSlugs();
   return slugs.map((slug) => ({
     slug: slug,
   }));
@@ -20,7 +54,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: RoomPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const room = getRoomBySlug(slug);
+  const room = await getRoomBySlug(slug);
 
   if (!room) {
     return {
@@ -36,7 +70,7 @@ export async function generateMetadata({ params }: RoomPageProps): Promise<Metad
 
 export default async function RoomPage({ params }: RoomPageProps) {
   const { slug } = await params;
-  const room = getRoomBySlug(slug);
+  const room = await getRoomBySlug(slug);
 
   if (!room) {
     notFound();
