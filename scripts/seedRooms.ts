@@ -19,6 +19,12 @@ import { rooms as existingRooms } from "../data/rooms";
 
 const ROOMS_COLLECTION = "rooms";
 
+const ROOM_INVENTORY_BY_SLUG: Record<string, number> = {
+  "deluxe-double-room": 4,
+  "deluxe-double-room-with-bath": 1,
+  "family-double-room": 2,
+};
+
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value || !value.trim()) {
@@ -86,6 +92,7 @@ async function seedRooms() {
           features: room.features || room.amenities,
           view: room.view || "City View",
           available: true, // All rooms start as available
+          totalUnits: ROOM_INVENTORY_BY_SLUG[room.slug] || 1,
           createdAt: new Date(),
           updatedAt: new Date(),
         };

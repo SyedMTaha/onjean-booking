@@ -146,6 +146,10 @@ export function RoomsClient() {
                         <Maximize className="w-4 h-4" />
                         <span>{room.size}</span>
                       </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4" />
+                        <span>{room.totalUnits || 1} unit(s)</span>
+                      </div>
                     </div>
                     
                     {/* Amenities Badges */}
@@ -179,7 +183,7 @@ export function RoomsClient() {
                             View Details
                           </Button>
                         </Link>
-                        <Link href={`/book-now?room=${encodeURIComponent(room.name)}`} className="flex-1">
+                        <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="flex-1">
                           <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                             Book Now
                           </Button>

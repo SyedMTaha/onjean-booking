@@ -315,10 +315,14 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                     <span className="text-gray-600">Bed Type:</span>
                     <span className="font-medium text-gray-900">{room.bedType}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Units:</span>
+                    <span className="font-medium text-gray-900">{room.totalUnits || 1}</span>
+                  </div>
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
-                  <Link href={`/book-now?room=${encodeURIComponent(room.name)}`} className="block">
+                  <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="block">
                     <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                       Book Now
                     </Button>
@@ -414,7 +418,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                         View
                       </Button>
                     </Link>
-                    <Link href={`/book-now?room=${encodeURIComponent(similarRoom.name)}`} className="flex-1">
+                    <Link href={`/book-now?roomId=${encodeURIComponent(similarRoom.id)}&room=${encodeURIComponent(similarRoom.name)}`} className="flex-1">
                       <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm">
                         Book
                       </Button>

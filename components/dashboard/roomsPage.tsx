@@ -17,6 +17,7 @@ interface RoomForm {
   name: string;
   slug: string;
   price: string;
+  totalUnits: string;
   image: string;
   imageList: string;
   maxGuests: string;
@@ -63,6 +64,7 @@ function getEmptyForm(): RoomForm {
     name: "",
     slug: "",
     price: "",
+    totalUnits: "1",
     image: "",
     imageList: "",
     maxGuests: "2",
@@ -136,6 +138,7 @@ export function RoomsManagementClient() {
       name: room.name,
       slug: room.slug,
       price: room.price,
+      totalUnits: String(room.totalUnits || 1),
       image: room.image,
       imageList: (room.images || []).join(", "),
       maxGuests: String(room.maxGuests),
@@ -176,6 +179,12 @@ export function RoomsManagementClient() {
       return;
     }
 
+    const totalUnits = parseInt(form.totalUnits, 10);
+    if (Number.isNaN(totalUnits) || totalUnits < 1) {
+      toast.error("Total units must be at least 1.");
+      return;
+    }
+
     const computedSlug = form.slug.trim() ? slugify(form.slug) : slugify(form.name);
     const priceNumeric = parseInt(form.price.replace(/[^\d]/g, ""), 10);
     if (Number.isNaN(priceNumeric)) {
@@ -197,6 +206,7 @@ export function RoomsManagementClient() {
       image: form.image.trim(),
       images,
       maxGuests: guests,
+      totalUnits,
       bedType: form.bedType.trim(),
       size: form.size.trim(),
       description: form.description.trim(),
@@ -488,6 +498,17 @@ export function RoomsManagementClient() {
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Price per Night *</label>
                       <Input placeholder="e.g., R2,500" value={form.price} onChange={(e) => handleFormChange("price", e.target.value)} className="text-gray-900" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Total Units *</label>
+                      <Input
+                        placeholder="e.g., 4"
+                        type="number"
+                        min={1}
+                        value={form.totalUnits}
+                        onChange={(e) => handleFormChange("totalUnits", e.target.value)}
+                        className="text-gray-900"
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Max Guests *</label>

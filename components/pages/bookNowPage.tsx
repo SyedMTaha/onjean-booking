@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,24 +13,9 @@ import { CalendarIcon, CreditCard, Check, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { saveBooking } from "@/lib/bookingService";
+import { getRoomAvailabilityForRange, RoomAvailability, saveBooking, validateRoomAvailability } from "@/lib/bookingService";
+import { getAllRooms, Room } from "@/lib/roomService";
 import { YocoPaymentForm } from "@/components/YocoPaymentForm";
-
-const roomTypes = [
-  { id: 1, name: "Deluxe Double Room", price: 1800, available: true },
-  { id: 2, name: "Deluxe Double Room with Bath", price: 2100, available: true },
-  { id: 3, name: "Family Double Room", price: 2500, available: true },
-  { id: 4, name: "Deluxe Double Room with Extra Bed", price: 3200, available: true },
-];
-
-const bookedDates = [
-  new Date(2026, 1, 28),
-  new Date(2026, 1, 29),
-  new Date(2026, 2, 1),
-  new Date(2026, 2, 5),
-  new Date(2026, 2, 6),
-  new Date(2026, 2, 7),
-];
 
 const PENDING_BOOKING_KEY = "pendingBookingDraft";
 const PENDING_CHECKOUT_ID_KEY = "pendingYocoCheckoutId";
@@ -39,7 +24,7 @@ type PendingBookingDraft = {
   checkInDate: string;
   checkOutDate: string;
   roomType: string;
-  roomId: number;
+  roomId: string;
   roomPrice: number;
   nights: number;
   guests: string;
@@ -54,6 +39,10 @@ type PendingBookingDraft = {
 
 export function BookingClient() {
   const [step, setStep] = useState(1);
+  const [roomTypes, setRoomTypes] = useState<Room[]>([]);
+  const [isRoomsLoading, setIsRoomsLoading] = useState(true);
+  const [availabilityByRoomId, setAvailabilityByRoomId] = useState<Record<string, RoomAvailability>>({});
+  const [isAvailabilityLoading, setIsAvailabilityLoading] = useState(false);
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
   const [selectedRoomType, setSelectedRoomType] = useState("");
@@ -72,6 +61,27 @@ export function BookingClient() {
   const { user } = useAuth();
 
   useEffect(() => {
+    const loadRoomTypes = async () => {
+      setIsRoomsLoading(true);
+      try {
+        const dbRooms = await getAllRooms();
+        setRoomTypes(dbRooms.filter((room) => room.available));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load room types";
+        toast.error(message);
+      } finally {
+        setIsRoomsLoading(false);
+      }
+    };
+
+    loadRoomTypes();
+  }, []);
+
+  useEffect(() => {
+    if (isRoomsLoading) {
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
 
     // Do not override state when returning from payment callbacks.
@@ -79,6 +89,7 @@ export function BookingClient() {
       return;
     }
 
+    const roomIdParam = params.get("roomId");
     const roomName = params.get("room");
     const checkInParam = params.get("checkIn");
     const checkOutParam = params.get("checkOut");
@@ -86,10 +97,16 @@ export function BookingClient() {
 
     let hasPrefill = false;
 
-    if (roomName) {
+    if (roomIdParam) {
+      const byId = roomTypes.find((room) => room.id === roomIdParam);
+      if (byId) {
+        setSelectedRoomType(byId.id);
+        hasPrefill = true;
+      }
+    } else if (roomName) {
       const matchedRoom = roomTypes.find((room) => room.name === roomName);
       if (matchedRoom) {
-        setSelectedRoomType(matchedRoom.id.toString());
+        setSelectedRoomType(matchedRoom.id);
         hasPrefill = true;
       }
     }
@@ -121,9 +138,35 @@ export function BookingClient() {
     if (hasPrefill) {
       toast.success("Your search details are prefilled.", { id: "book-now-prefill" });
     }
-  }, []);
+  }, [isRoomsLoading, roomTypes]);
 
-  const selectedRoom = roomTypes.find(r => r.id.toString() === selectedRoomType);
+  useEffect(() => {
+    if (!checkIn || !checkOut || checkIn >= checkOut) {
+      setAvailabilityByRoomId({});
+      return;
+    }
+
+    const loadAvailability = async () => {
+      setIsAvailabilityLoading(true);
+      try {
+        const map = await getRoomAvailabilityForRange(checkIn, checkOut);
+        setAvailabilityByRoomId(map);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load availability";
+        toast.error(message);
+      } finally {
+        setIsAvailabilityLoading(false);
+      }
+    };
+
+    loadAvailability();
+  }, [checkIn, checkOut]);
+
+  const selectedRoom = roomTypes.find((r) => r.id === selectedRoomType);
+  const selectedRoomAvailability = useMemo(
+    () => (selectedRoomType ? availabilityByRoomId[selectedRoomType] : undefined),
+    [availabilityByRoomId, selectedRoomType]
+  );
 
   const calculateNights = () => {
     if (!checkIn || !checkOut) return 0;
@@ -133,7 +176,7 @@ export function BookingClient() {
   };
 
   const nights = calculateNights();
-  const totalPrice = selectedRoom ? selectedRoom.price * nights : 0;
+  const totalPrice = selectedRoom ? (selectedRoom.priceNumeric || 0) * nights : 0;
   const taxesAndFees = Math.round(totalPrice * 0.15);
   const totalAmount = totalPrice + taxesAndFees;
 
@@ -146,8 +189,8 @@ export function BookingClient() {
       checkInDate: checkIn.toISOString(),
       checkOutDate: checkOut.toISOString(),
       roomType: selectedRoom.name,
-      roomId: parseInt(selectedRoomType),
-      roomPrice: selectedRoom.price,
+      roomId: selectedRoomType,
+      roomPrice: selectedRoom.priceNumeric || 0,
       nights,
       guests,
       firstName,
@@ -179,9 +222,17 @@ export function BookingClient() {
     setIsProcessing(true);
 
     try {
+      const checkInDate = new Date(draft.checkInDate);
+      const checkOutDate = new Date(draft.checkOutDate);
+
+      const availability = await validateRoomAvailability(draft.roomId, checkInDate, checkOutDate);
+      if (!availability.isAvailable) {
+        throw new Error(availability.message || "Selected room type is no longer available for these dates.");
+      }
+
       const bookingData = {
-        checkInDate: new Date(draft.checkInDate),
-        checkOutDate: new Date(draft.checkOutDate),
+        checkInDate,
+        checkOutDate,
         roomType: draft.roomType,
         roomId: draft.roomId,
         roomPrice: draft.roomPrice,
@@ -311,6 +362,27 @@ export function BookingClient() {
         toast.error("Check-out date must be after check-in date");
         return;
       }
+
+      if (!selectedRoom) {
+        toast.error("Selected room type could not be loaded. Please reselect a room.");
+        return;
+      }
+
+      if (guestCount > selectedRoom.maxGuests) {
+        toast.error(`This room allows up to ${selectedRoom.maxGuests} guests.`);
+        return;
+      }
+
+      if (isAvailabilityLoading) {
+        toast.info("Checking availability. Please wait a moment.");
+        return;
+      }
+
+      if (!selectedRoomAvailability || selectedRoomAvailability.availableUnits <= 0) {
+        toast.error("Selected room type is fully booked for these dates. Please choose another option.");
+        return;
+      }
+
       setStep(2);
     } else if (step === 2) {
       if (!firstName || !lastName || !email || !phone) {
@@ -417,10 +489,7 @@ export function BookingClient() {
                                 if (range?.to) setCheckOut(range.to);
                               }}
                               disabled={(date) => {
-                                if (date < new Date()) return true;
-                                return bookedDates.some(
-                                  bookedDate => bookedDate.toDateString() === date.toDateString()
-                                );
+                                return date < new Date(new Date().setHours(0, 0, 0, 0));
                               }}
                             />
                             <div className="p-3 border-t bg-gray-50">
@@ -431,7 +500,7 @@ export function BookingClient() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                                  <span className="line-through text-red-600 font-medium">Fully Booked</span>
+                                  <span className="text-gray-600 font-medium">Availability is calculated per room type</span>
                                 </div>
                               </div>
                             </div>
@@ -462,9 +531,7 @@ export function BookingClient() {
                               }}
                               disabled={(date) => {
                                 if (date <= (checkIn || new Date())) return true;
-                                return bookedDates.some(
-                                  bookedDate => bookedDate.toDateString() === date.toDateString()
-                                );
+                                return false;
                               }}
                             />
                           </PopoverContent>
@@ -481,19 +548,41 @@ export function BookingClient() {
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-200 border-2">
                           {roomTypes.map((room) => (
+                            (() => {
+                              const availability = availabilityByRoomId[room.id];
+                              const availableUnits = availability?.availableUnits;
+                              const soldOutForDates = !!availability && availableUnits <= 0;
+                              return (
                             <SelectItem 
                               key={room.id} 
-                              value={room.id.toString()}
-                              disabled={!room.available}
+                              value={room.id}
+                              disabled={!room.available || soldOutForDates}
                               className="text-gray-900 font-medium focus:bg-amber-100 focus:text-gray-900"
                             >
-                              {room.name} - R{room.price.toLocaleString()} per night
-                              {!room.available && " (Fully Booked)"}
+                              {room.name} - R{(room.priceNumeric || 0).toLocaleString()} per night
+                              {availability
+                                ? soldOutForDates
+                                  ? " (Sold out for selected dates)"
+                                  : ` (${availableUnits} left)`
+                                : ` (${room.totalUnits || 1} total)`}
                             </SelectItem>
+                              );
+                            })()
                           ))}
                         </SelectContent>
                       </Select>
-                      {selectedRoom && !selectedRoom.available && (
+                      {isRoomsLoading && (
+                        <p className="text-sm text-gray-500 mt-2">Loading room types...</p>
+                      )}
+                      {checkIn && checkOut && isAvailabilityLoading && (
+                        <p className="text-sm text-gray-500 mt-2">Checking availability...</p>
+                      )}
+                      {selectedRoomAvailability && selectedRoomAvailability.availableUnits > 0 && (
+                        <p className="text-sm text-emerald-700 mt-2">
+                          {selectedRoomAvailability.availableUnits} of {selectedRoomAvailability.totalUnits} unit(s) available for selected dates.
+                        </p>
+                      )}
+                      {selectedRoom && (!selectedRoom.available || (selectedRoomAvailability?.availableUnits ?? 1) <= 0) && (
                         <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                           <AlertCircle className="h-4 w-4" aria-hidden={true} /> This room type is currently fully booked for selected dates
                         </p>
@@ -692,16 +781,16 @@ export function BookingClient() {
                     <div className="pt-4 border-t">
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-600 text-sm">Room rate</span>
-                        <span className="font-medium text-gray-900">R{selectedRoom.price.toLocaleString()} x {nights}</span>
+                        <span className="font-medium text-gray-900">R{(selectedRoom.priceNumeric || 0).toLocaleString()} x {nights}</span>
                       </div>
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-600 text-sm">Subtotal</span>
                         <span className="font-medium text-gray-900">R{totalPrice.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between mb-2">
+                      {/* <div className="flex justify-between mb-2">
                         <span className="text-gray-600 text-sm">Taxes & fees</span>
                         <span className="font-medium text-gray-900">R{taxesAndFees.toLocaleString()}</span>
-                      </div>
+                      </div> */}
                       <div className="pt-4 border-t flex justify-between items-center">
                         <span className="text-lg font-semibold text-gray-900">Total</span>
                         <span className="text-2xl text-amber-600 font-bold">

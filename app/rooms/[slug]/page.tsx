@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Navigation } from "@/components/Navbar";
 import { RoomDetailClient } from "@/components/pages/roomDetailPage";
 import { Footer } from "@/components/Footer";
-import { getRoomBySlug as getDbRoomBySlug, getAllRooms } from "@/lib/roomService";
+import { getRoomBySlug as getDbRoomBySlug, getAllRooms, Room } from "@/lib/roomService";
 import { getRoomBySlug as getFallbackRoomBySlug, getAllRoomSlugs, rooms as fallbackRooms } from "@/data/rooms";
 
 interface RoomPageProps {
@@ -13,7 +13,7 @@ interface RoomPageProps {
 }
 
 // Wrapper function to get room from DB with fallback
-async function getRoomBySlug(slug: string) {
+async function getRoomBySlug(slug: string): Promise<Room | null> {
   try {
     const dbRoom = await getDbRoomBySlug(slug);
     if (dbRoom) {
@@ -26,8 +26,19 @@ async function getRoomBySlug(slug: string) {
     }
   }
   
-  // Fallback to static data
-  return getFallbackRoomBySlug(slug);
+  // Fallback to static data - transform to match DB Room type
+  const fallbackRoom = getFallbackRoomBySlug(slug);
+  if (fallbackRoom) {
+    return {
+      ...fallbackRoom,
+      id: fallbackRoom.slug, // Use slug as id for fallback
+      priceNumeric: parseFloat(fallbackRoom.price.replace(/[^\d.]/g, '')),
+      available: true,
+      totalUnits: 1,
+    };
+  }
+  
+  return null;
 }
 
 // Wrapper to get all slugs from DB with fallback

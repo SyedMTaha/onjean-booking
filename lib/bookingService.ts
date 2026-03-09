@@ -10,13 +10,14 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
+import { getAllRooms } from "@/lib/roomService";
 
 export interface BookingData {
   // Dates & Room
   checkInDate: Date;
   checkOutDate: Date;
   roomType: string;
-  roomId: number;
+  roomId: string;
   roomPrice: number;
   nights: number;
   guests: string;
@@ -52,6 +53,36 @@ type NewBookingData = Omit<
   "userId" | "createdAt" | "updatedAt" | "bookingStatus"
 >;
 
+export interface RoomAvailability {
+  roomId: string;
+  roomName: string;
+  slug: string;
+  totalUnits: number;
+  bookedUnits: number;
+  availableUnits: number;
+  isSoldOut: boolean;
+}
+
+const ACTIVE_BOOKING_STATUSES: Array<BookingData["bookingStatus"]> = ["pending", "approved"];
+
+function toDateValue(input: unknown): Date | null {
+  if (!input) return null;
+  if (input instanceof Date) return input;
+
+  if (typeof input === "object" && input !== null && "toDate" in input) {
+    const converted = (input as { toDate?: () => Date }).toDate?.();
+    return converted instanceof Date && !Number.isNaN(converted.getTime()) ? converted : null;
+  }
+
+  const parsed = new Date(input as string | number);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
+  // [start, end) overlap check for booking intervals.
+  return startA < endB && startB < endA;
+}
+
 /**
  * Save a booking to Firestore
  * @param userId - The user's UID
@@ -84,6 +115,90 @@ export async function saveBooking(userId: string, bookingData: NewBookingData) {
     }
     throw new Error(firebaseError?.message || "Failed to save booking. Please try again.");
   }
+}
+
+export async function getRoomAvailabilityForRange(
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<Record<string, RoomAvailability>> {
+  const rooms = await getAllRooms();
+
+  const activeBookingsQuery = query(
+    collection(db, "roomBookings"),
+    where("bookingStatus", "in", ACTIVE_BOOKING_STATUSES)
+  );
+  const activeBookingsSnapshot = await getDocs(activeBookingsQuery);
+
+  const activeBookings = activeBookingsSnapshot.docs.map((bookingDoc) => bookingDoc.data() as Partial<BookingData>);
+
+  const availabilityMap: Record<string, RoomAvailability> = {};
+
+  for (const room of rooms) {
+    const roomTotalUnits = room.totalUnits && room.totalUnits > 0 ? room.totalUnits : 1;
+
+    const overlappingBookings = activeBookings.filter((booking) => {
+      const bookingRoomId = String(booking.roomId || "");
+      const bookingRoomType = String(booking.roomType || "").trim().toLowerCase();
+      const matchesRoom = bookingRoomId === room.id || bookingRoomType === room.name.trim().toLowerCase();
+
+      if (!matchesRoom) {
+        return false;
+      }
+
+      const existingCheckIn = toDateValue(booking.checkInDate);
+      const existingCheckOut = toDateValue(booking.checkOutDate);
+      if (!existingCheckIn || !existingCheckOut) {
+        return false;
+      }
+
+      return rangesOverlap(checkInDate, checkOutDate, existingCheckIn, existingCheckOut);
+    });
+
+    const bookedUnits = overlappingBookings.length;
+    const availableUnits = Math.max(roomTotalUnits - bookedUnits, 0);
+
+    availabilityMap[room.id] = {
+      roomId: room.id,
+      roomName: room.name,
+      slug: room.slug,
+      totalUnits: roomTotalUnits,
+      bookedUnits,
+      availableUnits,
+      isSoldOut: availableUnits === 0,
+    };
+  }
+
+  return availabilityMap;
+}
+
+export async function validateRoomAvailability(
+  roomId: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<{ isAvailable: boolean; availableUnits: number; message?: string }> {
+  const map = await getRoomAvailabilityForRange(checkInDate, checkOutDate);
+  const roomAvailability = map[roomId];
+
+  if (!roomAvailability) {
+    return {
+      isAvailable: false,
+      availableUnits: 0,
+      message: "Selected room type no longer exists.",
+    };
+  }
+
+  if (roomAvailability.availableUnits <= 0) {
+    return {
+      isAvailable: false,
+      availableUnits: 0,
+      message: "Selected room type is fully booked for these dates.",
+    };
+  }
+
+  return {
+    isAvailable: true,
+    availableUnits: roomAvailability.availableUnits,
+  };
 }
 
 /**

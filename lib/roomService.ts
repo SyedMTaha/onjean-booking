@@ -30,11 +30,23 @@ export interface Room {
   features?: string[];
   view?: string;
   available: boolean;
+  totalUnits?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 const ROOMS_COLLECTION = "rooms";
+
+function normalizeRoom(docId: string, data: Record<string, any>): Room {
+  return {
+    id: docId,
+    ...data,
+    // Inventory count per room type. Defaults to 1 for legacy docs.
+    totalUnits: typeof data.totalUnits === "number" && data.totalUnits > 0 ? data.totalUnits : 1,
+    createdAt: data.createdAt?.toDate?.() || data.createdAt,
+    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
+  } as Room;
+}
 
 async function ensureRoomServiceAuth(): Promise<void> {
   // Only needed in browser. Server-side scripts use a different path.
@@ -80,12 +92,7 @@ export async function getAllRooms(): Promise<Room[]> {
     const rooms: Room[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      rooms.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
-      } as Room);
+      rooms.push(normalizeRoom(doc.id, data));
     });
     
     // Sort in memory if we couldn't use orderBy
@@ -135,13 +142,8 @@ export async function getRoomBySlug(slug: string): Promise<Room | null> {
     
     const doc = snapshot.docs[0];
     const data = doc.data();
-    
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
-    } as Room;
+
+    return normalizeRoom(doc.id, data);
   } catch (error) {
     console.error("Error fetching room by slug:", error);
     throw new Error("Failed to fetch room from database");
@@ -162,12 +164,7 @@ export async function getRoomById(roomId: string): Promise<Room | null> {
     }
     
     const data = snapshot.data();
-    return {
-      id: snapshot.id,
-      ...data,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
-    } as Room;
+    return normalizeRoom(snapshot.id, data);
   } catch (error) {
     console.error("Error fetching room by ID:", error);
     throw new Error("Failed to fetch room from database");
@@ -276,12 +273,7 @@ export async function getAvailableRooms(): Promise<Room[]> {
     const rooms: Room[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      rooms.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
-      } as Room);
+      rooms.push(normalizeRoom(doc.id, data));
     });
     
     return rooms;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { rooms } from '@/data/rooms';
+import { getAllRooms, Room } from '@/lib/roomService';
 import { Calendar } from 'lucide-react';
 
 export function SearchBar() {
   const router = useRouter();
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState('');
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
@@ -31,6 +32,19 @@ export function SearchBar() {
   const [guests, setGuests] = useState('');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [activeField, setActiveField] = useState<'checkIn' | 'checkOut' | null>(null);
+
+  useEffect(() => {
+    const loadRooms = async () => {
+      try {
+        const dbRooms = await getAllRooms();
+        setRooms(dbRooms.filter((room) => room.available));
+      } catch {
+        setRooms([]);
+      }
+    };
+
+    loadRooms();
+  }, []);
 
   const getNightCount = () => {
     if (dateRange.from && dateRange.to) {
@@ -55,6 +69,7 @@ export function SearchBar() {
     const selectedRoomData = rooms.find((room) => room.slug === selectedRoom);
 
     if (selectedRoomData) {
+      params.set('roomId', selectedRoomData.id);
       params.set('room', selectedRoomData.name);
     }
 
