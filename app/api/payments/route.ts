@@ -12,7 +12,7 @@ const getBaseUrl = (request: NextRequest): string => {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, email, firstName, lastName, bookingData } = body;
+    const { amount, email, firstName, lastName, bookingData, returnPath } = body;
 
     if (!amount || !email) {
       return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = getBaseUrl(request);
+    const basePath = returnPath || '/book-now';
 
     const checkoutResponse = await fetch(YOCO_CHECKOUTS_API, {
       method: 'POST',
@@ -39,9 +40,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         amount: Math.round(amount * 100),
         currency: 'ZAR',
-        successUrl: `${baseUrl}/book-now?payment=success`,
-        cancelUrl: `${baseUrl}/book-now?payment=cancelled`,
-        failureUrl: `${baseUrl}/book-now?payment=failed`,
+        successUrl: `${baseUrl}${basePath}?payment=success`,
+        cancelUrl: `${baseUrl}${basePath}?payment=cancelled`,
+        failureUrl: `${baseUrl}${basePath}?payment=failed`,
         metadata: {
           email,
           firstName,

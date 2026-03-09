@@ -12,6 +12,7 @@ interface YocoPaymentFormProps {
   isProcessing: boolean;
   onError: (error: string) => void;
   onCheckoutCreated?: (checkoutId: string) => void;
+  returnPath?: string;
 }
 
 export function YocoPaymentForm({
@@ -22,6 +23,7 @@ export function YocoPaymentForm({
   isProcessing,
   onError,
   onCheckoutCreated,
+  returnPath,
 }: YocoPaymentFormProps) {
   const [startingCheckout, setStartingCheckout] = useState(false);
   const [yocoError, setYocoError] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export function YocoPaymentForm({
           bookingData: {
             bookingReference: `BK-${Date.now()}`,
           },
+          returnPath,
         }),
       });
 

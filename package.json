@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:rooms": "node --import tsx scripts/seedRooms.ts"
+    "seed:rooms": "node --import tsx scripts/seedRooms.ts",
+    "seed:menu": "node --import tsx scripts/seedMenuItems.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

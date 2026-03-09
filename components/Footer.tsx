@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Phone, Mail, Instagram, Facebook, Youtube } from "lucide-react";
+import { MapPin, Phone, Mail, Instagram, Facebook } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
 
 export function Footer() {
   const navLinks = [
@@ -48,13 +49,13 @@ export function Footer() {
                 <Facebook className="w-5 h-5" />
               </a>
               <a 
-                href="https://www.youtube.com/@78onjean" 
+                href="https://www.tiktok.com/@78onjean" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-amber-400 transition-colors"
-                aria-label="YouTube"
+                aria-label="TikTok"
               >
-                <Youtube className="w-5 h-5" />
+                <FaTiktok className="w-5 h-5" />
               </a>
             </div>
           </div>

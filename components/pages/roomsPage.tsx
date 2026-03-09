@@ -10,57 +10,19 @@ import { rooms as fallbackRooms } from "@/data/rooms";
 import { useEffect, useState } from "react";
 
 export function RoomsClient() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        setLoading(true);
-        const dbRooms = await getAllRooms();
-        
-        if (dbRooms.length === 0) {
-          // Use fallback if DB is empty - convert to match DB format
-          const convertedFallback = fallbackRooms.map(r => ({
-            ...r,
-            id: String(r.id),
-            priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
-            available: true
-          })) as unknown as Room[];
-          setRooms(convertedFallback);
-        } else {
-          // Only show available rooms
-          setRooms(dbRooms.filter(room => room.available));
-        }
-      } catch (error) {
-        // Use fallback on any error - convert to match DB format
-        if (process.env.NODE_ENV === 'development') {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage === 'AUTH_DISABLED') {
-            console.info('ℹ️ Using static room data. Enable Firebase anonymous auth for dynamic data.');
-          } else {
-            console.warn('⚠️ Error loading rooms, using static data:', errorMessage);
-          }
-        }
-        const convertedFallback = fallbackRooms.map(r => ({
-          ...r,
-          id: String(r.id),
-          priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
-          available: true
-        })) as unknown as Room[];
-        setRooms(convertedFallback);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRooms();
-  }, []);
+  // Use local rooms data directly
+  const mappedRooms = fallbackRooms.map(r => ({
+    ...r,
+    priceNumeric: parseInt(r.price.replace(/[R,]/g, ""), 10),
+    available: true
+  })) as Room[];
+  const rooms = mappedRooms;
+  const loading = false;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       {/* Hero Section */}
-      <section className="relative h-[300px] md:h-[400px] overflow-hidden">
+      <section className="relative h-75 md:h-100 overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1200&h=500&fit=crop"
@@ -83,10 +45,10 @@ export function RoomsClient() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {loading ? (
               // Loading skeleton
-              Array.from({ length: 4 }).map((_, index) => (
+              Array.from({ length: 7 }).map((_, index) => (
                 <Card key={index} className="overflow-hidden border border-gray-200 bg-white animate-pulse">
                   <div className="flex flex-col md:flex-row h-full">
-                    <div className="w-full md:w-[40%] h-[280px] md:h-auto bg-gray-300" />
+                    <div className="w-full md:w-[40%] h-70 md:h-auto bg-gray-300" />
                     <div className="w-full md:w-[60%] p-6 flex flex-col">
                       <div className="h-6 bg-gray-300 rounded mb-3 w-3/4" />
                       <div className="h-4 bg-gray-200 rounded mb-3 w-1/2" />
@@ -109,91 +71,83 @@ export function RoomsClient() {
               ))
             ) : rooms.length > 0 ? (
               rooms.map((room) => (
-              <Card key={room.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 bg-white">
-                <div className="flex flex-col md:flex-row h-full">
-                  {/* Image - 40% */}
-                  <div className="w-full md:w-[40%] h-[280px] md:h-auto overflow-hidden">
-                    <img
-                      src={room.image}
-                      alt={room.name}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                    />
-                  </div>
-                  
-                  {/* Content - 60% */}
-                  <div className="w-full md:w-[60%] p-6 flex flex-col relative">
-                    {/* Guest Badge - Top Right */}
-                    <Badge className="absolute top-4 right-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                      {room.maxGuests} Guests
-                    </Badge>
-
-                    {/* Room Type */}
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2 pr-24">{room.name}</h3>
-                    
-                    {/* Bed Type */}
-                    <p className="text-sm text-gray-600 mb-3">{room.bedType}</p>
-                    
-                    {/* Description */}
-                    <p className="text-gray-700 text-sm mb-4 line-clamp-2">{room.description}</p>
-                    
-                    {/* Guest & Size Info */}
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4" />
-                        <span>{room.maxGuests} Guests</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Maximize className="w-4 h-4" />
-                        <span>{room.size}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
-                        <span>{room.totalUnits || 1} unit(s)</span>
-                      </div>
+                <Card key={room.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 bg-white">
+                  <div className="flex flex-col md:flex-row h-full">
+                    {/* Image - 40% */}
+                    <div className="w-full md:w-[40%] h-70 md:h-auto overflow-hidden">
+                      <img
+                        src={room.image}
+                        alt={room.name}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                      />
                     </div>
-                    
-                    {/* Amenities Badges */}
-                    <div className="flex flex-wrap gap-2 mb-5">
-                      {room.amenities.slice(0, 5).map((amenity, i) => (
-                        <Badge 
-                          key={i} 
-                          variant="outline"
-                          className="text-xs text-gray-700 bg-white border-gray-300"
-                        >
-                          {amenity}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    {/* Price & Buttons */}
-                    <div className="mt-auto pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <span className="text-3xl font-bold text-amber-600">{room.price}</span>
-                          <span className="text-gray-500 text-sm ml-2">/ night</span>
+                    {/* Content - 60% */}
+                    <div className="w-full md:w-[60%] p-6 pt-12 flex flex-col relative">
+                      {/* Room ID Badge - Top Left */}
+                      <Badge className="absolute top-4 left-4 bg-blue-100 text-blue-700 border-0">
+                        Room ID: {room.id}
+                      </Badge>
+                      {/* Guest Badge - Top Right */}
+                      <Badge className="absolute top-4 right-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
+                        {room.maxGuests} Guests
+                      </Badge>
+                      {/* Room Type */}
+                      <h3 className="text-2xl font-bold text-slate-900 mb-2 pr-24 mt-4">{room.name}</h3>
+                      {/* Bed Type */}
+                      <p className="text-sm text-gray-600 mb-3">{room.bedType}</p>
+                      {/* Description */}
+                      <p className="text-gray-700 text-sm mb-4 line-clamp-2">{room.description}</p>
+                      {/* Guest & Size Info */}
+                      <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4" />
+                          <span>{room.maxGuests} Guests</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Maximize className="w-4 h-4" />
+                          <span>{room.size}</span>
                         </div>
                       </div>
-                      
-                      <div className="flex gap-3">
-                        <Link href={`/rooms/${room.slug}`} className="flex-1">
-                          <Button 
-                            variant="outline" 
-                            className="w-full bg-white border-amber-600  text-amber-600  hover:bg-gray-50"
+                      {/* Amenities Badges */}
+                      <div className="flex flex-wrap gap-2 mb-5">
+                        {room.amenities.slice(0, 5).map((amenity, i) => (
+                          <Badge 
+                            key={i} 
+                            variant="outline"
+                            className="text-xs text-gray-700 bg-white border-gray-300"
                           >
-                            View Details
-                          </Button>
-                        </Link>
-                        <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="flex-1">
-                          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-                            Book Now
-                          </Button>
-                        </Link>
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                      {/* Price & Buttons */}
+                      <div className="mt-auto pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <span className="text-3xl font-bold text-amber-600">{room.price}</span>
+                            <span className="text-gray-500 text-sm ml-2">/ night</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <Link href={`/rooms/${room.slug}`} className="flex-1">
+                            <Button 
+                              variant="outline" 
+                              className="w-full bg-white border-amber-600  text-amber-600  hover:bg-gray-50"
+                            >
+                              View Details
+                            </Button>
+                          </Link>
+                          <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="flex-1">
+                            <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                              Book Now
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              ))
             ) : (
               <div className="col-span-full text-center py-16">
                 <p className="text-gray-500 text-lg">No rooms available at the moment.</p>

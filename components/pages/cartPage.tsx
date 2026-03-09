@@ -1,15 +1,180 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { YocoPaymentForm } from "@/components/YocoPaymentForm";
+
+const PENDING_ORDER_KEY = "pendingFoodOrderDraft";
+const PENDING_ORDER_CHECKOUT_ID_KEY = "pendingFoodOrderYocoCheckoutId";
+
+type PendingOrderDraft = {
+  items: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image: string;
+    description: string;
+  }>;
+  totalPrice: number;
+  userEmail: string;
+  userName: string;
+};
 
 export function CartPage() {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
+  const { user } = useAuth();
   const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+
+  // Save pending order draft to session storage
+  const savePendingOrderDraft = () => {
+    if (!user) {
+      toast.error("Please sign in to complete your order");
+      return;
+    }
+
+    const draft: PendingOrderDraft = {
+      items: items.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        description: item.description,
+      })),
+      totalPrice,
+      userEmail: user.email || "",
+      userName: user.displayName || user.email?.split("@")[0] || "Guest",
+    };
+
+    sessionStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(draft));
+    setShowPaymentForm(true);
+  };
+
+  // Complete the order after payment verification
+  const completePendingOrder = async (paymentId: string) => {
+    try {
+      setIsProcessing(true);
+
+      // Get checkout ID from session storage
+      const checkoutId = sessionStorage.getItem(PENDING_ORDER_CHECKOUT_ID_KEY);
+      if (!checkoutId) {
+        throw new Error("No checkout ID found");
+      }
+
+      // Verify payment with backend
+      const verifyResponse = await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ checkoutId }),
+      });
+
+      if (!verifyResponse.ok) {
+        throw new Error("Payment verification failed");
+      }
+
+      const paymentData = await verifyResponse.json();
+      
+      if (paymentData.status !== "successful") {
+        throw new Error("Payment was not successful");
+      }
+
+      // Get pending order draft
+      const draftJson = sessionStorage.getItem(PENDING_ORDER_KEY);
+      if (!draftJson) {
+        throw new Error("No pending order found");
+      }
+
+      const draft: PendingOrderDraft = JSON.parse(draftJson);
+
+      // Verify user is still signed in
+      if (!user) {
+        throw new Error("User not signed in");
+      }
+
+      // Save order to Firestore
+      const { saveFoodOrder } = await import("@/lib/orderService");
+      const orderId = await saveFoodOrder(
+        user.uid,
+        draft.userEmail,
+        draft.userName,
+        draft.items,
+        draft.totalPrice,
+        paymentId
+      );
+
+      // Clear session storage
+      sessionStorage.removeItem(PENDING_ORDER_KEY);
+      sessionStorage.removeItem(PENDING_ORDER_CHECKOUT_ID_KEY);
+
+      // Clear cart
+      clearCart();
+
+      // Show success message
+      toast.success("Order placed successfully!", {
+        description: `Order ID: ${orderId}`,
+        duration: 5000,
+      });
+
+      // Redirect to orders page (or menu)
+      setTimeout(() => {
+        router.push("/menu");
+      }, 1500);
+
+    } catch (error) {
+      console.error("Error completing order:", error);
+      toast.error("Failed to complete order", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle payment return from Yoco
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get("status");
+    const paymentId = urlParams.get("id");
+
+    if (status === "success" && paymentId) {
+      // Payment successful, complete the order
+      completePendingOrder(paymentId);
+      
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (status === "cancelled") {
+      toast.error("Payment was cancelled");
+      setShowPaymentForm(false);
+      
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  const handleProceedToPayment = () => {
+    if (!user) {
+      toast.error("Please sign in to complete your order", {
+        description: "You need to be signed in to place an order",
+      });
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    savePendingOrderDraft();
+  };
 
   if (items.length === 0) {
     return (
@@ -166,33 +331,83 @@ export function CartPage() {
 
               {/* Buttons */}
               <div className="space-y-3">
-                <Button
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 md:py-4 text-base md:text-lg rounded-lg transition-colors"
-                  onClick={() => {
-                    toast.success("Proceeding to checkout...");
-                    router.push("/checkout");
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
+                {!showPaymentForm ? (
+                  <>
+                    {/* Auth Warning if not signed in */}
+                    {!user && (
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-800">
+                          You need to be signed in to place an order
+                        </p>
+                      </div>
+                    )}
 
-                <Button
-                  variant="outline"
-                  className="w-full font-medium py-3 md:py-4 text-base md:text-lg rounded-lg border-2 border-gray-900   hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-colors"
-                  onClick={() => router.push("/menu")}
-                >
-                  Continue Shopping
-                </Button>
+                    <Button
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 md:py-4 text-base md:text-lg rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleProceedToPayment}
+                      disabled={!user || items.length === 0}
+                    >
+                      Proceed to Payment
+                    </Button>
 
-                <Button
-                  className="w-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white font-medium py-3 md:py-4 text-base md:text-lg rounded-lg transition-colors"
-                  onClick={() => {
-                    clearCart();
-                    toast.success("Cart cleared");
-                  }}
-                >
-                  Clear Cart
-                </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full font-medium py-3 md:py-4 text-base md:text-lg rounded-lg border-2 border-gray-900 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-colors"
+                      onClick={() => router.push("/menu")}
+                    >
+                      Continue Shopping
+                    </Button>
+
+                    <Button
+                      className="w-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white font-medium py-3 md:py-4 text-base md:text-lg rounded-lg transition-colors"
+                      onClick={() => {
+                        clearCart();
+                        toast.success("Cart cleared");
+                      }}
+                    >
+                      Clear Cart
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {/* Payment Form */}
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Complete Payment
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        You will be redirected to Yoco to complete your payment securely.
+                      </p>
+                      <YocoPaymentForm
+                        amount={totalPrice}
+                        email={user?.email || ""}
+                        firstName={user?.displayName?.split(" ")[0] || "Guest"}
+                        lastName={user?.displayName?.split(" ").slice(1).join(" ") || ""}
+                        isProcessing={isProcessing}
+                        returnPath="/cart"
+                        onError={(error) => {
+                          toast.error("Payment failed", {
+                            description: error,
+                          });
+                          setShowPaymentForm(false);
+                        }}
+                        onCheckoutCreated={(checkoutId) => {
+                          sessionStorage.setItem(PENDING_ORDER_CHECKOUT_ID_KEY, checkoutId);
+                        }}
+                      />
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full font-medium py-3 text-base rounded-lg border-2 transition-colors"
+                      onClick={() => setShowPaymentForm(false)}
+                      disabled={isProcessing}
+                    >
+                      Back to Cart
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

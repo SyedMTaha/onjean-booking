@@ -37,6 +37,7 @@ export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const isAuthenticatedUser = Boolean(user && !user.isAnonymous);
 
   // Check for admin session
   useEffect(() => {
@@ -144,7 +145,7 @@ export function Navigation() {
 
             {/* Auth Section */}
             <div className="flex items-center gap-3">
-            {user ? (
+            {isAuthenticatedUser ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -169,9 +170,6 @@ export function Navigation() {
                     </DropdownMenuItem>
                   ) : (
                     <>
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="text-gray-200 hover:text-white hover:bg-gray-800">Profile</Link>
-                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
                       </DropdownMenuItem>
@@ -232,7 +230,7 @@ export function Navigation() {
               </Link>
             ))}
             <div className="pt-2 border-t border-gray-700">
-              {!user ? (
+              {!isAuthenticatedUser ? (
                 <div className="flex gap-2 px-4">
                   <Button
                     variant="outline"

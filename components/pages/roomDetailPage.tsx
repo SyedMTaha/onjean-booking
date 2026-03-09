@@ -17,7 +17,7 @@ interface RoomDetailClientProps {
 // Helper function to get icon for facility
 const getFacilityIcon = (facility: string) => {
   const lowerFacility = facility.toLowerCase();
-  
+
   if (lowerFacility.includes('shower')) return Droplets;
   if (lowerFacility.includes('bath') && !lowerFacility.includes('room')) return Bath;
   if (lowerFacility.includes('toilet')) return AlertCircle;
@@ -38,8 +38,8 @@ const getFacilityIcon = (facility: string) => {
   if (lowerFacility.includes('linen') || lowerFacility.includes('sheet')) return Layers;
   if (lowerFacility.includes('wifi') || lowerFacility.includes('internet')) return Wifi;
   if (lowerFacility.includes('light')) return Lightbulb;
-  
-  return Check; // Default icon
+
+  return Check;
 };
 
 export function RoomDetailClient({ room }: RoomDetailClientProps) {
@@ -49,7 +49,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const shouldExpandInfoCards = room.slug === "deluxe-double-room-with-extra-bed";
 
-  // Fetch all rooms for "You May Also Like" section
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -57,26 +56,24 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
         if (dbRooms.length > 0) {
           setAllRooms(dbRooms.filter(r => r.available && r.id !== room.id));
         } else {
-          // Use fallback - convert to match DB format
           const convertedFallback = fallbackRooms
             .filter(r => String(r.id) !== room.id)
             .map(r => ({
               ...r,
               id: String(r.id),
               priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
-              available: true
+              available: true,
             })) as unknown as Room[];
           setAllRooms(convertedFallback);
         }
       } catch (error) {
-        // Use fallback on error - convert to match DB format
         const convertedFallback = fallbackRooms
           .filter(r => String(r.id) !== room.id)
           .map(r => ({
             ...r,
             id: String(r.id),
             priceNumeric: parseInt(r.price.replace(/[R,]/g, ''), 10),
-            available: true
+            available: true,
           })) as unknown as Room[];
         setAllRooms(convertedFallback);
       } finally {
@@ -87,7 +84,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
     fetchRooms();
   }, [room.id]);
 
-  // Get random rooms for "You May Also Like"
   const randomRooms = useMemo(() => {
     const shuffled = [...allRooms].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 4);
@@ -95,8 +91,9 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
+
       {/* Hero Section */}
-      <section className="relative h-[400px] md:h-[500px] overflow-hidden">
+      <section className="relative h-[550px] md:h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={selectedImage}
@@ -106,7 +103,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
           <div className="absolute inset-0 bg-black/45" />
         </div>
         <div className="relative container mx-auto px-4 h-full flex flex-col justify-between py-8">
-          {/* Back Button */}
           <div>
             <Button
               onClick={() => router.push("/rooms")}
@@ -117,8 +113,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
               Back to Rooms
             </Button>
           </div>
-
-          {/* Room Title */}
           <div className="text-white">
             <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
               {room.maxGuests} Guests
@@ -139,7 +133,9 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                   key={index}
                   onClick={() => setSelectedImage(image)}
                   className={`flex-shrink-0 w-68 h-32 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === image ? "border-amber-600" : "border-gray-300 hover:border-gray-400"
+                    selectedImage === image
+                      ? "border-amber-600"
+                      : "border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <img
@@ -158,10 +154,12 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Details */}
+
+            {/* ── Left Column ── */}
             <div className="lg:col-span-2 space-y-8">
+
               {/* Quick Info Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="p-4 bg-white border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
@@ -186,6 +184,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                   </div>
                 </Card>
 
+                {/* ✅ FIX: Removed the stray </div> that was here, closing the left column early */}
                 <Card className={`p-4 bg-white border-gray-200 ${shouldExpandInfoCards ? "min-h-[130px]" : ""}`}>
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -205,19 +204,8 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                     </div>
                   </div>
                 </Card>
-
-                <Card className="p-4 bg-white border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                      <Eye className="w-6 h-6 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">View</p>
-                      <p className="text-sm font-semibold text-gray-900">{room.view}</p>
-                    </div>
-                  </div>
-                </Card>
               </div>
+              {/* End Quick Info Cards */}
 
               {/* Description */}
               <Card className="p-8 bg-white border-gray-200">
@@ -236,22 +224,28 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
               <Card className="p-8 bg-white border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Bathroom Facilities</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                  {room.features?.filter(feature => 
-                    feature.toLowerCase().includes('toilet') || 
-                    feature.toLowerCase().includes('shower') || 
-                    feature.toLowerCase().includes('bath') ||
-                    feature.toLowerCase().includes('hairdryer') ||
-                    feature.toLowerCase().includes('slippers') ||
-                    feature.toLowerCase().includes('towel')
-                  ).map((feature, index) => {
-                    const Icon = getFacilityIcon(feature);
-                    return (
-                      <div key={index} className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                        <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                        <span className="text-sm font-medium text-gray-800">{feature}</span>
-                      </div>
-                    );
-                  })}
+                  {room.features
+                    ?.filter(
+                      feature =>
+                        feature.toLowerCase().includes('toilet') ||
+                        feature.toLowerCase().includes('shower') ||
+                        feature.toLowerCase().includes('bath') ||
+                        feature.toLowerCase().includes('hairdryer') ||
+                        feature.toLowerCase().includes('slippers') ||
+                        feature.toLowerCase().includes('towel')
+                    )
+                    .map((feature, index) => {
+                      const Icon = getFacilityIcon(feature);
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200"
+                        >
+                          <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
+                          <span className="text-sm font-medium text-gray-800">{feature}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </Card>
 
@@ -259,23 +253,29 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
               <Card className="p-8 bg-white border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Room Facilities</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                  {room.features?.filter(feature => 
-                    !feature.toLowerCase().includes('toilet') && 
-                    !feature.toLowerCase().includes('shower') && 
-                    !feature.toLowerCase().includes('bath') &&
-                    !feature.toLowerCase().includes('hairdryer') &&
-                    !feature.toLowerCase().includes('slippers') &&
-                    !feature.toLowerCase().includes('towel') &&
-                    !feature.toLowerCase().includes('smoking')
-                  ).map((feature, index) => {
-                    const Icon = getFacilityIcon(feature);
-                    return (
-                      <div key={index} className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200">
-                        <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
-                        <span className="text-sm font-medium text-gray-800">{feature}</span>
-                      </div>
-                    );
-                  })}
+                  {room.features
+                    ?.filter(
+                      feature =>
+                        !feature.toLowerCase().includes('toilet') &&
+                        !feature.toLowerCase().includes('shower') &&
+                        !feature.toLowerCase().includes('bath') &&
+                        !feature.toLowerCase().includes('hairdryer') &&
+                        !feature.toLowerCase().includes('slippers') &&
+                        !feature.toLowerCase().includes('towel') &&
+                        !feature.toLowerCase().includes('smoking')
+                    )
+                    .map((feature, index) => {
+                      const Icon = getFacilityIcon(feature);
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2 md:px-5 md:py-3 border border-gray-200"
+                        >
+                          <Icon className="w-5 h-5 text-gray-700 flex-shrink-0" />
+                          <span className="text-sm font-medium text-gray-800">{feature}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </Card>
 
@@ -289,9 +289,11 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                   </div>
                 </div>
               </Card>
-            </div>
 
-            {/* Right Column - Booking Card */}
+            </div>
+            {/* ── End Left Column ── */}
+
+            {/* ── Right Column - Booking Card ── */}
             <div className="lg:col-span-1">
               <Card className="p-6 bg-white border-gray-200 sticky top-20">
                 <div className="mb-6">
@@ -322,7 +324,10 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
-                  <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="block">
+                  <Link
+                    href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`}
+                    className="block"
+                  >
                     <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                       Book Now
                     </Button>
@@ -343,6 +348,8 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                 </div>
               </Card>
             </div>
+            {/* ── End Right Column ── */}
+
           </div>
         </div>
       </section>
@@ -357,7 +364,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {loadingRooms ? (
-              // Loading skeleton
               Array.from({ length: 4 }).map((_, index) => (
                 <Card key={index} className="overflow-hidden border border-gray-200 bg-white animate-pulse">
                   <div className="w-full h-40 bg-gray-300" />
@@ -375,58 +381,54 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
               ))
             ) : randomRooms.length > 0 ? (
               randomRooms.map((similarRoom) => (
-              <Card key={similarRoom.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white flex flex-col">
-                {/* Image - 50% */}
-                <div className="w-full h-40 overflow-hidden">
-                  <img
-                    src={similarRoom.image}
-                    alt={similarRoom.name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                  />
-                </div>
-
-                {/* Content - 50% */}
-                <div className="flex-1 p-5 flex flex-col">
-                  {/* Room Title */}
-                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">{similarRoom.name}</h3>
-
-                  {/* Guest & Size Info */}
-                  <div className="space-y-2 mb-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      <span>{similarRoom.maxGuests} Guests</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Maximize className="w-4 h-4" />
-                      <span>{similarRoom.size}</span>
-                    </div>
+                <Card
+                  key={similarRoom.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white flex flex-col"
+                >
+                  <div className="w-full h-40 overflow-hidden">
+                    <img
+                      src={similarRoom.image}
+                      alt={similarRoom.name}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                    />
                   </div>
-
-                  {/* Price */}
-                  <div className="mb-4">
-                    <span className="text-2xl font-bold text-amber-600">{similarRoom.price}</span>
-                    <span className="text-gray-500 text-sm ml-1">/ night</span>
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex gap-2 mt-auto">
-                    <Link href={`/rooms/${similarRoom.slug}`} className="flex-1">
-                      <Button 
-                        variant="outline" 
-                        className="w-full bg-white border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+                  <div className="flex-1 p-5 flex flex-col">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">{similarRoom.name}</h3>
+                    <div className="space-y-2 mb-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>{similarRoom.maxGuests} Guests</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Maximize className="w-4 h-4" />
+                        <span>{similarRoom.size}</span>
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <span className="text-2xl font-bold text-amber-600">{similarRoom.price}</span>
+                      <span className="text-gray-500 text-sm ml-1">/ night</span>
+                    </div>
+                    <div className="flex gap-2 mt-auto">
+                      <Link href={`/rooms/${similarRoom.slug}`} className="flex-1">
+                        <Button
+                          variant="outline"
+                          className="w-full bg-white border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+                        >
+                          View
+                        </Button>
+                      </Link>
+                      <Link
+                        href={`/book-now?roomId=${encodeURIComponent(similarRoom.id)}&room=${encodeURIComponent(similarRoom.name)}`}
+                        className="flex-1"
                       >
-                        View
-                      </Button>
-                    </Link>
-                    <Link href={`/book-now?roomId=${encodeURIComponent(similarRoom.id)}&room=${encodeURIComponent(similarRoom.name)}`} className="flex-1">
-                      <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm">
-                        Book
-                      </Button>
-                    </Link>
+                        <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm">
+                          Book
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              ))
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-gray-500 text-lg">No other rooms available at the moment.</p>
@@ -436,32 +438,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
         </div>
       </section>
 
-      {/* Policies Section */}
-      {/* <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Policies & Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="p-6 border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Check-in / Check-out</h3>
-              <p className="text-sm text-gray-600 mb-2">Check-in: 3:00 PM</p>
-              <p className="text-sm text-gray-600">Check-out: 11:00 AM</p>
-            </Card>
-
-            <Card className="p-6 border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Cancellation</h3>
-              <p className="text-sm text-gray-600">
-                Free cancellation up to 48 hours before arrival. Late cancellations subject to one night's charge.
-              </p>
-            </Card>
-
-            <Card className="p-6 border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Additional Info</h3>
-              <p className="text-sm text-gray-600 mb-2">Non-smoking room</p>
-              <p className="text-sm text-gray-600">Pets not allowed</p>
-            </Card>
-          </div>
-        </div>
-      </section> */}
     </div>
   );
 }

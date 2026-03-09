@@ -12,6 +12,52 @@ import { toast } from "sonner";
 import { SearchBar } from "@/components/SearchBar";
 import { getAllRooms, Room } from "@/lib/roomService";
 
+type Testimonial = {
+  name: string;
+  location: string;
+  rating: number;
+  comment: string;
+};
+
+const fallbackTestimonials: Testimonial[] = [
+  {
+    name: "Sarah Mitchell",
+    location: "London, UK",
+    rating: 5,
+    comment: "Absolutely stunning hotel! The service was impeccable and the rooms were beautifully designed. The spa treatments were divine.",
+  },
+  {
+    name: "James Peterson",
+    location: "New York, USA",
+    rating: 5,
+    comment: "Best hotel experience in South Africa. The staff went above and beyond to make our stay memorable. Highly recommend!",
+  },
+  {
+    name: "Emma van der Berg",
+    location: "Johannesburg, SA",
+    rating: 5,
+    comment: "A hidden gem! Every detail was perfect. The breakfast was exceptional and the amenities are world-class.",
+  },
+  {
+    name: "Michael Chen",
+    location: "Singapore",
+    rating: 5,
+    comment: "Exceptional hospitality and attention to detail. The views are absolutely breathtaking and the staff is incredibly courteous.",
+  },
+  {
+    name: "Isabella Rodriguez",
+    location: "Madrid, Spain",
+    rating: 5,
+    comment: "A luxury experience like no other! The rooms are elegantly furnished and the dining experience is unforgettable.",
+  },
+  {
+    name: "David Thompson",
+    location: "Toronto, Canada",
+    rating: 5,
+    comment: "Truly world-class! Every moment at this hotel was special. Can't wait to return for another amazing stay.",
+  },
+];
+
 export function HomeClient() {
   const [email, setEmail] = useState("");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -19,51 +65,13 @@ export function HomeClient() {
   const [cardsPerView, setCardsPerView] = useState(3);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonials);
 
   const stats = [
     { number: "7", label: "Luxury Rooms", icon: Star },
     { number: "100%", label: "Clean Rooms", icon: Sparkles },
     { number: "50+", label: "Menu Items", icon: Utensils },
     { number: "24/7", label: "Support", icon: Clock },
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Mitchell",
-      location: "London, UK",
-      rating: 5,
-      comment: "Absolutely stunning hotel! The service was impeccable and the rooms were beautifully designed. The spa treatments were divine.",
-    },
-    {
-      name: "James Peterson",
-      location: "New York, USA",
-      rating: 5,
-      comment: "Best hotel experience in South Africa. The staff went above and beyond to make our stay memorable. Highly recommend!",
-    },
-    {
-      name: "Emma van der Berg",
-      location: "Johannesburg, SA",
-      rating: 5,
-      comment: "A hidden gem! Every detail was perfect. The breakfast was exceptional and the amenities are world-class.",
-    },
-    {
-      name: "Michael Chen",
-      location: "Singapore",
-      rating: 5,
-      comment: "Exceptional hospitality and attention to detail. The views are absolutely breathtaking and the staff is incredibly courteous.",
-    },
-    {
-      name: "Isabella Rodriguez",
-      location: "Madrid, Spain",
-      rating: 5,
-      comment: "A luxury experience like no other! The rooms are elegantly furnished and the dining experience is unforgettable.",
-    },
-    {
-      name: "David Thompson",
-      location: "Toronto, Canada",
-      rating: 5,
-      comment: "Truly world-class! Every moment at this hotel was special. Can't wait to return for another amazing stay.",
-    },
   ];
 
   const maxSlideIndex = Math.max(testimonials.length - cardsPerView, 0);
@@ -99,6 +107,42 @@ export function HomeClient() {
     
     return () => clearInterval(interval);
   }, [isHoveringTestimonials, maxSlideIndex]);
+
+  useEffect(() => {
+    const fetchGoogleReviews = async () => {
+      try {
+        const response = await fetch("/api/google-reviews");
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data?.reviews) || data.reviews.length === 0) {
+          return;
+        }
+
+        const normalized: Testimonial[] = data.reviews
+          .filter((review: Testimonial) => review.comment)
+          .slice(0, 6)
+          .map((review: Testimonial) => ({
+            name: review.name || "Guest",
+            location: review.location || "Google Review",
+            rating: review.rating || 5,
+            comment: review.comment,
+          }));
+
+        if (normalized.length > 0) {
+          setTestimonials(normalized);
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Using fallback testimonials:", error);
+        }
+      }
+    };
+
+    fetchGoogleReviews();
+  }, []);
 
   useEffect(() => {
     const fetchRooms = async () => {

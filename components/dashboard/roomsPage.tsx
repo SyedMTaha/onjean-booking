@@ -407,6 +407,7 @@ export function RoomsManagementClient() {
                   <div className="h-14">
                     <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{room.name}</h3>
                     <p className="text-xs text-gray-500 truncate">/{room.slug}</p>
+                      <p className="text-xs text-gray-400 mt-1">ID: {room.id}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm h-24">
