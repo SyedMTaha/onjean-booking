@@ -64,7 +64,7 @@ export const rooms: Room[] = [
     maxGuests: 2,
     bedType: "1 Double Bed",
     size: "30 m²",
-    description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
+    description: "Featuring free toiletries, this double room includes a private bathroom with a shower, a hairdryer and slippers. The double room features a minibar, a tea and coffee maker, a wardrobe, a flat-screen TV with streaming services, as well as garden views. The unit has 1 bed.",
     amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker", "Minibar", "Private Bathroom", "No Smoking"],
     features: ["Free Toiletries", "Shower", "Toilet", "Towels", "Hairdryer", "Streaming Service", "TV", "Refrigerator", "Tea/Coffee Maker", "Fan", "Minibar", "Electric Kettle", "Wardrobe or Closet", "Clothes Rack", "No Smoking"]
   },

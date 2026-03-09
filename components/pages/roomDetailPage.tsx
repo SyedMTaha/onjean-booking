@@ -114,9 +114,14 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
             </Button>
           </div>
           <div className="text-white">
-            <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-              {room.maxGuests} Guests
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border border-amber-200 font-normal">
+                {room.maxGuests} Guests
+              </Badge>
+              <Badge className="bg-amber-50 text-amber-700 border border-amber-200 font-mono text-xs tracking-wide" title="Room ID">
+                ID: {room.id}
+              </Badge>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{room.name}</h1>
             <p className="text-xl md:text-2xl text-amber-50">{room.view}</p>
           </div>
@@ -211,11 +216,6 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
               <Card className="p-8 bg-white border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-gray-900">About This Room</h2>
-                  <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <span className="font-semibold">7.5</span>
-                    <span className="text-xs">Comfy beds</span>
-                  </Badge>
                 </div>
                 <p className="text-gray-700 leading-relaxed mb-4">{room.longDescription || room.description}</p>
               </Card>

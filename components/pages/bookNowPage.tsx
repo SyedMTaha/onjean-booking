@@ -67,8 +67,12 @@ export function BookingClient() {
         const dbRooms = await getAllRooms();
         setRoomTypes(dbRooms.filter((room) => room.available));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load room types";
-        toast.error(message);
+        let message = error instanceof Error ? error.message : "Failed to load room types";
+        if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
+          toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
+        } else {
+          toast.error(message);
+        }
       } finally {
         setIsRoomsLoading(false);
       }
@@ -152,8 +156,12 @@ export function BookingClient() {
         const map = await getRoomAvailabilityForRange(checkIn, checkOut);
         setAvailabilityByRoomId(map);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load availability";
-        toast.error(message);
+        let message = error instanceof Error ? error.message : "Failed to load availability";
+        if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
+          toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
+        } else {
+          toast.error(message);
+        }
       } finally {
         setIsAvailabilityLoading(false);
       }
@@ -276,11 +284,12 @@ export function BookingClient() {
       window.history.replaceState({}, "", "/book-now");
     } catch (error) {
       console.error("Booking completion error:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to complete booking. Please contact support with your payment proof."
-      );
+      let message = error instanceof Error ? error.message : "Failed to complete booking. Please contact support with your payment proof.";
+      if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
+        toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -335,11 +344,12 @@ export function BookingClient() {
         await completePendingBooking(data.paymentId);
       } catch (error) {
         console.error("Payment verification error:", error);
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to verify payment status"
-        );
+        let message = error instanceof Error ? error.message : "Failed to verify payment status";
+        if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
+          toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
+        } else {
+          toast.error(message);
+        }
       } finally {
         setIsProcessing(false);
       }
@@ -391,7 +401,7 @@ export function BookingClient() {
         return;
       }
       if (!user) {
-        toast.error("Please sign in to continue with your booking");
+        toast.error("You must sign in with a registered account to book.");
         return;
       }
       setStep(3);

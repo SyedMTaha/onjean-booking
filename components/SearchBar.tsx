@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { getAllRooms, Room } from '@/lib/roomService';
+import { rooms as localRoomsData } from '@/data/rooms';
 import { Calendar } from 'lucide-react';
 
 export function SearchBar() {
@@ -34,12 +35,154 @@ export function SearchBar() {
   const [activeField, setActiveField] = useState<'checkIn' | 'checkOut' | null>(null);
 
   useEffect(() => {
+    const localRooms: Room[] = [
+      {
+        id: 'room1',
+        name: 'Deluxe Suite',
+        slug: 'deluxe-suite',
+        price: 'R2,500',
+        priceNumeric: 2500,
+        image: '/images/rooms/deluxe-suite.jpg',
+        images: ['/images/rooms/deluxe-suite.jpg'],
+        maxGuests: 2,
+        bedType: 'King Bed',
+        size: '25 m²',
+        description: 'A luxurious suite with city view.',
+        longDescription: 'A luxurious suite with city view and all modern amenities.',
+        amenities: ['WiFi', 'Air Conditioning', 'Mini Bar'],
+        features: ['Balcony', 'City View', 'Non-Smoking'],
+        view: 'City',
+        available: true,
+        totalUnits: 3,
+      },
+      {
+        id: 'room2',
+        name: 'Standard Room',
+        slug: 'standard-room',
+        price: 'R1,800',
+        priceNumeric: 1800,
+        image: '/images/rooms/standard-room.jpg',
+        images: ['/images/rooms/standard-room.jpg'],
+        maxGuests: 2,
+        bedType: 'Queen Bed',
+        size: '20 m²',
+        description: 'A comfortable room for two.',
+        longDescription: 'A comfortable room for two with all basic amenities.',
+        amenities: ['WiFi', 'TV'],
+        features: ['Non-Smoking'],
+        view: 'Garden',
+        available: true,
+        totalUnits: 2,
+      },
+      {
+        id: 'room3',
+        name: 'Family Suite',
+        slug: 'family-suite',
+        price: 'R3,200',
+        priceNumeric: 3200,
+        image: '/images/rooms/family-suite.jpg',
+        images: ['/images/rooms/family-suite.jpg'],
+        maxGuests: 4,
+        bedType: '2 Double Beds',
+        size: '35 m²',
+        description: 'Spacious suite for families.',
+        longDescription: 'Spacious suite for families with separate living area.',
+        amenities: ['WiFi', 'Mini Bar', 'Kitchenette'],
+        features: ['Balcony', 'Non-Smoking'],
+        view: 'Pool',
+        available: true,
+        totalUnits: 1,
+      },
+      {
+        id: 'room4',
+        name: 'Executive Room',
+        slug: 'executive-room',
+        price: 'R2,800',
+        priceNumeric: 2800,
+        image: '/images/rooms/executive-room.jpg',
+        images: ['/images/rooms/executive-room.jpg'],
+        maxGuests: 2,
+        bedType: 'King Bed',
+        size: '28 m²',
+        description: 'Premium room for business travelers.',
+        longDescription: 'Premium room for business travelers with workspace.',
+        amenities: ['WiFi', 'Workspace', 'Coffee Maker'],
+        features: ['Non-Smoking'],
+        view: 'City',
+        available: true,
+        totalUnits: 1,
+      },
+      {
+        id: 'room5',
+        name: 'Penthouse Suite',
+        slug: 'penthouse-suite',
+        price: 'R5,000',
+        priceNumeric: 5000,
+        image: '/images/rooms/penthouse-suite.jpg',
+        images: ['/images/rooms/penthouse-suite.jpg'],
+        maxGuests: 2,
+        bedType: 'King Bed',
+        size: '50 m²',
+        description: 'Top floor suite with panoramic views.',
+        longDescription: 'Top floor suite with panoramic views and luxury amenities.',
+        amenities: ['WiFi', 'Jacuzzi', 'Mini Bar'],
+        features: ['Balcony', 'Sea View', 'Non-Smoking'],
+        view: 'Sea',
+        available: true,
+        totalUnits: 1,
+      },
+      {
+        id: 'room6',
+        name: 'Twin Room',
+        slug: 'twin-room',
+        price: 'R1,600',
+        priceNumeric: 1600,
+        image: '/images/rooms/twin-room.jpg',
+        images: ['/images/rooms/twin-room.jpg'],
+        maxGuests: 2,
+        bedType: '2 Single Beds',
+        size: '18 m²',
+        description: 'Ideal for friends or colleagues.',
+        longDescription: 'Ideal for friends or colleagues, two single beds.',
+        amenities: ['WiFi', 'TV'],
+        features: ['Non-Smoking'],
+        view: 'Garden',
+        available: true,
+        totalUnits: 2,
+      },
+      {
+        id: 'room7',
+        name: 'Budget Room',
+        slug: 'budget-room',
+        price: 'R1,200',
+        priceNumeric: 1200,
+        image: '/images/rooms/budget-room.jpg',
+        images: ['/images/rooms/budget-room.jpg'],
+        maxGuests: 2,
+        bedType: 'Double Bed',
+        size: '15 m²',
+        description: 'Affordable comfort for short stays.',
+        longDescription: 'Affordable comfort for short stays, all essentials included.',
+        amenities: ['WiFi'],
+        features: ['Non-Smoking'],
+        view: 'Courtyard',
+        available: true,
+        totalUnits: 2,
+      },
+    ];
+
     const loadRooms = async () => {
       try {
         const dbRooms = await getAllRooms();
-        setRooms(dbRooms.filter((room) => room.available));
+        setRooms(dbRooms);
       } catch {
-        setRooms([]);
+        // Map localRoomsData to add missing fields for type compatibility
+        const mappedRooms = localRoomsData.map((room) => ({
+          ...room,
+          priceNumeric: typeof room.price === 'string' ? parseInt(room.price.replace(/\D/g, '')) : 0,
+          available: true,
+        }));
+        setRooms(mappedRooms);
       }
     };
 
@@ -66,7 +209,7 @@ export function SearchBar() {
   const handleSearch = () => {
     const params = new URLSearchParams();
 
-    const selectedRoomData = rooms.find((room) => room.slug === selectedRoom);
+    const selectedRoomData = rooms.find((room) => room.id === selectedRoom);
 
     if (selectedRoomData) {
       params.set('roomId', selectedRoomData.id);
@@ -104,7 +247,7 @@ export function SearchBar() {
             {rooms.map((room) => (
               <SelectItem
                 key={room.id}
-                value={room.slug}
+                value={room.id}
                 className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50 data-highlighted:bg-orange-50"
               >
                 {room.name} - {room.price}/night
