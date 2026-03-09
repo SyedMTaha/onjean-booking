@@ -115,7 +115,7 @@ export function ContactClient() {
                   width="100%"
                   height="300"
                   frameBorder="0"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3581.123456789!2d28.043!3d-26.195!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e950c0123456789%3A0x1234567890abcdef!2s78%20On%20Jean%20Street%2C%20Johannesburg!5e0!3m2!1sen!2sza!4v1234567890"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3590.3668689235224!2d28.202451473762487!3d-25.857400177291876!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e95653d1e2ee2df%3A0x3eef6fb6c76da8b2!2s78onJean!5e0!3m2!1sen!2s!4v1773059630675!5m2!1sen!2s"
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

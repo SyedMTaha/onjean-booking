@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Star, Coffee, Utensils, ChevronRight, Award, Users, Clock, CheckCircle2, Sparkles } from "lucide-react";
+import { Star, Coffee, Utensils, ChevronRight, Clock, CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
 import { FaAward, FaArrowRight } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -21,9 +21,9 @@ export function HomeClient() {
   const [loading, setLoading] = useState(true);
 
   const stats = [
-    { number: "500+", label: "Happy Guests", icon: Users },
     { number: "7", label: "Luxury Rooms", icon: Star },
-    { number: "15+", label: "Years Experience", icon: Award },
+    { number: "100%", label: "Clean Rooms", icon: Sparkles },
+    { number: "50+", label: "Menu Items", icon: Utensils },
     { number: "24/7", label: "Support", icon: Clock },
   ];
 
@@ -338,9 +338,9 @@ export function HomeClient() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {[
-              { icon: Award, title: "Award Winning", description: "Recognized for excellence in hospitality" },
-              { icon: Star, title: "5-Star Service", description: "Exceptional service, every time" },
-              { icon: Clock, title: "24/7 Concierge", description: "Always here to assist you" },
+              { icon: ShieldCheck, title: "Daily Housekeeping", description: "Professionally cleaned and refreshed rooms every day" },
+              { icon: Star, title: "5-Star Service", description: "Exceptional service, every time, when ever you need" },
+              { icon: CheckCircle2, title: "Fast Check-in Support", description: "Quick arrivals with help available when you need it" },
               { icon: Sparkles, title: "Luxury Amenities", description: "Everything you need for a perfect stay" },
             ].map((item, index) => {
               const Icon = item.icon;

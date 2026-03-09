@@ -1,5 +1,6 @@
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import type { FirebaseError } from "firebase/app";
+import { signInAnonymously } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -65,6 +66,31 @@ export interface RoomAvailability {
 
 const ACTIVE_BOOKING_STATUSES: Array<BookingData["bookingStatus"]> = ["pending", "approved"];
 
+async function ensureBookingAvailabilityAuth(): Promise<void> {
+  // Browser-only auth bootstrap for availability checks.
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!auth) {
+    throw new Error("Firebase auth is not initialized in browser.");
+  }
+
+  if (auth.currentUser) {
+    return;
+  }
+
+  try {
+    await signInAnonymously(auth);
+  } catch (error) {
+    const errorCode = (error as { code?: string })?.code;
+    if (errorCode === "auth/admin-restricted-operation") {
+      throw new Error("Anonymous sign-in is disabled in Firebase Authentication.");
+    }
+    throw new Error("Unable to authenticate for room availability checks.");
+  }
+}
+
 function toDateValue(input: unknown): Date | null {
   if (!input) return null;
   if (input instanceof Date) return input;
@@ -121,54 +147,63 @@ export async function getRoomAvailabilityForRange(
   checkInDate: Date,
   checkOutDate: Date
 ): Promise<Record<string, RoomAvailability>> {
-  const rooms = await getAllRooms();
+  try {
+    await ensureBookingAvailabilityAuth();
+    const rooms = await getAllRooms();
 
-  const activeBookingsQuery = query(
-    collection(db, "roomBookings"),
-    where("bookingStatus", "in", ACTIVE_BOOKING_STATUSES)
-  );
-  const activeBookingsSnapshot = await getDocs(activeBookingsQuery);
+    const activeBookingsQuery = query(
+      collection(db, "roomBookings"),
+      where("bookingStatus", "in", ACTIVE_BOOKING_STATUSES)
+    );
+    const activeBookingsSnapshot = await getDocs(activeBookingsQuery);
 
-  const activeBookings = activeBookingsSnapshot.docs.map((bookingDoc) => bookingDoc.data() as Partial<BookingData>);
+    const activeBookings = activeBookingsSnapshot.docs.map((bookingDoc) => bookingDoc.data() as Partial<BookingData>);
 
-  const availabilityMap: Record<string, RoomAvailability> = {};
+    const availabilityMap: Record<string, RoomAvailability> = {};
 
-  for (const room of rooms) {
-    const roomTotalUnits = room.totalUnits && room.totalUnits > 0 ? room.totalUnits : 1;
+    for (const room of rooms) {
+      const roomTotalUnits = room.totalUnits && room.totalUnits > 0 ? room.totalUnits : 1;
 
-    const overlappingBookings = activeBookings.filter((booking) => {
-      const bookingRoomId = String(booking.roomId || "");
-      const bookingRoomType = String(booking.roomType || "").trim().toLowerCase();
-      const matchesRoom = bookingRoomId === room.id || bookingRoomType === room.name.trim().toLowerCase();
+      const overlappingBookings = activeBookings.filter((booking) => {
+        const bookingRoomId = String(booking.roomId || "");
+        const bookingRoomType = String(booking.roomType || "").trim().toLowerCase();
+        const matchesRoom = bookingRoomId === room.id || bookingRoomType === room.name.trim().toLowerCase();
 
-      if (!matchesRoom) {
-        return false;
-      }
+        if (!matchesRoom) {
+          return false;
+        }
 
-      const existingCheckIn = toDateValue(booking.checkInDate);
-      const existingCheckOut = toDateValue(booking.checkOutDate);
-      if (!existingCheckIn || !existingCheckOut) {
-        return false;
-      }
+        const existingCheckIn = toDateValue(booking.checkInDate);
+        const existingCheckOut = toDateValue(booking.checkOutDate);
+        if (!existingCheckIn || !existingCheckOut) {
+          return false;
+        }
 
-      return rangesOverlap(checkInDate, checkOutDate, existingCheckIn, existingCheckOut);
-    });
+        return rangesOverlap(checkInDate, checkOutDate, existingCheckIn, existingCheckOut);
+      });
 
-    const bookedUnits = overlappingBookings.length;
-    const availableUnits = Math.max(roomTotalUnits - bookedUnits, 0);
+      const bookedUnits = overlappingBookings.length;
+      const availableUnits = Math.max(roomTotalUnits - bookedUnits, 0);
 
-    availabilityMap[room.id] = {
-      roomId: room.id,
-      roomName: room.name,
-      slug: room.slug,
-      totalUnits: roomTotalUnits,
-      bookedUnits,
-      availableUnits,
-      isSoldOut: availableUnits === 0,
-    };
+      availabilityMap[room.id] = {
+        roomId: room.id,
+        roomName: room.name,
+        slug: room.slug,
+        totalUnits: roomTotalUnits,
+        bookedUnits,
+        availableUnits,
+        isSoldOut: availableUnits === 0,
+      };
+    }
+
+    return availabilityMap;
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+    if (firebaseError?.code === "permission-denied") {
+      throw new Error("Firestore rules are blocking availability checks. Allow authenticated read access to roomBookings for bookingStatus/check-in/check-out fields.");
+    }
+    throw error;
   }
-
-  return availabilityMap;
 }
 
 export async function validateRoomAvailability(

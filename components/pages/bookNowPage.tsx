@@ -177,7 +177,8 @@ export function BookingClient() {
 
   const nights = calculateNights();
   const totalPrice = selectedRoom ? (selectedRoom.priceNumeric || 0) * nights : 0;
-  const taxesAndFees = Math.round(totalPrice * 0.15);
+  // Taxes are currently not charged, keep field for backward compatibility.
+  const taxesAndFees = 0;
   const totalAmount = totalPrice + taxesAndFees;
 
   const savePendingBookingDraft = () => {
@@ -247,7 +248,7 @@ export function BookingClient() {
         paymentMethod: "yoco" as const,
         paymentStatus: "completed" as const,
         totalPrice: draft.totalPrice,
-        taxesAndFees: draft.taxesAndFees,
+        taxesAndFees: 0,
         // cardLast4 and cardholderName omitted - not available from Yoco Checkout API
       };
 
