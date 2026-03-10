@@ -1,0 +1,37 @@
+{
+  "welcome": "Welcome",
+  "home_title": "Home Page",
+  "about_title": "About Us",
+  "contact_title": "Contact",
+  "rooms_title": "Rooms",
+  "book_now": "Book Now",
+  "footer_text": "All rights reserved.",
+  "home": {
+    "hero": {
+      "title": "Welcome to",
+      "subtitle": "Experience luxury hospitality in the heart of South Africa. Where comfort meets elegance.",
+      "bookButton": "Book Your Stay",
+      "exploreButton": "Explore Rooms"
+    },
+    "stats": {
+      "rooms": "Luxury Rooms",
+      "clean": "Clean Rooms",
+      "menu": "Menu Items",
+      "support": "Support"
+    },
+    "roomsSection": {
+      "title": "Our Featured Rooms",
+      "subtitle": "Discover our most popular rooms, designed for comfort and elegance."
+    },
+    "testimonialsSection": {
+      "title": "Guest Testimonials",
+      "subtitle": "Hear from our guests about their unforgettable experiences."
+    },
+    "newsletterSection": {
+      "title": "Subscribe to our Newsletter",
+      "subtitle": "Get exclusive offers and updates delivered to your inbox.",
+      "placeholder": "Enter your email",
+      "button": "Subscribe"
+    }
+  }
+}

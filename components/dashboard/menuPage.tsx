@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CheckCircle2, ChefHat, Edit3, Plus, Search, Trash2, Utensils, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -69,7 +76,6 @@ export function MenuManagementClient() {
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : "Failed to load menu items.";
-
       if (message === "PERMISSION_DENIED") {
         toast.error("Menu permissions not configured", {
           description: "Please add Firestore rules for the menuItems collection.",
@@ -86,14 +92,12 @@ export function MenuManagementClient() {
 
   useEffect(() => {
     const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
-
     if (!hasSession) {
       toast.error("Please sign in with admin credentials to access menu management.");
       router.push("/");
       setIsAuthLoading(false);
       return;
     }
-
     setIsAdminAuthenticated(true);
     setIsAuthLoading(false);
   }, [router]);
@@ -134,13 +138,15 @@ export function MenuManagementClient() {
       toast.error("Name, category, price and image are required.");
       return;
     }
-
+    if (form.category === "Beverages" && !form.subcategory.trim()) {
+      toast.error("Subcategory is required for Beverages.");
+      return;
+    }
     const priceNumeric = parseInt(form.price.replace(/[^\d]/g, ""), 10);
     if (Number.isNaN(priceNumeric)) {
       toast.error("Price format is invalid. Example: R120");
       return;
     }
-
     const payload = {
       name: form.name.trim(),
       category: form.category.trim(),
@@ -151,19 +157,16 @@ export function MenuManagementClient() {
       description: form.description.trim(),
       available: form.available,
     };
-
     setIsSaving(true);
     try {
       const result =
         mode === "add"
           ? await addMenuItem(payload)
           : await updateMenuItem(form.id, payload);
-
       if (!result.success) {
         toast.error(result.error || `Failed to ${mode} menu item.`);
         return;
       }
-
       toast.success(mode === "add" ? "Menu item added." : "Menu item updated.");
       setIsModalOpen(false);
       setForm(getEmptyForm());
@@ -179,13 +182,11 @@ export function MenuManagementClient() {
   const handleDelete = async (item: MenuItem) => {
     const confirmed = window.confirm(`Delete ${item.name}? This cannot be undone.`);
     if (!confirmed) return;
-
     const result = await deleteMenuItem(item.id);
     if (!result.success) {
       toast.error(result.error || "Failed to delete menu item.");
       return;
     }
-
     toast.success("Menu item deleted.");
     await loadItems();
   };
@@ -196,7 +197,6 @@ export function MenuManagementClient() {
       toast.error(result.error || "Failed to update availability.");
       return;
     }
-
     toast.success(`Item marked as ${!item.available ? "available" : "unavailable"}.`);
     await loadItems();
   };
@@ -204,7 +204,6 @@ export function MenuManagementClient() {
   const filteredItems = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (!needle) return items;
-
     return items.filter((item) =>
       [item.name, item.category, item.subcategory || "", item.description]
         .join(" ")
@@ -304,7 +303,6 @@ export function MenuManagementClient() {
               className="h-10 pl-10 placeholder:text-gray-400 text-gray-900 border-gray-300 bg-white rounded-xl"
             />
           </div>
-
           <Button className="h-10 bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white rounded-xl lg:ml-auto" onClick={openAddModal}>
             <Plus className="h-4 w-4 mr-2" />
             Add Menu Item
@@ -337,19 +335,18 @@ export function MenuManagementClient() {
                 <div className="p-5 space-y-4">
                   <div className="h-14">
                     <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{item.name}</h3>
-                    <p className="text-xs text-gray-500 truncate">{item.category}{item.subcategory ? ` • ${item.subcategory}` : ''}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {item.category}{item.subcategory ? ` • ${item.subcategory}` : ""}
+                    </p>
                   </div>
-
                   <div className="h-10">
                     <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
                   </div>
-
                   <div className="pt-3 border-t border-gray-100">
                     <div className="flex items-baseline justify-between mb-3 h-8">
                       <span className="text-sm text-gray-600">Price</span>
                       <span className="text-2xl font-bold text-gray-900">{item.price}</span>
                     </div>
-
                     <div className="grid grid-cols-3 gap-2">
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 border-blue-200" onClick={() => openEditModal(item)}>
                         <Edit3 className="h-3 w-3 mr-1" />
@@ -358,19 +355,13 @@ export function MenuManagementClient() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className={`text-xs bg-white border px-1 ${item.available ? 'hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200' : 'hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200'}`}
+                        className={`text-xs bg-white border px-1 ${item.available ? "hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200" : "hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200"}`}
                         onClick={() => handleToggleAvailability(item)}
                       >
                         {item.available ? (
-                          <>
-                            <XCircle className="h-3 w-3" />
-                            <span className="ml-1 hidden xl:inline">Off</span>
-                          </>
+                          <><XCircle className="h-3 w-3" /><span className="ml-1 hidden xl:inline">Off</span></>
                         ) : (
-                          <>
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span className="ml-1 hidden xl:inline">On</span>
-                          </>
+                          <><CheckCircle2 className="h-3 w-3" /><span className="ml-1 hidden xl:inline">On</span></>
                         )}
                       </Button>
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border-red-200" onClick={() => handleDelete(item)}>
@@ -386,8 +377,16 @@ export function MenuManagementClient() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col">
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setIsModalOpen(false)}
+          tabIndex={-1}
+          onKeyDown={(e) => { if (e.key === "Escape") setIsModalOpen(false); }}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col rounded-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Fixed Header */}
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -402,55 +401,95 @@ export function MenuManagementClient() {
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                  {/* ✅ Image Picker — styled to match Input fields */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Image *</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          handleFormChange("image", url);
+                        } else {
+                          handleFormChange("image", "");
+                        }
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    {form.image && (
+                      <div className="mt-2">
+                        <img src={form.image} alt="Preview" className="h-24 rounded-md border border-black object-cover" />
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Item Name *</label>
-                    <Input 
-                      placeholder="e.g., Cappuccino" 
-                      value={form.name} 
-                      onChange={(e) => handleFormChange("name", e.target.value)} 
+                    <Input
+                      placeholder="e.g., Cappuccino"
+                      value={form.name}
+                      onChange={(e) => handleFormChange("name", e.target.value)}
                       className="text-gray-900"
                     />
                   </div>
+
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Price *</label>
-                    <Input 
-                      placeholder="e.g., R120" 
-                      value={form.price} 
-                      onChange={(e) => handleFormChange("price", e.target.value)} 
+                    <Input
+                      placeholder="e.g., R120"
+                      value={form.price}
+                      onChange={(e) => handleFormChange("price", e.target.value)}
                       className="text-gray-900"
                     />
                   </div>
+
+                  {/* ✅ Category Select — SelectTrigger now matches Input styling */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Category *</label>
-                    <Input
-                      list="menu-categories"
-                      placeholder="Select or type category"
-                      value={form.category}
-                      onChange={(e) => handleFormChange("category", e.target.value)}
-                      className="text-gray-900"
-                    />
-                    <datalist id="menu-categories">
-                      {presetCategories.map((category) => (
-                        <option key={category} value={category} />
-                      ))}
-                    </datalist>
+                    <Select value={form.category} onValueChange={(value) => handleFormChange("category", value)}>
+                      <SelectTrigger className="h-10 w-full text-gray-900 border-input bg-white rounded-md px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                        <SelectValue placeholder="Choose category" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {presetCategories.map((category) => (
+                          <SelectItem
+                            key={category}
+                            value={category}
+                            className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50"
+                          >
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <p className="text-xs text-gray-500 mt-1">Choose from: Light Meals, Dinner, Desserts, Beverages</p>
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Subcategory</label>
-                    <Input 
-                      placeholder="e.g., Hot Drinks" 
-                      value={form.subcategory} 
-                      onChange={(e) => handleFormChange("subcategory", e.target.value)} 
-                      className="text-gray-900"
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      Subcategory
+                      {form.category === "Beverages" && <span className="text-red-500"> *</span>}
+                    </label>
+                    <Input
+                      placeholder="e.g., Hot Drinks"
+                      value={form.subcategory}
+                      onChange={(e) => handleFormChange("subcategory", e.target.value)}
+                      className={"text-gray-900 " + (form.category === "Beverages" && !form.subcategory.trim() ? "border-red-500" : "")}
                     />
+                    {form.category === "Beverages" && !form.subcategory.trim() && (
+                      <p className="text-xs text-red-500 mt-1">Subcategory is required for Beverages.</p>
+                    )}
                   </div>
+
                   <div className="md:col-span-2">
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Image URL *</label>
-                    <Input 
-                      placeholder="https://example.com/image.jpg or /images/food.jpg" 
-                      value={form.image} 
-                      onChange={(e) => handleFormChange("image", e.target.value)} 
+                    <Input
+                      placeholder="https://example.com/image.jpg or /images/food.jpg"
+                      value={form.image}
+                      onChange={(e) => handleFormChange("image", e.target.value)}
                       className="text-gray-900"
                     />
                   </div>
@@ -458,10 +497,10 @@ export function MenuManagementClient() {
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
-                  <Input 
-                    placeholder="Brief description of the menu item" 
-                    value={form.description} 
-                    onChange={(e) => handleFormChange("description", e.target.value)} 
+                  <Input
+                    placeholder="Brief description of the menu item"
+                    value={form.description}
+                    onChange={(e) => handleFormChange("description", e.target.value)}
                     className="text-gray-900"
                   />
                 </div>
@@ -469,7 +508,7 @@ export function MenuManagementClient() {
             </div>
 
             {/* Fixed Footer */}
-            <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+            <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-md">
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
@@ -479,7 +518,6 @@ export function MenuManagementClient() {
                 />
                 <span className="font-medium">Mark as Available</span>
               </label>
-
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
                   Cancel
@@ -489,7 +527,7 @@ export function MenuManagementClient() {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>

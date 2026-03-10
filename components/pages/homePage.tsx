@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslation } from "next-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,7 @@ const fallbackTestimonials: Testimonial[] = [
 
 export function HomeClient() {
   const [email, setEmail] = useState("");
+  const { t } = useTranslation("common");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isHoveringTestimonials, setIsHoveringTestimonials] = useState(false);
   const [cardsPerView, setCardsPerView] = useState(3);
@@ -159,7 +161,7 @@ export function HomeClient() {
               slug: "deluxe-double-room",
               price: "R1,800",
               priceNumeric: 1800,
-              image: "/rooms/deluxe/deluxe-1.jpg",
+              image: "/rooms/r3-deluxe/deluxe-1.jpg",
               maxGuests: 2,
               bedType: "1 Double Bed",
               size: "30 m²",
@@ -174,7 +176,7 @@ export function HomeClient() {
               slug: "deluxe-double-room-with-bath",
               price: "R2,100",
               priceNumeric: 2100,
-              image: "/rooms/deluxe-bath/deluxe-bath-7.jpg",
+              image: "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg",
               maxGuests: 2,
               bedType: "1 Double Bed",
               size: "25 m²",
@@ -189,7 +191,7 @@ export function HomeClient() {
               slug: "family-double-room",
               price: "R2,500",
               priceNumeric: 2500,
-              image: "/rooms/family/family-6.jpg",
+              image: "/rooms/r1-family/family-6.jpg",
               maxGuests: 4,
               bedType: "2 Double Beds",
               size: "25 m²",
@@ -204,13 +206,17 @@ export function HomeClient() {
         }
         
         // Only show available rooms and limit to 3 for home page
-        const availableRooms = allRooms.filter(room => room.available).slice(0, 3);
-        
-        if (availableRooms.length === 0) {
+        // Show rooms with id 1, 2, and 3 if available
+        const prioritizedIds = ["1", "2", "3"];
+        const prioritizedRooms = prioritizedIds
+          .map(id => allRooms.find(room => room.available && String(room.id) === id))
+          .filter(Boolean) as Room[];
+
+        if (prioritizedRooms.length === 0) {
           toast.warning("All rooms are currently unavailable");
         }
-        
-        setRooms(availableRooms);
+
+        setRooms(prioritizedRooms);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load rooms";
         
@@ -318,10 +324,10 @@ export function HomeClient() {
             <div className="max-w-5xl w-full px-2 sm:px-4">
               <div className="text-center text-white mb-8 md:mb-12">
                 <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 md:mb-6 leading-tight font-light tracking-tight px-4">
-                  Welcome to <span className="block font-semibold mt-2">78 On Jean</span>
+                  {t("home.hero.title")} <span className="block font-semibold mt-2">78 On Jean</span>
                 </h1>
                 <p className="text-base md:text-lg lg:text-xl mb-6 md:mb-10 text-gray-200 max-w-2xl mx-auto font-light px-4">
-                  Experience luxury hospitality in the heart of South Africa. Where comfort meets elegance.
+                  {t("home.hero.subtitle")}
                 </p>
               </div>
 
@@ -333,7 +339,7 @@ export function HomeClient() {
               <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 px-4">
                 <Link href="/book-now" className="w-full sm:w-auto">
                   <Button size="default" className="w-full sm:w-auto bg-gray-900 hover:bg-black text-white px-6 py-3">
-                    Book Your Stay
+                    {t("home.hero.bookButton")}
                     <ChevronRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
@@ -344,7 +350,7 @@ export function HomeClient() {
                     className="w-full sm:w-auto bg-transparent hover:bg-white text-white hover:text-[#000B1C] border-white px-6 py-3 transition-all duration-300"
                     style={{ borderWidth: '1.5px' }}
                   >
-                    Explore Rooms
+                    {t("home.hero.exploreButton")}
                   </Button>
                 </Link>
               </div>

@@ -473,8 +473,18 @@ export function RoomsManagementClient() {
         </div>
 
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col">
+          <div
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setIsModalOpen(false)}
+            tabIndex={-1}
+            onKeyDown={e => {
+              if (e.key === "Escape") setIsModalOpen(false);
+            }}
+          >
+            <div
+              className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-900 flex flex-col rounded-md"
+              onClick={e => e.stopPropagation()}
+            >
               {/* Fixed Header */}
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">{mode === "add" ? "Add New Room" : "Edit Room"}</h2>
@@ -535,20 +545,55 @@ export function RoomsManagementClient() {
                       <Input placeholder="e.g., Ocean View" value={form.view} onChange={(e) => handleFormChange("view", e.target.value)} className="text-gray-900" />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Main Image URL *</label>
-                      <Input placeholder="https://example.com/image.jpg" value={form.image} onChange={(e) => handleFormChange("image", e.target.value)} className="text-gray-900" />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Main Image *</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            handleFormChange("image", url);
+                          } else {
+                            handleFormChange("image", "");
+                          }
+                        }}
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        
+                      />
+                      {form.image && (
+                        <div className="mt-2">
+                          <img src={form.image} alt="Preview" className="h-24 rounded-md border border-gray-200 object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Additional Images</label>
-                    <Input
-                      placeholder="Comma-separated image URLs"
-                      value={form.imageList}
-                      onChange={(e) => handleFormChange("imageList", e.target.value)}
-                      className="text-gray-900"
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          const urls = files.map(file => URL.createObjectURL(file));
+                          handleFormChange("imageList", urls.join(", "));
+                        } else {
+                          handleFormChange("imageList", "");
+                        }
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Separate multiple URLs with commas</p>
+                    {form.imageList && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {form.imageList.split(",").map((url, idx) => (
+                          <img key={idx} src={url.trim()} alt={`Preview ${idx + 1}`} className="h-16 rounded-md border border-gray-200 object-cover" />
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">Select multiple images. They will be separated with commas.</p>
                   </div>
 
                   <div>
@@ -596,7 +641,7 @@ export function RoomsManagementClient() {
               </div>
 
               {/* Fixed Footer */}
-              <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+              <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-md">
                 <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
@@ -616,7 +661,7 @@ export function RoomsManagementClient() {
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         )}
       </div>

@@ -1,0 +1,37 @@
+{
+  "welcome": "Bienvenido",
+  "home_title": "Página principal",
+  "about_title": "Sobre nosotros",
+  "contact_title": "Contacto",
+  "rooms_title": "Habitaciones",
+  "book_now": "Reservar ahora",
+  "footer_text": "Todos los derechos reservados.",
+  "home": {
+    "hero": {
+      "title": "Bienvenido a",
+      "subtitle": "Viva la hospitalidad de lujo en el corazón de Sudáfrica. Donde el confort se encuentra con la elegancia.",
+      "bookButton": "Reserva tu estancia",
+      "exploreButton": "Explorar habitaciones"
+    },
+    "stats": {
+      "rooms": "Habitaciones de lujo",
+      "clean": "Habitaciones limpias",
+      "menu": "Elementos del menú",
+      "support": "Soporte"
+    },
+    "roomsSection": {
+      "title": "Nuestras habitaciones destacadas",
+      "subtitle": "Descubre nuestras habitaciones más populares, diseñadas para la comodidad y la elegancia."
+    },
+    "testimonialsSection": {
+      "title": "Testimonios de huéspedes",
+      "subtitle": "Escucha a nuestros huéspedes sobre sus experiencias inolvidables."
+    },
+    "newsletterSection": {
+      "title": "Suscríbete a nuestro boletín",
+      "subtitle": "Recibe ofertas exclusivas y actualizaciones en tu bandeja de entrada.",
+      "placeholder": "Introduce tu correo electrónico",
+      "button": "Suscribirse"
+    }
+  }
+}

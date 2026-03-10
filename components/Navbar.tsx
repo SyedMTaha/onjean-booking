@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ReactCountryFlag from "react-country-flag";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { MouseEvent, useState, useEffect } from "react";
@@ -34,6 +35,7 @@ export function Navigation() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -102,6 +104,39 @@ export function Navigation() {
     router.push("/#home-hero");
   };
 
+  const languageOptions = [
+    {
+      value: "en",
+      label: "English",
+      abbr: "ENG",
+      countryCode: "US"
+    },
+    {
+      value: "fr",
+      label: "Français",
+      abbr: "FRA",
+      countryCode: "FR"
+    },
+    {
+      value: "es",
+      label: "Español",
+      abbr: "ESP",
+      countryCode: "ES"
+    },
+    {
+      value: "it",
+      label: "Italiano",
+      abbr: "ITA",
+      countryCode: "IT"
+    },
+    {
+      value: "nl",
+      label: "Nederlands",
+      abbr: "NLD",
+      countryCode: "NL"
+    }
+  ];
+
   return (
     <nav className={`${montserrat.className} sticky top-0 z-50 bg-gray-900 border-b border-gray-700 shadow-sm`}>
       <div className="container mx-auto px-4">
@@ -164,6 +199,43 @@ export function Navigation() {
                     {displayName}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-gray-700" />
+                  <div className="px-2.5 py-2">
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full flex items-center justify-between bg-white text-gray-800 font-semibold py-1.5 px-2 rounded-md focus:outline-none"
+                        style={{ minHeight: '36px', fontSize: '13px' }}
+                        onClick={e => {
+                          e.preventDefault();
+                          setShowLangDropdown(prev => !prev);
+                        }}
+                      >
+                        <span>Choose Language</span>
+                        <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </Button>
+                      {showLangDropdown && (
+                        <div className="absolute left-0 mt-2 w-full bg-white rounded-md shadow-lg z-10 flex flex-col gap-1 border border-gray-200">
+                          {languageOptions.map(lang => (
+                            <button
+                              key={lang.value}
+                              className={`w-full flex items-center gap-2 rounded-md bg-white py-1 px-2 text-gray-800 font-medium focus:outline-none hover:bg-gray-100 transition ${typeof window !== 'undefined' && window.location.pathname.split('/')[1] === lang.value ? 'ring-2 ring-blue-500' : ''}`}
+                              style={{ minHeight: '32px', fontSize: '0.95rem' }}
+                              onClick={() => {
+                                setShowLangDropdown(false);
+                                if (typeof window !== 'undefined') {
+                                  window.location.pathname = `/${lang.value}${window.location.pathname.replace(/^\/\w{2}/, '')}`;
+                                }
+                              }}
+                            >
+                              <ReactCountryFlag countryCode={lang.countryCode} svg style={{ width: "1.2em", height: "1.2em", borderRadius: "5px", boxShadow: "0 0 2px #ccc" }} title={lang.label} />
+                              <span className="font-semibold">{lang.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {isAdmin ? (
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard" className="text-gray-200 hover:text-white hover:bg-gray-800">Dashboard</Link>

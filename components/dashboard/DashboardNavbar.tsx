@@ -70,7 +70,9 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-44 rounded-xl border border-gray-200 p-1.5 shadow-lg"
+              className="w-44 rounded-xl border border-gray-200 p-1.5 shadow-lg bg-white"
+              sideOffset={8}
+              style={{ minWidth: '11rem', zIndex: 50 }}
             >
               <DropdownMenuItem
                 onClick={handleLogout}

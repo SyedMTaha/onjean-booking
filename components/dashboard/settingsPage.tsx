@@ -209,9 +209,9 @@ export function SettingsManagementClient() {
           <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Admin Profile & Security */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 gap-6">
+          {/* Left Column - Admin Profile & Security (now full width) */}
+          <div className="space-y-6">
             {/* Admin Profile Section */}
             <Card className="p-6 bg-white border border-gray-200">
               <div className="flex items-center gap-4 mb-6">
@@ -413,90 +413,12 @@ export function SettingsManagementClient() {
            
           </div>
 
-          {/* Right Column - Notifications & Quick Actions */}
+          {/* Right Column - Notifications & Quick Actions (commented out) */}
+          {/**
           <div className="space-y-6">
-            {/* Notifications Section */}
-            <Card className="p-6 bg-white border border-gray-200">
-              <div className="flex items-center gap-4 mb-6">
-                <Bell className="h-5 w-5 text-gray-700" />
-                <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Email Notifications</p>
-                    <p className="text-sm text-gray-600">Receive booking updates</p>
-                  </div>
-                  <button
-                    onClick={() => setNotifications((prev) => ({ ...prev, emailNotifications: !prev.emailNotifications }))}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                      notifications.emailNotifications ? "bg-blue-600" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition ${
-                        notifications.emailNotifications ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900">Desktop Notifications</p>
-                      <p className="text-sm text-gray-600">Browser notifications</p>
-                    </div>
-                    <button
-                      onClick={() => setNotifications((prev) => ({ ...prev, desktopNotifications: !prev.desktopNotifications }))}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        notifications.desktopNotifications ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition ${
-                          notifications.desktopNotifications ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-                <div className="border-t border-gray-200 pt-4 flex justify-end">
-                  <Button onClick={handleSaveNotifications} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 rounded-xl">
-                    Save Notification Settings
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Quick Actions Section */}
-            <Card className="p-6 bg-white border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <Globe className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">Language & Region</span>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <Palette className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">Appearance</span>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <CreditCard className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">Billing & Plans</span>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <MailIcon className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">Email Templates</span>
-                </button>
-              </div>
-            </Card>
+            ...existing right column code...
           </div>
+          */}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { MenuManagementClient } from "@/components/dashboard/menuManagementPage";
+import { MenuManagementClient } from "@/components/dashboard/menuPage";
 
 export default function DashboardMenuPage() {
   return (
