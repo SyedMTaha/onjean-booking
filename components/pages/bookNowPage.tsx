@@ -330,7 +330,7 @@ export function BookingClient() {
       try {
         setIsProcessing(true);
 
-        const response = await fetch(`/api/payments?checkoutId=${encodeURIComponent(checkoutId)}`);
+        const response = await fetch('/api/payments?checkoutId=' + encodeURIComponent(checkoutId));
         const data = await response.json();
 
         if (!response.ok) {
