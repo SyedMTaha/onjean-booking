@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Explore our delicious dining options.",
 };
 
-export default function MenuPage() {
+export default function MenuPage({ params }: { params: { locale: string } }) {
   return (
     <>
       <Navigation />

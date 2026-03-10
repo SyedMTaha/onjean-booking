@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Experience our world-class spa and wellness treatments.",
 };
 
-export default function SpaPage() {
+export default function SpaPage({ params }: { params: { locale: string } }) {
   return (
     <>
       <Navigation />

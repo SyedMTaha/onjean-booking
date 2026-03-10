@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Browse our gallery of beautiful hotel spaces and amenities.",
 };
 
-export default function GalleryPage() {
+export default function GalleryPage({ params }: { params: { locale: string } }) {
   return (
     <>
       <Navigation />

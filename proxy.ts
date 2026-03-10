@@ -1,14 +1,13 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
 
-export function proxy(request: NextRequest) {
-  // If the pathname is exactly '/', redirect to '/en'
-  if (request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/en', request.url));
-  }
-  return NextResponse.next();
-}
+export default createMiddleware({
+  locales: ['en', 'fr', 'es', 'it', 'nl'],
+  defaultLocale: 'en',
+  localePrefix: 'always'
+});
 
 export const config = {
-  matcher: ['/'],
+  matcher: [
+    '/((?!_next|_vercel|.*\\..*).*)',
+  ],
 };

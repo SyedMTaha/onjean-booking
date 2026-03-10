@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,11 @@ import { getAllRooms, Room } from "@/lib/roomService";
 import { rooms as fallbackRooms } from "@/data/rooms";
 import { useEffect, useState } from "react";
 
-export function RoomsClient() {
+interface RoomsClientProps {
+  locale: string;
+}
+
+export default function RoomsClient({ locale }: RoomsClientProps) {
   // Use local rooms data directly
   const mappedRooms = fallbackRooms.map(r => ({
     ...r,
@@ -129,7 +134,7 @@ export function RoomsClient() {
                           </div>
                         </div>
                         <div className="flex gap-3">
-                          <Link href={`/rooms/${room.slug}`} className="flex-1">
+                          <Link href={`/${locale}/rooms/${room.slug}`} className="flex-1">
                             <Button 
                               variant="outline" 
                               className="w-full bg-white border-amber-600  text-amber-600  hover:bg-gray-50"

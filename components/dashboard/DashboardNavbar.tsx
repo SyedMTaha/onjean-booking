@@ -1,6 +1,6 @@
 "use client";
 
-import { User, ChevronDown, LogOut } from "lucide-react";
+import { User, ChevronDown, LogOut, Home } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +74,13 @@ export function DashboardNavbar({ sidebarOpen }: DashboardNavbarProps) {
               sideOffset={8}
               style={{ minWidth: '11rem', zIndex: 50 }}
             >
+              <DropdownMenuItem
+                onClick={() => router.push("/")}
+                className="group flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-gray-800 outline-none hover:bg-gray-100 focus:bg-gray-100"
+              >
+                <Home className="h-4 w-4 text-black" />
+                <span>Go to Website</span>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="group flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-red-600 outline-none hover:bg-red-50 focus:bg-red-50"

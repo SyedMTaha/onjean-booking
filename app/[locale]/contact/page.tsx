@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Get in touch with our hotel team.",
 };
 
-export default function ContactPage() {
+export default function ContactPage({ params }: { params: { locale: string } }) {
   return (
     <>
       <Navigation />

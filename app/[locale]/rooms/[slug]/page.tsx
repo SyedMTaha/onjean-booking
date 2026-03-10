@@ -7,9 +7,7 @@ import { getRoomBySlug as getDbRoomBySlug, getAllRooms, Room } from "@/lib/roomS
 import { getRoomBySlug as getFallbackRoomBySlug, getAllRoomSlugs, rooms as fallbackRooms } from "@/data/rooms";
 
 interface RoomPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: { slug: string };
 }
 
 // Wrapper function to get room from DB with fallback

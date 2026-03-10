@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "View your room bookings and status updates.",
 };
 
-export default function BookingHistoryPage() {
+export default function BookingHistoryPage({ params }: { params: { locale: string } }) {
   return (
     <>
       <Navigation />

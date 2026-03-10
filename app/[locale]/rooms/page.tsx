@@ -1,6 +1,6 @@
+import RoomsClient from "@/components/pages/roomsPage";
 import { Metadata } from "next";
 import { Navigation } from "@/components/Navbar";
-import { RoomsClient } from "@/components/pages/roomsPage";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
@@ -8,11 +8,12 @@ export const metadata: Metadata = {
   description: "Explore our collection of beautifully designed luxury rooms and suites.",
 };
 
-export default function RoomsPage() {
+export default async function RoomsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <>
       <Navigation />
-      <RoomsClient />
+      <RoomsClient locale={locale} />
       <Footer />
     </>
   );

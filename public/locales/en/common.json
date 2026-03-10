@@ -1,11 +1,4 @@
 {
-  "welcome": "Welcome",
-  "home_title": "Home Page",
-  "about_title": "About Us",
-  "contact_title": "Contact",
-  "rooms_title": "Rooms",
-  "book_now": "Book Now",
-  "footer_text": "All rights reserved.",
   "home": {
     "hero": {
       "title": "Welcome to",
@@ -19,19 +12,66 @@
       "menu": "Menu Items",
       "support": "Support"
     },
+    "whyChooseUs": {
+      "title": "Why Choose Us",
+      "description": "Experience world-class hospitality with premium amenities",
+      "cards": [
+        { "title": "Daily Housekeeping", "description": "Professionally cleaned and refreshed rooms every day" },
+        { "title": "5-Star Service", "description": "Exceptional service, every time, whenever you need" },
+        { "title": "Fast Check-in Support", "description": "Quick arrivals with help available when you need it" },
+        { "title": "Luxury Amenities", "description": "Everything you need for a perfect stay" }
+      ]
+    },
     "roomsSection": {
       "title": "Our Featured Rooms",
-      "subtitle": "Discover our most popular rooms, designed for comfort and elegance."
+      "subtitle": "Discover our most popular rooms, designed for comfort and elegance.",
+      "description": "Beautifully designed rooms and suites",
+      "viewAllRooms": "View All Rooms",
+      "perNight": "/ night",
+      "noRooms": "No rooms available at the moment."
+    },
+    "diningSection": {
+      "badge": "Award-Winning Cuisine",
+      "title": "Culinary Excellence",
+      "description": "From hearty breakfasts to elegant dinners, our menu features locally-sourced ingredients and international flavors. Experience culinary artistry at every meal.",
+      "meals": [
+        { "label": "Breakfast", "time": "7:00 AM - 11:00 AM" },
+        { "label": "Lunch", "time": "12:00 PM - 4:00 PM" },
+        { "label": "Dinner", "time": "17:30 PM - 19:30 PM" },
+        { "label": "Room Service", "time": "24/7 Available" }
+      ],
+      "viewMenu": "View Full Menu"
+    },
+    "spaSection": {
+      "badge": "Premium Wellness",
+      "title": "Spa & Wellness",
+      "description": "Our world-class spa offers a range of treatments designed to help you unwind and refresh. From massages to manicures, we have everything you need for the ultimate relaxation experience.",
+      "features": [
+        "Professional Massage Therapy",
+        "Manicure & Pedicure Services",
+        "Facial Treatments",
+        "Aromatherapy Sessions"
+      ],
+      "bookSpa": "Book Spa Treatment"
     },
     "testimonialsSection": {
       "title": "Guest Testimonials",
-      "subtitle": "Hear from our guests about their unforgettable experiences."
+      "subtitle": "Hear from our guests about their unforgettable experiences.",
+      "description": "What our guests say about their experience"
     },
     "newsletterSection": {
       "title": "Subscribe to our Newsletter",
       "subtitle": "Get exclusive offers and updates delivered to your inbox.",
+      "description": "Subscribe for exclusive offers and updates",
       "placeholder": "Enter your email",
       "button": "Subscribe"
     }
-  }
+  },
+  "welcome": "Welcome",
+  "home_title": "Home Page",
+  "about_title": "About Us",
+  "contact_title": "Contact",
+  "rooms_title": "Rooms",
+  "book_now": "Book Now",
+  "footer_text": "All rights reserved."
 }

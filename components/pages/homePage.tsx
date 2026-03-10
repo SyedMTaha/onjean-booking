@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslation } from "next-i18next";
+import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +61,7 @@ const fallbackTestimonials: Testimonial[] = [
 
 export function HomeClient() {
   const [email, setEmail] = useState("");
-  const { t } = useTranslation("common");
+  const t = useTranslations();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isHoveringTestimonials, setIsHoveringTestimonials] = useState(false);
   const [cardsPerView, setCardsPerView] = useState(3);
@@ -70,10 +70,10 @@ export function HomeClient() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonials);
 
   const stats = [
-    { number: "7", label: "Luxury Rooms", icon: Star },
-    { number: "100%", label: "Clean Rooms", icon: Sparkles },
-    { number: "50+", label: "Menu Items", icon: Utensils },
-    { number: "24/7", label: "Support", icon: Clock },
+    { number: "7", label: t("home.stats.rooms"), icon: Star },
+    { number: "100%", label: t("home.stats.clean"), icon: Sparkles },
+    { number: "50+", label: t("home.stats.menu"), icon: Utensils },
+    { number: "24/7", label: t("home.stats.support"), icon: Clock },
   ];
 
   const maxSlideIndex = Math.max(testimonials.length - cardsPerView, 0);
@@ -151,7 +151,6 @@ export function HomeClient() {
       try {
         setLoading(true);
         const allRooms = await getAllRooms();
-        
         if (allRooms.length === 0) {
           // Use fallback dummy data if database is empty
           const fallbackRooms = [
@@ -204,27 +203,22 @@ export function HomeClient() {
           setRooms(fallbackRooms);
           return;
         }
-        
         // Only show available rooms and limit to 3 for home page
         // Show rooms with id 1, 2, and 3 if available
         const prioritizedIds = ["1", "2", "3"];
         const prioritizedRooms = prioritizedIds
           .map(id => allRooms.find(room => room.available && String(room.id) === id))
           .filter(Boolean) as Room[];
-
         if (prioritizedRooms.length === 0) {
           toast.warning("All rooms are currently unavailable");
         }
-
         setRooms(prioritizedRooms);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load rooms";
-        
         // Check for specific error types
         const isAuthDisabled = errorMessage === 'AUTH_DISABLED';
         const isAuthError = errorMessage.startsWith('AUTH_ERROR:');
         const isPermissionError = errorMessage === 'PERMISSION_DENIED';
-        
         // Use fallback on error
         const fallbackRooms = [
           {
@@ -233,7 +227,7 @@ export function HomeClient() {
             slug: "deluxe-double-room",
             price: "R1,800",
             priceNumeric: 1800,
-            image: "/rooms/deluxe/deluxe-1.jpg",
+            image: "/rooms/r3-deluxe/deluxe-6.jpg",
             maxGuests: 2,
             bedType: "1 Double Bed",
             size: "30 m²",
@@ -248,7 +242,7 @@ export function HomeClient() {
             slug: "deluxe-double-room-with-bath",
             price: "R2,100",
             priceNumeric: 2100,
-            image: "/rooms/deluxe-bath/deluxe-bath-7.jpg",
+            image: "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg",
             maxGuests: 2,
             bedType: "1 Double Bed",
             size: "25 m²",
@@ -263,7 +257,7 @@ export function HomeClient() {
             slug: "family-double-room",
             price: "R2,500",
             priceNumeric: 2500,
-            image: "/rooms/family/family-6.jpg",
+            image: "/rooms/r1-family/family-3.jpg",
             maxGuests: 4,
             bedType: "2 Double Beds",
             size: "25 m²",
@@ -274,7 +268,6 @@ export function HomeClient() {
           }
         ] as Room[];
         setRooms(fallbackRooms);
-        
         // Only log in development mode, no user-facing errors for auth issues
         if (process.env.NODE_ENV === 'development') {
           if (isAuthDisabled) {
@@ -381,17 +374,17 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A] ">Why Choose Us</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A] ">{t("home.whyChooseUs.title")}</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Experience world-class hospitality with premium amenities
+              {t("home.whyChooseUs.description")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {[
-              { icon: ShieldCheck, title: "Daily Housekeeping", description: "Professionally cleaned and refreshed rooms every day" },
-              { icon: Star, title: "5-Star Service", description: "Exceptional service, every time, when ever you need" },
-              { icon: CheckCircle2, title: "Fast Check-in Support", description: "Quick arrivals with help available when you need it" },
-              { icon: Sparkles, title: "Luxury Amenities", description: "Everything you need for a perfect stay" },
+              { icon: ShieldCheck, title: t("home.whyChooseUs.cards.0.title"), description: t("home.whyChooseUs.cards.0.description") },
+              { icon: Star, title: t("home.whyChooseUs.cards.1.title"), description: t("home.whyChooseUs.cards.1.description") },
+              { icon: CheckCircle2, title: t("home.whyChooseUs.cards.2.title"), description: t("home.whyChooseUs.cards.2.description") },
+              { icon: Sparkles, title: t("home.whyChooseUs.cards.3.title"), description: t("home.whyChooseUs.cards.3.description") },
             ].map((item, index) => {
               const Icon = item.icon;
               return (
@@ -413,14 +406,14 @@ export function HomeClient() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
             <div>
-              <h2 className="text-4xl md:text-5xl mb-3 text-[#0A0A0A]">Luxury Accommodations</h2>
+              <h2 className="text-4xl md:text-5xl mb-3 text-[#0A0A0A]">{t("home.roomsSection.title")}</h2>
               <p className="text-gray-600 text-lg">
-                Beautifully designed rooms and suites
+                {t("home.roomsSection.description")}
               </p>
             </div>
             <Link href="/rooms">
               <Button variant="outline" className="border-2 bg-gray-900  hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors">
-                View All Rooms <ChevronRight className="ml-2 w-4 h-4" />
+                {t("home.roomsSection.viewAllRooms")} <ChevronRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
           </div>
@@ -449,7 +442,11 @@ export function HomeClient() {
                 <Card key={room.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 flex flex-col">
                   <div className="h-64 overflow-hidden relative">
                     <img
-                      src={room.image}
+                      src={
+                        room.id === "1" ? "/rooms/r3-deluxe/deluxe-6.jpg" :
+                        room.id === "2" ? "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg" :
+                        room.id === "3" ? "/rooms/r1-family/family-3.jpg" : room.image
+                      }
                       alt={room.name}
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
                     />
@@ -476,11 +473,11 @@ export function HomeClient() {
                     <div className="flex items-center justify-between pt-4 border-t mt-auto">
                       <div>
                         <span className="text-3xl text-amber-600">{room.price}</span>
-                        <span className="text-gray-500 text-sm ml-2">/ night</span>
+                        <span className="text-gray-500 text-sm ml-2">{t("home.roomsSection.perNight")}</span>
                       </div>
                       <Link href="/book-now">
                         <Button className="bg-amber-600 hover:bg-amber-700">
-                          Book Now
+                          {t("book_now")}
                         </Button>
                       </Link>
                     </div>
@@ -489,7 +486,7 @@ export function HomeClient() {
               ))
             ) : (
               <div className="col-span-full text-center py-12">
-                <p className="text-gray-500 text-lg">No rooms available at the moment.</p>
+                <p className="text-gray-500 text-lg">{t("home.roomsSection.noRooms")}</p>
               </div>
             )}
           </div>
@@ -502,19 +499,18 @@ export function HomeClient() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                Award-Winning Cuisine
+                {t("home.diningSection.badge")}
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Culinary Excellence</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">{t("home.diningSection.title")}</h2>
               <p className="text-gray-600 text-lg mb-8">
-                From hearty breakfasts to elegant dinners, our menu features locally-sourced 
-                ingredients and international flavors. Experience culinary artistry at every meal.
+                {t("home.diningSection.description")}
               </p>
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  { label: "Breakfast", time: "7:00 AM - 11:00 AM", icon: Coffee },
-                  { label: "Lunch", time: "12:00 PM - 4:00 PM", icon: Utensils },
-                  { label: "Dinner", time: "17:30 PM - 19:30 PM", icon: Utensils },
-                  { label: "Room Service", time: "24/7 Available", icon: Clock },
+                  { label: t("home.diningSection.meals.0.label"), time: t("home.diningSection.meals.0.time"), icon: Coffee },
+                  { label: t("home.diningSection.meals.1.label"), time: t("home.diningSection.meals.1.time"), icon: Utensils },
+                  { label: t("home.diningSection.meals.2.label"), time: t("home.diningSection.meals.2.time"), icon: Utensils },
+                  { label: t("home.diningSection.meals.3.label"), time: t("home.diningSection.meals.3.time"), icon: Clock },
                 ].map((item, i) => {
                   const Icon = item.icon;
                   return (
@@ -528,7 +524,7 @@ export function HomeClient() {
               </div>
               <Link href="/menu" className="block">
                 <Button className="w-full bg-amber-600 hover:bg-amber-700">
-                  View Full Menu
+                  {t("home.diningSection.viewMenu")}
                   <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
                 </Button>
               </Link>
@@ -557,20 +553,18 @@ export function HomeClient() {
             </div>
             <div>
               <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                Premium Wellness
+                {t("home.spaSection.badge")}
               </Badge>
-              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Spa & Wellness</h2>
+              <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">{t("home.spaSection.title")}</h2>
               <p className="text-gray-600 text-lg mb-8">
-                Our world-class spa offers a range of treatments designed to help you
-                unwind and refresh. From massages to manicures, we have everything you
-                need for the ultimate relaxation experience.
+                {t("home.spaSection.description")}
               </p>
               <ul className="space-y-3 mb-8">
                 {[
-                  "Professional Massage Therapy",
-                  "Manicure & Pedicure Services",
-                  "Facial Treatments",
-                  "Aromatherapy Sessions"
+                  t("home.spaSection.features.0"),
+                  t("home.spaSection.features.1"),
+                  t("home.spaSection.features.2"),
+                  t("home.spaSection.features.3")
                 ].map((item, index) => (
                   <li key={index} className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-amber-600 flex-shrink-0" />
@@ -580,7 +574,7 @@ export function HomeClient() {
               </ul>
               <Link href="/spa" className="block">
                 <Button className="w-full bg-amber-600 hover:bg-amber-700">
-                  Book Spa Treatment
+                  {t("home.spaSection.bookSpa")}
                   <FaArrowRight className="ml-2 w-4 h-4 animate-slide-arrow-hover" />
                 </Button>
               </Link>
@@ -593,9 +587,9 @@ export function HomeClient() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">Guest Reviews</h2>
+            <h2 className="text-4xl md:text-5xl mb-4 text-[#0A0A0A]">{t("home.testimonialsSection.title")}</h2>
             <p className="text-gray-600 text-lg">
-              What our guests say about their experience
+              {t("home.testimonialsSection.description")}
             </p>
           </div>
           <div 
@@ -649,20 +643,20 @@ export function HomeClient() {
       <section className="py-20 bg-gradient-to-br from-amber-600 to-amber-700">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center text-white">
-            <h2 className="text-3xl md:text-5xl mb-4">Stay Connected</h2>
+            <h2 className="text-3xl md:text-5xl mb-4">{t("home.newsletterSection.title")}</h2>
             <p className="text-base md:text-xl mb-8 text-amber-50">
-              Subscribe for exclusive offers and updates
+              {t("home.newsletterSection.description")}
             </p>
             <form onSubmit={handleNewsletter} className="flex flex-col sm:flex-row gap-4 max-w-xl w-full mx-auto">
               <Input
                 type="email"
-                placeholder="Enter your email address"
+                placeholder={t("home.newsletterSection.placeholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full flex-1 h-14 px-6 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30 backdrop-blur-sm"
               />
               <Button type="submit" size="lg" className="w-full sm:w-auto bg-white text-amber-600 hover:bg-gray-50 h-14 px-8">
-                Subscribe
+                {t("home.newsletterSection.button")}
               </Button>
             </form>
           </div>

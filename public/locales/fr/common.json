@@ -1,4 +1,72 @@
 {
+  "home": {
+    "hero": {
+      "title": "Bienvenue à",
+      "subtitle": "Découvrez l'hospitalité de luxe au cœur de l'Afrique du Sud. Où le confort rencontre l'élégance.",
+      "bookButton": "Réservez votre séjour",
+      "exploreButton": "Explorer les chambres"
+    },
+    "stats": {
+      "rooms": "Chambres de luxe",
+      "clean": "Chambres propres",
+      "menu": "Éléments du menu",
+      "support": "Assistance"
+    },
+    "whyChooseUs": {
+      "title": "Pourquoi nous choisir",
+      "description": "Vivez une hospitalité de classe mondiale avec des équipements haut de gamme",
+      "cards": [
+        { "title": "Ménage quotidien", "description": "Chambres nettoyées et rafraîchies professionnellement chaque jour" },
+        { "title": "Service 5 étoiles", "description": "Service exceptionnel, à tout moment, quand vous en avez besoin" },
+        { "title": "Support check-in rapide", "description": "Arrivées rapides avec aide disponible à tout moment" },
+        { "title": "Équipements de luxe", "description": "Tout ce dont vous avez besoin pour un séjour parfait" }
+      ]
+    },
+    "roomsSection": {
+      "title": "Nos chambres en vedette",
+      "subtitle": "Découvrez nos chambres les plus populaires, conçues pour le confort et l'élégance.",
+      "description": "Chambres et suites magnifiquement conçues",
+      "viewAllRooms": "Voir toutes les chambres",
+      "perNight": "/ nuit",
+      "noRooms": "Aucune chambre disponible pour le moment."
+    },
+    "diningSection": {
+      "badge": "Cuisine primée",
+      "title": "Excellence culinaire",
+      "description": "Des petits-déjeuners copieux aux dîners élégants, notre menu propose des ingrédients locaux et des saveurs internationales. Découvrez l'art culinaire à chaque repas.",
+      "meals": [
+        { "label": "Petit-déjeuner", "time": "7h00 - 11h00" },
+        { "label": "Déjeuner", "time": "12h00 - 16h00" },
+        { "label": "Dîner", "time": "17h30 - 19h30" },
+        { "label": "Service en chambre", "time": "Disponible 24/7" }
+      ],
+      "viewMenu": "Voir le menu complet"
+    },
+    "spaSection": {
+      "badge": "Bien-être premium",
+      "title": "Spa & Bien-être",
+      "description": "Notre spa de classe mondiale propose une gamme de soins pour vous aider à vous détendre et à vous ressourcer. Des massages aux manucures, tout pour une relaxation ultime.",
+      "features": [
+        "Thérapie de massage professionnelle",
+        "Services de manucure et pédicure",
+        "Soins du visage",
+        "Séances d'aromathérapie"
+      ],
+      "bookSpa": "Réserver un soin spa"
+    },
+    "testimonialsSection": {
+      "title": "Avis des clients",
+      "subtitle": "Découvrez les expériences inoubliables de nos clients.",
+      "description": "Ce que nos clients disent de leur expérience"
+    },
+    "newsletterSection": {
+      "title": "Restez connecté",
+      "subtitle": "Recevez des offres exclusives et des mises à jour dans votre boîte mail.",
+      "description": "Abonnez-vous pour des offres et actualités exclusives",
+      "placeholder": "Entrez votre email",
+      "button": "S'abonner"
+    }
+  },
   "welcome": "Bienvenue",
   "home_title": "Page d'accueil",
   "about_title": "À propos de nous",

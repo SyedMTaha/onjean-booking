@@ -3,7 +3,7 @@
 import Link from "next/link";
 import ReactCountryFlag from "react-country-flag";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut , LayoutDashboard} from "lucide-react";
 import { MouseEvent, useState, useEffect } from "react";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import { Button } from "@/components/ui/button";
@@ -57,21 +57,25 @@ export function Navigation() {
   // Get display name: "Admin" if admin, otherwise user's display name
   const displayName = isAdmin ? "Admin" : (user?.displayName || "My Account");
 
+  // Get current locale from pathname or default to 'en'
+  const currentLocale = pathname.split("/")[1] || "en";
   const navLinks = [
-    { path: "/", label: "Home" },
-    { path: "/rooms", label: "Rooms" },
-    { path: "/book-now", label: "Book Now" },
-    { path: "/spa", label: "Spa" },
-    { path: "/menu", label: "Menu" },
-    { path: "/gallery", label: "Gallery" },
-    { path: "/contact", label: "Contact" },
+    { path: `/${currentLocale}`, label: "Home" },
+    { path: `/${currentLocale}/rooms`, label: "Rooms" },
+    { path: `/${currentLocale}/book-now`, label: "Book Now" },
+    { path: `/${currentLocale}/spa`, label: "Spa" },
+    { path: `/${currentLocale}/menu`, label: "Menu" },
+    { path: `/${currentLocale}/gallery`, label: "Gallery" },
+    { path: `/${currentLocale}/contact`, label: "Contact" },
   ];
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/";
+    // Only match exact path for Home
+    if (path === `/${currentLocale}`) {
+      return pathname === `/${currentLocale}`;
     }
-    return pathname.startsWith(path);
+    // For other links, match exact path
+    return pathname === path;
   };
 
   const handleLogout = async () => {
@@ -205,22 +209,22 @@ export function Navigation() {
                         variant="outline"
                         size="sm"
                         className="w-full flex items-center justify-between bg-white text-gray-800 font-semibold py-1.5 px-2 rounded-md focus:outline-none"
-                        style={{ minHeight: '36px', fontSize: '13px' }}
+                        style={{ minHeight: '36px', fontSize: '0.95rem' }}
                         onClick={e => {
                           e.preventDefault();
                           setShowLangDropdown(prev => !prev);
                         }}
                       >
-                        <span>Choose Language</span>
+                        <span style={{ fontSize: '12px' }}>Choose Language</span>
                         <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </Button>
                       {showLangDropdown && (
-                        <div className="absolute left-0 mt-2 w-full bg-white rounded-md shadow-lg z-10 flex flex-col gap-1 border border-gray-200">
+                        <div className="absolute left-0 mt-2 w-full bg-white rounded-md shadow-lg z-10 flex flex-col gap-1 border border-gray-200 font-medium">
                           {languageOptions.map(lang => (
                             <button
                               key={lang.value}
                               className={`w-full flex items-center gap-2 rounded-md bg-white py-1 px-2 text-gray-800 font-medium focus:outline-none hover:bg-gray-100 transition ${typeof window !== 'undefined' && window.location.pathname.split('/')[1] === lang.value ? 'ring-2 ring-blue-500' : ''}`}
-                              style={{ minHeight: '32px', fontSize: '0.95rem' }}
+                              style={{ minHeight: '32px', fontSize: '12px' }}
                               onClick={() => {
                                 setShowLangDropdown(false);
                                 if (typeof window !== 'undefined') {
@@ -238,7 +242,10 @@ export function Navigation() {
                   </div>
                   {isAdmin ? (
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="text-gray-200 hover:text-white hover:bg-gray-800">Dashboard</Link>
+                      <Link href="/dashboard" className="flex items-center gap-2 text-gray-200 hover:text-white hover:bg-gray-800">
+                        <LayoutDashboard className="w-4 h-4" />
+                        Go to Dashboard
+                      </Link>
                     </DropdownMenuItem>
                   ) : (
                     <>
@@ -327,13 +334,49 @@ export function Navigation() {
                 </div>
               ) : (
                 <div className="px-4 space-y-2">
+                  {/* Language Dropdown for Mobile */}
+                  <div className="relative">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full flex items-center justify-between bg-white text-gray-800 font-semibold py-1.5 px-2 rounded-md focus:outline-none mb-2"
+                      style={{ minHeight: '36px', fontSize: '0.95rem' }}
+                      onClick={e => {
+                        e.preventDefault();
+                        setShowLangDropdown(prev => !prev);
+                      }}
+                    >
+                      <span style={{ fontSize: '12px' }}>Choose Language</span>
+                      <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </Button>
+                    {showLangDropdown && (
+                      <div className="absolute left-0 mt-2 w-full bg-white rounded-md shadow-lg z-10 flex flex-col gap-1 border border-gray-200 font-medium">
+                        {languageOptions.map(lang => (
+                          <button
+                            key={lang.value}
+                            className={`w-full flex items-center gap-2 rounded-md bg-white py-1 px-2 text-gray-800 font-medium focus:outline-none hover:bg-gray-100 transition ${typeof window !== 'undefined' && window.location.pathname.split('/')[1] === lang.value ? 'ring-2 ring-blue-500' : ''}`}
+                            style={{ minHeight: '32px', fontSize: '12px' }}
+                            onClick={() => {
+                              setShowLangDropdown(false);
+                              if (typeof window !== 'undefined') {
+                                window.location.pathname = `/${lang.value}${window.location.pathname.replace(/^\/\w{2}/, '')}`;
+                              }
+                            }}
+                          >
+                            <ReactCountryFlag countryCode={lang.countryCode} svg style={{ width: "1.2em", height: "1.2em", borderRadius: "5px", boxShadow: "0 0 2px #ccc" }} title={lang.label} />
+                            <span className="font-semibold">{lang.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {isAdmin ? (
                     <Link
                       href="/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
                       className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
                     >
-                      Dashboard
+                      <Menu className="inline w-4 h-4 mr-1 align-text-bottom" /> Dashboard
                     </Link>
                   ) : (
                     <>

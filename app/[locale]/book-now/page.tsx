@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Complete your hotel reservation in 3 easy steps.",
 };
 
-export default function BookingPage() {
+export default function BookingPage({ params }: { params: { locale: string } }) {
   return (
   <>
   <Navigation />
