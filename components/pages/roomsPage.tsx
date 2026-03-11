@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ interface RoomsClientProps {
 }
 
 export default function RoomsClient({ locale }: RoomsClientProps) {
+  const t = useTranslations();
   // Use local rooms data directly
   const mappedRooms = fallbackRooms.map(r => ({
     ...r,
@@ -38,8 +40,8 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
         </div>
         <div className="relative container mx-auto px-4 h-full flex items-center justify-center">
           <div className="text-white text-center">
-            <h1 className="text-4xl md:text-5xl font-semibold mb-4">Our Rooms & Suites</h1>
-            <p className="text-lg md:text-xl text-amber-50">Choose from our carefully designed accommodations, each offering comfort and luxury</p>
+            <h1 className="text-4xl md:text-5xl font-semibold mb-4">{t('roomsPage.hero.title')}</h1>
+            <p className="text-lg md:text-xl text-amber-50">{t('roomsPage.hero.subtitle')}</p>
           </div>
         </div>
       </section>
@@ -90,11 +92,11 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                     <div className="w-full md:w-[60%] p-6 pt-12 flex flex-col relative">
                       {/* Room ID Badge - Top Left */}
                       <Badge className="absolute top-4 left-4 bg-blue-100 text-blue-700 border-0">
-                        Room ID: {room.id}
+                        {t('roomsPage.roomId')}: {room.id}
                       </Badge>
                       {/* Guest Badge - Top Right */}
                       <Badge className="absolute top-4 right-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                        {room.maxGuests} Guests
+                        {room.maxGuests} {t('roomsPage.guests')}
                       </Badge>
                       {/* Room Type */}
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 pr-24 mt-4">{room.name}</h3>
@@ -106,7 +108,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                       <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5">
                           <Users className="w-4 h-4" />
-                          <span>{room.maxGuests} Guests</span>
+                          <span>{room.maxGuests} {t('roomsPage.guests')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Maximize className="w-4 h-4" />
@@ -130,7 +132,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <span className="text-3xl font-bold text-amber-600">{room.price}</span>
-                            <span className="text-gray-500 text-sm ml-2">/ night</span>
+                            <span className="text-gray-500 text-sm ml-2">{t('roomsPage.perNight')}</span>
                           </div>
                         </div>
                         <div className="flex gap-3">
@@ -139,12 +141,12 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                               variant="outline" 
                               className="w-full bg-white border-amber-600  text-amber-600  hover:bg-gray-50"
                             >
-                              View Details
+                              {t('roomsPage.viewDetails')}
                             </Button>
                           </Link>
                           <Link href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`} className="flex-1">
                             <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-                              Book Now
+                              {t('roomsPage.bookNow')}
                             </Button>
                           </Link>
                         </div>
@@ -155,7 +157,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
               ))
             ) : (
               <div className="col-span-full text-center py-16">
-                <p className="text-gray-500 text-lg">No rooms available at the moment.</p>
+                <p className="text-gray-500 text-lg">{t('roomsPage.noRooms')}</p>
               </div>
             )}
           </div>
@@ -166,8 +168,8 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">All Rooms Include</h2>
-            <p className="text-gray-600 text-lg">Standard amenities in every room</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{t('roomsPage.amenitiesTitle')}</h2>
+            <p className="text-gray-600 text-lg">{t('roomsPage.amenitiesSubtitle')}</p>
           </div>
           
           <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -175,7 +177,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
                 <Wifi className="w-10 h-10 text-amber-600" />
               </div>
-              <p className="text-center text-sm font-medium text-gray-700">Free WiFi</p>
+              <p className="text-center text-sm font-medium text-gray-700">{t('roomsPage.amenities.wifi')}</p>
             </div>
             
             
@@ -183,14 +185,14 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
                 <Tv className="w-10 h-10 text-amber-600" />
               </div>
-              <p className="text-center text-sm font-medium text-gray-700">Flat Screen TV</p>
+              <p className="text-center text-sm font-medium text-gray-700">{t('roomsPage.amenities.tv')}</p>
             </div>
             
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
                 <Coffee className="w-10 h-10 text-amber-600" />
               </div>
-              <p className="text-center text-sm font-medium text-gray-700">Coffee Maker</p>
+              <p className="text-center text-sm font-medium text-gray-700">{t('roomsPage.amenities.coffee')}</p>
             </div>
 
             
@@ -198,7 +200,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-4">
                 <Maximize2 className="w-10 h-10 text-amber-600" />
               </div>
-              <p className="text-center text-sm font-medium text-gray-700">Spacious Rooms</p>
+              <p className="text-center text-sm font-medium text-gray-700">{t('roomsPage.amenities.spacious')}</p>
             </div>
           </div>
         </div>

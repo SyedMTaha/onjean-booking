@@ -67,7 +67,7 @@ export function HomeClient() {
   const [cardsPerView, setCardsPerView] = useState(3);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonials);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   const stats = [
     { number: "7", label: t("home.stats.rooms"), icon: Star },
@@ -111,40 +111,17 @@ export function HomeClient() {
   }, [isHoveringTestimonials, maxSlideIndex]);
 
   useEffect(() => {
-    const fetchGoogleReviews = async () => {
-      try {
-        const response = await fetch("/api/google-reviews");
-        if (!response.ok) {
-          return;
-        }
-
-        const data = await response.json();
-        if (!Array.isArray(data?.reviews) || data.reviews.length === 0) {
-          return;
-        }
-
-        const normalized: Testimonial[] = data.reviews
-          .filter((review: Testimonial) => review.comment)
-          .slice(0, 6)
-          .map((review: Testimonial) => ({
-            name: review.name || "Guest",
-            location: review.location || "Google Review",
-            rating: review.rating || 5,
-            comment: review.comment,
-          }));
-
-        if (normalized.length > 0) {
-          setTestimonials(normalized);
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("Using fallback testimonials:", error);
-        }
-      }
-    };
-
-    fetchGoogleReviews();
-  }, []);
+    // Use translated testimonials from locale file
+    const reviews = t.raw("home.testimonialsSection.reviews");
+    if (Array.isArray(reviews) && reviews.length > 0) {
+      setTestimonials(reviews.map((review: any) => ({
+        ...review,
+        rating: 5 // All reviews are 5-star, as per fallback
+      })));
+    } else {
+      setTestimonials(fallbackTestimonials);
+    }
+  }, [t]);
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -447,26 +424,26 @@ export function HomeClient() {
                         room.id === "2" ? "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg" :
                         room.id === "3" ? "/rooms/r1-family/family-3.jpg" : room.image
                       }
-                      alt={room.name}
+                      alt={t(`rooms.${room.slug}.name`, { default: room.name })}
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
                     />
                   </div>
                   <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-2xl mb-3 text-[#0A0A0A] min-h-[64px] line-clamp-2">{room.name}</h3>
+                    <h3 className="text-2xl mb-3 text-[#0A0A0A] min-h-[64px] line-clamp-2">{t(`rooms.${room.slug}.name`, { default: room.name })}</h3>
                     <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
                       {room.bedType && (
                         <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                          {room.bedType}
+                          {t(`rooms.${room.slug}.bedType`, { default: room.bedType })}
                         </span>
                       )}
                       {room.view && (
                         <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                          {room.view}
+                          {t(`rooms.${room.slug}.view`, { default: room.view })}
                         </span>
                       )}
                       {room.size && (
                         <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                          {room.size}
+                          {t(`rooms.${room.slug}.size`, { default: room.size })}
                         </span>
                       )}
                     </div>

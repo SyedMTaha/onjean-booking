@@ -1,4 +1,36 @@
 {
+  "roomsPage": {
+    "hero": {
+      "title": "Nuestras habitaciones y suites",
+      "subtitle": "Elija entre nuestros alojamientos cuidadosamente diseñados, que ofrecen comodidad y lujo",
+      "alt": "Habitaciones de lujo"
+    },
+    "roomId": "ID de habitación",
+    "guests": "Huéspedes",
+    "perNight": "/ noche",
+    "viewDetails": "Ver detalles",
+    "bookNow": "Reservar",
+    "noRooms": "No hay habitaciones disponibles en este momento.",
+    "amenitiesTitle": "Todas las habitaciones incluyen",
+    "amenitiesSubtitle": "Comodidades estándar en cada habitación",
+    "amenities": {
+      "wifi": "WiFi gratis",
+      "tv": "Televisión de pantalla plana",
+      "coffee": "Cafetera",
+      "spacious": "Habitaciones espaciosas"
+    }
+  },
+  "searchBar": {
+    "selectRoom": "Seleccionar habitación",
+    "chooseRoom": "Elige una habitación",
+    "perNight": "noche",
+    "checkIn": "Entrada",
+    "checkOut": "Salida",
+    "selectDate": "Seleccionar fecha",
+    "addGuests": "Agregar huéspedes",
+    "numberOfGuests": "Número de huéspedes",
+    "searchButton": "Buscar"
+  },
   "welcome": "Bienvenido",
   "home_title": "Página principal",
   "about_title": "Sobre nosotros",
@@ -6,6 +38,71 @@
   "rooms_title": "Habitaciones",
   "book_now": "Reservar ahora",
   "footer_text": "Todos los derechos reservados.",
+  "rooms": {
+    "deluxe-double-room-with-bath": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Deluxe con Baño",
+      "title": "Habitación Doble Deluxe con Baño",
+      "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana"],
+      "bedType": "1 cama doble",
+      "size": "25 m²"
+    },
+    "deluxe-double-room": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Deluxe",
+      "title": "Habitación Doble Deluxe",
+      "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana"],
+      "bedType": "1 cama doble",
+      "size": "30 m²"
+    },
+    "family-double-room": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Familiar",
+      "title": "Habitación Doble Familiar",
+      "description": "Amplia habitación familiar con 2 camas dobles, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana", "Ideal para familias"],
+      "bedType": "2 camas dobles",
+      "size": "25 m²"
+    },
+    "family-double-room-1": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Familiar",
+      "title": "Habitación Doble Familiar",
+      "description": "Amplia habitación familiar con 2 camas dobles, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana", "Ideal para familias"],
+      "bedType": "2 camas dobles",
+      "size": "25 m²"
+    },
+    "deluxe-double-room-3": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Deluxe",
+      "title": "Habitación Doble Deluxe",
+      "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana"],
+      "bedType": "1 cama doble",
+      "size": "30 m²"
+    },
+    "deluxe-double-room-2": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Deluxe",
+      "title": "Habitación Doble Deluxe",
+      "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana"],
+      "bedType": "1 cama doble",
+      "size": "28 m²"
+    },
+    "deluxe-double-room-4": {
+      "view": "Ver habitación",
+      "name": "Habitación Doble Deluxe",
+      "title": "Habitación Doble Deluxe",
+      "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín.",
+      "features": ["Baño privado", "Vistas al jardín", "WiFi gratis", "Televisión de pantalla plana"],
+      "bedType": "1 cama doble",
+      "size": "32 m²"
+    }
+  },
   "home": {
     "hero": {
       "title": "Bienvenido a",
@@ -21,11 +118,112 @@
     },
     "roomsSection": {
       "title": "Nuestras habitaciones destacadas",
-      "subtitle": "Descubre nuestras habitaciones más populares, diseñadas para la comodidad y la elegancia."
+      "subtitle": "Descubre nuestras habitaciones más populares, diseñadas para la comodidad y la elegancia.",
+      "description": "Habitaciones y suites bellamente diseñadas",
+      "viewAllRooms": "Ver todas las habitaciones",
+      "perNight": "/ noche",
+      "noRooms": "No hay habitaciones disponibles en este momento.",
+      "cards": {
+        "deluxe-double-room-with-bath": {
+          "title": "Habitación Doble Deluxe con Baño",
+          "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín."
+        },
+        "deluxe-double-room": {
+          "title": "Habitación Doble Deluxe",
+          "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín."
+        },
+        "family-double-room": {
+          "title": "Habitación Doble Familiar",
+          "description": "Amplia habitación familiar con 2 camas dobles, baño privado y vistas al jardín."
+        },
+        "family-double-room-1": {
+          "title": "Habitación Doble Familiar",
+          "description": "Amplia habitación familiar con 2 camas dobles, baño privado y vistas al jardín."
+        },
+        "deluxe-double-room-3": {
+          "title": "Habitación Doble Deluxe",
+          "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín."
+        },
+        "deluxe-double-room-2": {
+          "title": "Habitación Doble Deluxe",
+          "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín."
+        },
+        "deluxe-double-room-4": {
+          "title": "Habitación Doble Deluxe",
+          "description": "Cómoda habitación doble deluxe con 1 cama doble, baño privado y vistas al jardín."
+        }
+      }
+    },
+    "whyChooseUs": {
+      "title": "¿Por qué elegirnos?",
+      "description": "Experimenta hospitalidad de clase mundial con comodidades premium",
+      "cards": [
+        { "title": "Limpieza diaria", "description": "Habitaciones limpiadas y renovadas profesionalmente cada día" },
+        { "title": "Servicio 5 estrellas", "description": "Servicio excepcional, siempre que lo necesites" },
+        { "title": "Check-in rápido", "description": "Llegadas rápidas con ayuda disponible cuando la necesites" },
+        { "title": "Comodidades de lujo", "description": "Todo lo que necesitas para una estancia perfecta" }
+      ]
+    },
+    "diningSection": {
+      "badge": "Cocina galardonada",
+      "title": "Excelencia culinaria",
+      "description": "Desde desayunos abundantes hasta cenas elegantes, nuestro menú ofrece ingredientes locales y sabores internacionales. Experimenta arte culinario en cada comida.",
+      "meals": [
+        { "label": "Desayuno", "time": "7:00 - 11:00" },
+        { "label": "Almuerzo", "time": "12:00 - 16:00" },
+        { "label": "Cena", "time": "17:30 - 19:30" },
+        { "label": "Servicio a la habitación", "time": "Disponible 24/7" }
+      ],
+      "viewMenu": "Ver menú completo"
+    },
+    "spaSection": {
+      "badge": "Bienestar premium",
+      "title": "Spa y bienestar",
+      "description": "Nuestro spa de clase mundial ofrece una gama de tratamientos para ayudarte a relajarte y recargar energías. Desde masajes hasta manicuras, todo para una experiencia de relajación total.",
+      "features": [
+        "Terapia de masaje profesional",
+        "Servicios de manicura y pedicura",
+        "Tratamientos faciales",
+        "Sesiones de aromaterapia"
+      ],
+      "bookSpa": "Reservar tratamiento de spa"
     },
     "testimonialsSection": {
       "title": "Testimonios de huéspedes",
-      "subtitle": "Escucha a nuestros huéspedes sobre sus experiencias inolvidables."
+      "subtitle": "Escucha a nuestros huéspedes sobre sus experiencias inolvidables.",
+      "description": "Lo que nuestros huéspedes dicen sobre su experiencia",
+      "reviews": [
+        {
+          "name": "Sarah Mitchell",
+          "location": "Londres, Reino Unido",
+          "comment": "¡Hotel absolutamente impresionante! El servicio fue impecable y las habitaciones bellamente diseñadas. Los tratamientos de spa fueron divinos."
+        },
+        {
+          "name": "James Peterson",
+          "location": "Nueva York, EE.UU.",
+          "comment": "La mejor experiencia hotelera en Sudáfrica. El personal hizo todo lo posible para que nuestra estancia fuera memorable. ¡Muy recomendable!"
+        },
+        {
+          "name": "Emma van der Berg",
+          "location": "Johannesburgo, Sudáfrica",
+          "comment": "¡Una joya escondida! Cada detalle fue perfecto. El desayuno fue excepcional y las comodidades son de clase mundial."
+        },
+        {
+          "name": "Michael Chen",
+          "location": "Singapur",
+          "comment": "Hospitalidad excepcional y atención al detalle. Las vistas son absolutamente impresionantes y el personal es increíblemente cortés."
+        },
+        {
+          "name": "Isabella Rodriguez",
+          "location": "Madrid, España",
+          "comment": "¡Una experiencia de lujo como ninguna otra! Las habitaciones están elegantemente amuebladas y la cena es inolvidable."
+        },
+        {
+          "name": "David Thompson",
+          "location": "Toronto, Canadá",
+          "comment": "¡Realmente de clase mundial! Cada momento en este hotel fue especial. Estoy deseando volver para otra estancia increíble."
+        }
+      ]
     },
     "newsletterSection": {
       "title": "Suscríbete a nuestro boletín",

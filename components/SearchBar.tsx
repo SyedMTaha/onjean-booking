@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ import { rooms as localRoomsData } from '@/data/rooms';
 import { Calendar } from 'lucide-react';
 
 export function SearchBar() {
+  const t = useTranslations();
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState('');
@@ -237,11 +239,11 @@ export function SearchBar() {
       {/* Room Selection */}
       <div className="flex-1 px-4 md:px-6 py-3 md:border-r border-gray-200 min-w-0 flex flex-col justify-end">
         <label className="text-xs font-semibold text-gray-700 block mb-1">
-          Select Room
+          {t('searchBar.selectRoom')}
         </label>
         <Select value={selectedRoom} onValueChange={setSelectedRoom}>
           <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 focus:ring-offset-0 text-sm text-gray-900 bg-white">
-            <SelectValue placeholder="Choose a room" className="text-gray-900" />
+            <SelectValue placeholder={t('searchBar.chooseRoom')} className="text-gray-900" />
           </SelectTrigger>
           <SelectContent className="bg-white">
             {rooms.map((room) => (
@@ -250,7 +252,7 @@ export function SearchBar() {
                 value={room.id}
                 className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50 data-highlighted:bg-orange-50"
               >
-                {room.name} - {room.price}/night
+                {room.name} - {room.price}/{t('searchBar.perNight')}
               </SelectItem>
             ))}
           </SelectContent>
@@ -260,7 +262,7 @@ export function SearchBar() {
       {/* Check-in Date */}
       <div className="flex-1 px-4 md:px-6 py-3 md:border-r border-gray-200 min-w-0 flex flex-col justify-end">
         <label className="text-xs font-semibold text-gray-700 block mb-1">
-          Check-in
+          {t('searchBar.checkIn')}
         </label>
         <Popover open={isCalendarOpen && activeField === 'checkIn'} onOpenChange={(open) => {
           setIsCalendarOpen(open);
@@ -269,7 +271,7 @@ export function SearchBar() {
           <PopoverTrigger asChild>
             <button className="w-full flex items-center justify-between text-left">
               <span className="text-sm text-gray-900">
-                {dateRange.from ? format(dateRange.from, "MMM dd, yyyy") : "Select date"}
+                {dateRange.from ? format(dateRange.from, "MMM dd, yyyy") : t('searchBar.selectDate')}
               </span>
               <Calendar className="h-4 w-4 text-gray-400" />
             </button>
@@ -295,7 +297,7 @@ export function SearchBar() {
       {/* Check-out Date */}
       <div className="flex-1 px-4 md:px-6 py-3 md:border-r border-gray-200 min-w-0 flex flex-col justify-end">
         <label className="text-xs font-semibold text-gray-700 block mb-1">
-          Check-out
+          {t('searchBar.checkOut')}
         </label>
         <Popover open={isCalendarOpen && activeField === 'checkOut'} onOpenChange={(open) => {
           setIsCalendarOpen(open);
@@ -304,7 +306,7 @@ export function SearchBar() {
           <PopoverTrigger asChild>
             <button className="w-full flex items-center justify-between text-left">
               <span className="text-sm text-gray-900">
-                {dateRange.to ? format(dateRange.to, "MMM dd, yyyy") : "Select date"}
+                {dateRange.to ? format(dateRange.to, "MMM dd, yyyy") : t('searchBar.selectDate')}
               </span>
               <Calendar className="h-4 w-4 text-gray-400" />
             </button>
@@ -330,11 +332,11 @@ export function SearchBar() {
       {/* Guests */}
       <div className="flex-1 px-4 md:px-6 py-3 md:border-r border-gray-200 min-w-0 flex flex-col justify-end">
         <label className="text-xs font-semibold text-gray-700 block mb-1">
-          Add guests
+          {t('searchBar.addGuests')}
         </label>
         <Input
           type="number"
-          placeholder="Number of guests"
+          placeholder={t('searchBar.numberOfGuests')}
           min="1"
           value={guests}
           onChange={(e) => setGuests(e.target.value)}
@@ -348,7 +350,7 @@ export function SearchBar() {
           onClick={handleSearch}
           className="bg-gray-900 hover:bg-black text-white rounded-full h-14 px-8 w-full md:w-auto font-semibold"
         >
-          Search
+          {t('searchBar.searchButton')}
         </Button>
       </div>
     </div>

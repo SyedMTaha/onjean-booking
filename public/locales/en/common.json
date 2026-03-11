@@ -1,4 +1,87 @@
-{
+    {
+      "roomsPage": {
+        "hero": {
+          "title": "Our Rooms & Suites",
+          "subtitle": "Choose from our carefully designed accommodations, each offering comfort and luxury",
+          "alt": "Luxury Rooms"
+        },
+        "roomId": "Room ID",
+        "guests": "Guests",
+        "perNight": "/ night",
+        "viewDetails": "View Details",
+        "bookNow": "Book Now",
+        "noRooms": "No rooms available at the moment.",
+        "amenitiesTitle": "All Rooms Include",
+        "amenitiesSubtitle": "Standard amenities in every room",
+        "amenities": {
+          "wifi": "Free WiFi",
+          "tv": "Flat Screen TV",
+          "coffee": "Coffee Maker",
+          "spacious": "Spacious Rooms"
+        }
+      },
+    "searchBar": {
+      "selectRoom": "Select Room",
+      "chooseRoom": "Choose a room",
+      "perNight": "night",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "selectDate": "Select date",
+      "addGuests": "Add guests",
+      "numberOfGuests": "Number of guests",
+      "searchButton": "Search"
+    },
+  "rooms": {
+      "deluxe-double-room-with-bath": {
+        "view": "View Room",
+        "name": "Deluxe Double Room with Bath",
+        "bedType": "1 Double Bed",
+        "size": "25 m²",
+        "description": "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views."
+      },
+      "deluxe-double-room": {
+        "view": "View Room",
+        "name": "Deluxe Double Room",
+        "bedType": "1 Double Bed",
+        "size": "30 m²",
+        "description": "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views."
+      },
+      "family-double-room": {
+        "view": "View Room",
+        "name": "Family Double Room",
+        "bedType": "2 Double Beds",
+        "size": "25 m²",
+        "description": "Spacious Family Double Room with 2 double beds, private bathroom, and garden views."
+      },
+      "family-double-room-1": {
+        "view": "View Room",
+        "name": "Family Double Room",
+        "bedType": "2 Double Beds",
+        "size": "25 m²",
+        "description": "Spacious Family Double Room with 2 double beds, private bathroom, and garden views."
+      },
+      "deluxe-double-room-3": {
+        "view": "View Room",
+        "name": "Deluxe Double Room",
+        "bedType": "1 Double Bed",
+        "size": "30 m²",
+        "description": "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views."
+      },
+      "deluxe-double-room-2": {
+        "view": "View Room",
+        "name": "Deluxe Double Room",
+        "bedType": "1 Double Bed",
+        "size": "28 m²",
+        "description": "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views."
+      },
+      "deluxe-double-room-4": {
+        "view": "View Room",
+        "name": "Deluxe Double Room",
+        "bedType": "1 Double Bed",
+        "size": "32 m²",
+        "description": "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views."
+      }
+    },
   "home": {
     "hero": {
       "title": "Welcome to",
@@ -57,7 +140,39 @@
     "testimonialsSection": {
       "title": "Guest Testimonials",
       "subtitle": "Hear from our guests about their unforgettable experiences.",
-      "description": "What our guests say about their experience"
+      "description": "What our guests say about their experience",
+      "reviews": [
+        {
+          "name": "Sarah Mitchell",
+          "location": "London, UK",
+          "comment": "Absolutely stunning hotel! The service was impeccable and the rooms were beautifully designed. The spa treatments were divine."
+        },
+        {
+          "name": "James Peterson",
+          "location": "New York, USA",
+          "comment": "Best hotel experience in South Africa. The staff went above and beyond to make our stay memorable. Highly recommend!"
+        },
+        {
+          "name": "Emma van der Berg",
+          "location": "Johannesburg, SA",
+          "comment": "A hidden gem! Every detail was perfect. The breakfast was exceptional and the amenities are world-class."
+        },
+        {
+          "name": "Michael Chen",
+          "location": "Singapore",
+          "comment": "Exceptional hospitality and attention to detail. The views are absolutely breathtaking and the staff is incredibly courteous."
+        },
+        {
+          "name": "Isabella Rodriguez",
+          "location": "Madrid, Spain",
+          "comment": "A luxury experience like no other! The rooms are elegantly furnished and the dining experience is unforgettable."
+        },
+        {
+          "name": "David Thompson",
+          "location": "Toronto, Canada",
+          "comment": "Truly world-class! Every moment at this hotel was special. Can't wait to return for another amazing stay."
+        }
+      ]
     },
     "newsletterSection": {
       "title": "Subscribe to our Newsletter",

@@ -1,9 +1,173 @@
 {
+  "roomsPage": {
+    "hero": {
+      "title": "Onze kamers en suites",
+      "subtitle": "Kies uit onze zorgvuldig ontworpen accommodaties, elk met comfort en luxe",
+      "alt": "Luxe kamers"
+    },
+    "roomId": "Kamer ID",
+    "guests": "Gasten",
+    "perNight": "/ nacht",
+    "viewDetails": "Bekijk details",
+    "bookNow": "Nu boeken",
+    "noRooms": "Momenteel geen kamers beschikbaar.",
+    "amenitiesTitle": "Alle kamers bevatten",
+    "amenitiesSubtitle": "Standaard voorzieningen in elke kamer",
+    "amenities": {
+      "wifi": "Gratis WiFi",
+      "tv": "Flatscreen TV",
+      "coffee": "Koffiezetapparaat",
+      "spacious": "Ruime kamers"
+    }
+  },
+  "searchBar": {
+    "selectRoom": "Selecteer kamer",
+    "chooseRoom": "Kies een kamer",
+    "perNight": "nacht",
+    "checkIn": "Inchecken",
+    "checkOut": "Uitchecken",
+    "selectDate": "Selecteer datum",
+    "addGuests": "Voeg gasten toe",
+    "numberOfGuests": "Aantal gasten",
+    "searchButton": "Zoeken"
+  },
+  "rooms": {
+    "deluxe-double-room-with-bath": {
+      "view": "Bekijk kamer",
+      "name": "Deluxe tweepersoonskamer met bad",
+      "bedType": "1 tweepersoonsbed",
+      "size": "25 m²"
+    },
+    "deluxe-double-room": {
+      "view": "Bekijk kamer",
+      "name": "Deluxe tweepersoonskamer",
+      "bedType": "1 tweepersoonsbed",
+      "size": "30 m²"
+    },
+    "family-double-room": {
+      "view": "Bekijk kamer",
+      "name": "Familie tweepersoonskamer",
+      "bedType": "2 tweepersoonsbedden",
+      "size": "25 m²"
+    },
+    "family-double-room-1": {
+      "view": "Bekijk kamer",
+      "name": "Familie tweepersoonskamer",
+      "bedType": "2 tweepersoonsbedden",
+      "size": "25 m²"
+    },
+    "deluxe-double-room-3": {
+      "view": "Bekijk kamer",
+      "name": "Deluxe tweepersoonskamer",
+      "bedType": "1 tweepersoonsbed",
+      "size": "30 m²"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Welkom bij",
+      "subtitle": "Ontdek luxe gastvrijheid in het hart van Zuid-Afrika. Waar comfort en elegantie samenkomen.",
+      "bookButton": "Boek uw verblijf",
+      "exploreButton": "Bekijk kamers"
+    },
+    "stats": {
+      "rooms": "Luxe kamers",
+      "clean": "Schone kamers",
+      "menu": "Menu-items",
+      "support": "Ondersteuning"
+    },
+    "roomsSection": {
+      "title": "Onze uitgelichte kamers",
+      "subtitle": "Ontdek onze populairste kamers, ontworpen voor comfort en elegantie.",
+      "description": "Prachtig ontworpen kamers en suites",
+      "viewAllRooms": "Bekijk alle kamers",
+      "perNight": "/ nacht",
+      "noRooms": "Momenteel geen kamers beschikbaar."
+    },
+    "whyChooseUs": {
+      "title": "Waarom voor ons kiezen",
+      "description": "Ervaar gastvrijheid van wereldklasse met premium voorzieningen",
+      "cards": [
+        { "title": "Dagelijkse schoonmaak", "description": "Kamers elke dag professioneel schoongemaakt en opgefrist" },
+        { "title": "5-sterren service", "description": "Uitstekende service, altijd wanneer u het nodig heeft" },
+        { "title": "Snelle check-in", "description": "Snelle aankomst met hulp altijd beschikbaar" },
+        { "title": "Luxe voorzieningen", "description": "Alles wat u nodig heeft voor een perfect verblijf" }
+      ]
+    },
+    "diningSection": {
+      "badge": "Bekroonde keuken",
+      "title": "Culinaire excellentie",
+      "description": "Van stevige ontbijten tot elegante diners, ons menu biedt lokale ingrediënten en internationale smaken. Ontdek culinaire kunst bij elke maaltijd.",
+      "meals": [
+        { "label": "Ontbijt", "time": "7:00 - 11:00" },
+        { "label": "Lunch", "time": "12:00 - 16:00" },
+        { "label": "Diner", "time": "17:30 - 19:30" },
+        { "label": "Roomservice", "time": "24/7 beschikbaar" }
+      ],
+      "viewMenu": "Bekijk het volledige menu"
+    },
+    "spaSection": {
+      "badge": "Premium wellness",
+      "title": "Spa & Wellness",
+      "description": "Onze spa van wereldklasse biedt een scala aan behandelingen om u te helpen ontspannen en opladen. Van massages tot manicures, alles voor ultieme ontspanning.",
+      "features": [
+        "Professionele massagetherapie",
+        "Manicure- en pedicureservices",
+        "Gezichtsbehandelingen",
+        "Aromatherapiesessies"
+      ],
+      "bookSpa": "Boek een spabehandeling"
+    },
+    "testimonialsSection": {
+      "title": "Gastbeoordelingen",
+      "subtitle": "Ontdek de onvergetelijke ervaringen van onze gasten.",
+      "description": "Wat onze gasten zeggen over hun ervaring",
+      "reviews": [
+        {
+          "name": "Sarah Mitchell",
+          "location": "Londen, VK",
+          "comment": "Absoluut prachtig hotel! De service was onberispelijk en de kamers waren prachtig ontworpen. De spabehandelingen waren goddelijk."
+        },
+        {
+          "name": "James Peterson",
+          "location": "New York, VS",
+          "comment": "Beste hotelervaring in Zuid-Afrika. Het personeel deed er alles aan om ons verblijf onvergetelijk te maken. Zeker een aanrader!"
+        },
+        {
+          "name": "Emma van der Berg",
+          "location": "Johannesburg, Zuid-Afrika",
+          "comment": "Een verborgen parel! Elk detail was perfect. Het ontbijt was uitzonderlijk en de voorzieningen zijn van wereldklasse."
+        },
+        {
+          "name": "Michael Chen",
+          "location": "Singapore",
+          "comment": "Uitzonderlijke gastvrijheid en aandacht voor detail. Het uitzicht is adembenemend en het personeel is ongelooflijk vriendelijk."
+        },
+        {
+          "name": "Isabella Rodriguez",
+          "location": "Madrid, Spanje",
+          "comment": "Een luxe ervaring als geen ander! De kamers zijn elegant ingericht en het diner is onvergetelijk."
+        },
+        {
+          "name": "David Thompson",
+          "location": "Toronto, Canada",
+          "comment": "Echt van wereldklasse! Elk moment in dit hotel was bijzonder. Ik kan niet wachten om terug te komen voor een geweldig verblijf."
+        }
+      ]
+    },
+    "newsletterSection": {
+      "title": "Blijf verbonden",
+      "subtitle": "Ontvang exclusieve aanbiedingen en updates in uw inbox.",
+      "description": "Abonneer u voor exclusieve aanbiedingen en nieuws",
+      "placeholder": "Voer uw e-mail in",
+      "button": "Abonneren"
+    }
+  },
   "welcome": "Welkom",
   "home_title": "Startpagina",
   "about_title": "Over ons",
   "contact_title": "Contact",
   "rooms_title": "Kamers",
-  "book_now": "Boek nu",
+  "book_now": "Nu boeken",
   "footer_text": "Alle rechten voorbehouden."
 }

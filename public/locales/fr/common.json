@@ -1,16 +1,88 @@
 {
+  "roomsPage": {
+    "hero": {
+      "title": "Nos chambres et suites",
+      "subtitle": "Choisissez parmi nos hébergements soigneusement conçus, alliant confort et luxe",
+      "alt": "Chambres de luxe"
+    },
+    "roomId": "ID de chambre",
+    "guests": "Invités",
+    "perNight": "/ nuit",
+    "viewDetails": "Voir les détails",
+    "bookNow": "Réserver",
+    "noRooms": "Aucune chambre disponible pour le moment.",
+    "amenitiesTitle": "Toutes les chambres incluent",
+    "amenitiesSubtitle": "Équipements standards dans chaque chambre",
+    "amenities": {
+      "wifi": "WiFi gratuit",
+      "tv": "Télévision à écran plat",
+      "coffee": "Cafetière",
+      "spacious": "Chambres spacieuses"
+    }
+  },
+  "searchBar": {
+    "selectRoom": "Sélectionner une chambre",
+    "chooseRoom": "Choisissez une chambre",
+    "perNight": "nuit",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "selectDate": "Sélectionner une date",
+    "addGuests": "Ajouter des invités",
+    "numberOfGuests": "Nombre d'invités",
+    "searchButton": "Rechercher"
+  },
+  "rooms": {
+    "deluxe-double-room-with-bath": {
+      "name": "Chambre double deluxe avec baignoire",
+      "bedType": "1 lit double",
+      "size": "25 m²"
+    },
+    "deluxe-double-room": {
+      "name": "Chambre double deluxe",
+      "bedType": "1 lit double",
+      "size": "30 m²"
+    },
+      "view": "Voir la chambre",
+    "family-double-room": {
+      "name": "Chambre familiale double",
+      "bedType": "2 lits doubles",
+      "size": "25 m²"
+    },
+    "family-double-room-1": {
+      "view": "Voir la chambre",
+      "name": "Chambre familiale double",
+      "bedType": "2 lits doubles",
+      "size": "25 m²"
+    },
+    "deluxe-double-room-3": {
+      "name": "Chambre double deluxe",
+      "view": "Voir la chambre",
+      "bedType": "1 lit double",
+      "size": "30 m²"
+    }
+  },
   "home": {
     "hero": {
+      "view": "Voir la chambre",
       "title": "Bienvenue à",
       "subtitle": "Découvrez l'hospitalité de luxe au cœur de l'Afrique du Sud. Où le confort rencontre l'élégance.",
       "bookButton": "Réservez votre séjour",
       "exploreButton": "Explorer les chambres"
     },
     "stats": {
+      "view": "Voir la chambre",
       "rooms": "Chambres de luxe",
       "clean": "Chambres propres",
       "menu": "Éléments du menu",
       "support": "Assistance"
+    },
+    "roomsSection": {
+      "title": "Nos chambres en vedette",
+      "subtitle": "Découvrez nos chambres les plus populaires, conçues pour le confort et l'élégance.",
+      "description": "Chambres et suites magnifiquement conçues",
+      "viewAllRooms": "Voir toutes les chambres",
+      "perNight": "/ nuit",
+      "noRooms": "Aucune chambre disponible pour le moment."
     },
     "whyChooseUs": {
       "title": "Pourquoi nous choisir",
@@ -21,14 +93,6 @@
         { "title": "Support check-in rapide", "description": "Arrivées rapides avec aide disponible à tout moment" },
         { "title": "Équipements de luxe", "description": "Tout ce dont vous avez besoin pour un séjour parfait" }
       ]
-    },
-    "roomsSection": {
-      "title": "Nos chambres en vedette",
-      "subtitle": "Découvrez nos chambres les plus populaires, conçues pour le confort et l'élégance.",
-      "description": "Chambres et suites magnifiquement conçues",
-      "viewAllRooms": "Voir toutes les chambres",
-      "perNight": "/ nuit",
-      "noRooms": "Aucune chambre disponible pour le moment."
     },
     "diningSection": {
       "badge": "Cuisine primée",
@@ -57,7 +121,39 @@
     "testimonialsSection": {
       "title": "Avis des clients",
       "subtitle": "Découvrez les expériences inoubliables de nos clients.",
-      "description": "Ce que nos clients disent de leur expérience"
+      "description": "Ce que nos clients disent de leur expérience",
+      "reviews": [
+        {
+          "name": "Sarah Mitchell",
+          "location": "Londres, Royaume-Uni",
+          "comment": "Hôtel absolument magnifique ! Le service était impeccable et les chambres magnifiquement décorées. Les soins au spa étaient divins."
+        },
+        {
+          "name": "James Peterson",
+          "location": "New York, États-Unis",
+          "comment": "Meilleure expérience hôtelière en Afrique du Sud. Le personnel a tout fait pour rendre notre séjour mémorable. Je recommande vivement !"
+        },
+        {
+          "name": "Emma van der Berg",
+          "location": "Johannesburg, Afrique du Sud",
+          "comment": "Un joyau caché ! Chaque détail était parfait. Le petit-déjeuner était exceptionnel et les équipements sont de classe mondiale."
+        },
+        {
+          "name": "Michael Chen",
+          "location": "Singapour",
+          "comment": "Hospitalité exceptionnelle et souci du détail. Les vues sont à couper le souffle et le personnel est incroyablement courtois."
+        },
+        {
+          "name": "Isabella Rodriguez",
+          "location": "Madrid, Espagne",
+          "comment": "Une expérience de luxe incomparable ! Les chambres sont élégamment meublées et le dîner est inoubliable."
+        },
+        {
+          "name": "David Thompson",
+          "location": "Toronto, Canada",
+          "comment": "Vraiment de classe mondiale ! Chaque moment dans cet hôtel était spécial. J'ai hâte de revenir pour un autre séjour incroyable."
+        }
+      ]
     },
     "newsletterSection": {
       "title": "Restez connecté",

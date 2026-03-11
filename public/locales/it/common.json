@@ -1,4 +1,36 @@
 {
+  "roomsPage": {
+    "hero": {
+      "title": "Le nostre camere e suite",
+      "subtitle": "Scegli tra le nostre sistemazioni progettate con cura, che offrono comfort e lusso",
+      "alt": "Camere di lusso"
+    },
+    "roomId": "ID camera",
+    "guests": "Ospiti",
+    "perNight": "/ notte",
+    "viewDetails": "Vedi dettagli",
+    "bookNow": "Prenota ora",
+    "noRooms": "Nessuna camera disponibile al momento.",
+    "amenitiesTitle": "Tutte le camere includono",
+    "amenitiesSubtitle": "Servizi standard in ogni camera",
+    "amenities": {
+      "wifi": "WiFi gratuito",
+      "tv": "TV a schermo piatto",
+      "coffee": "Macchina da caffè",
+      "spacious": "Camere spaziose"
+    }
+  },
+  "searchBar": {
+    "selectRoom": "Seleziona camera",
+    "chooseRoom": "Scegli una camera",
+    "perNight": "notte",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "selectDate": "Seleziona data",
+    "addGuests": "Aggiungi ospiti",
+    "numberOfGuests": "Numero di ospiti",
+    "searchButton": "Cerca"
+  },
   "welcome": "Benvenuto",
   "home_title": "Pagina principale",
   "about_title": "Chi siamo",
@@ -6,6 +38,38 @@
   "rooms_title": "Camere",
   "book_now": "Prenota ora",
   "footer_text": "Tutti i diritti riservati.",
+  "rooms": {
+    "deluxe-double-room-with-bath": {
+      "view": "Vedi camera",
+      "name": "Camera doppia deluxe con vasca",
+      "bedType": "1 letto matrimoniale",
+      "size": "25 m²"
+    },
+    "deluxe-double-room": {
+      "view": "Vedi camera",
+      "name": "Camera doppia deluxe",
+      "bedType": "1 letto matrimoniale",
+      "size": "30 m²"
+    },
+    "family-double-room": {
+      "view": "Vedi camera",
+      "name": "Camera familiare doppia",
+      "bedType": "2 letti matrimoniali",
+      "size": "25 m²"
+    },
+    "family-double-room-1": {
+      "view": "Vedi camera",
+      "name": "Camera familiare doppia",
+      "bedType": "2 letti matrimoniali",
+      "size": "25 m²"
+    },
+    "deluxe-double-room-3": {
+      "view": "Vedi camera",
+      "name": "Camera doppia deluxe",
+      "bedType": "1 letto matrimoniale",
+      "size": "30 m²"
+    }
+  },
   "home": {
     "hero": {
       "title": "Benvenuto a",
@@ -21,11 +85,82 @@
     },
     "roomsSection": {
       "title": "Le nostre camere in evidenza",
-      "subtitle": "Scopri le nostre camere più popolari, progettate per comfort ed eleganza."
+      "subtitle": "Scopri le nostre camere più popolari, progettate per comfort ed eleganza.",
+      "description": "Camere e suite splendidamente progettate",
+      "viewAllRooms": "Vedi tutte le camere",
+      "perNight": "/ notte",
+      "noRooms": "Nessuna camera disponibile al momento."
+    },
+    "whyChooseUs": {
+      "title": "Perché scegliere noi",
+      "description": "Vivi un'ospitalità di classe mondiale con servizi premium",
+      "cards": [
+        { "title": "Pulizia giornaliera", "description": "Camere pulite e rinfrescate professionalmente ogni giorno" },
+        { "title": "Servizio 5 stelle", "description": "Servizio eccezionale, sempre quando ne hai bisogno" },
+        { "title": "Check-in rapido", "description": "Arrivi rapidi con assistenza sempre disponibile" },
+        { "title": "Servizi di lusso", "description": "Tutto ciò di cui hai bisogno per un soggiorno perfetto" }
+      ]
+    },
+    "diningSection": {
+      "badge": "Cucina premiata",
+      "title": "Eccellenza culinaria",
+      "description": "Dalle colazioni abbondanti alle cene eleganti, il nostro menu offre ingredienti locali e sapori internazionali. Vivi l'arte culinaria ad ogni pasto.",
+      "meals": [
+        { "label": "Colazione", "time": "7:00 - 11:00" },
+        { "label": "Pranzo", "time": "12:00 - 16:00" },
+        { "label": "Cena", "time": "17:30 - 19:30" },
+        { "label": "Servizio in camera", "time": "Disponibile 24/7" }
+      ],
+      "viewMenu": "Vedi menu completo"
+    },
+    "spaSection": {
+      "badge": "Benessere premium",
+      "title": "Spa & Benessere",
+      "description": "La nostra spa di classe mondiale offre una gamma di trattamenti per aiutarti a rilassarti e rigenerarti. Dai massaggi alle manicure, tutto per un'esperienza di relax totale.",
+      "features": [
+        "Terapia di massaggio professionale",
+        "Servizi di manicure e pedicure",
+        "Trattamenti viso",
+        "Sessioni di aromaterapia"
+      ],
+      "bookSpa": "Prenota trattamento spa"
     },
     "testimonialsSection": {
       "title": "Testimonianze degli ospiti",
-      "subtitle": "Scopri cosa dicono i nostri ospiti sulle loro esperienze indimenticabili."
+      "subtitle": "Scopri cosa dicono i nostri ospiti sulle loro esperienze indimenticabili.",
+      "description": "Cosa dicono i nostri ospiti sulla loro esperienza",
+      "reviews": [
+        {
+          "name": "Sarah Mitchell",
+          "location": "Londra, Regno Unito",
+          "comment": "Hotel assolutamente stupendo! Il servizio era impeccabile e le camere splendidamente arredate. I trattamenti spa erano divini."
+        },
+        {
+          "name": "James Peterson",
+          "location": "New York, USA",
+          "comment": "La migliore esperienza alberghiera in Sudafrica. Il personale ha fatto di tutto per rendere il nostro soggiorno memorabile. Consigliatissimo!"
+        },
+        {
+          "name": "Emma van der Berg",
+          "location": "Johannesburg, Sudafrica",
+          "comment": "Una gemma nascosta! Ogni dettaglio era perfetto. La colazione era eccezionale e i servizi sono di livello mondiale."
+        },
+        {
+          "name": "Michael Chen",
+          "location": "Singapore",
+          "comment": "Ospitalità eccezionale e attenzione ai dettagli. Le viste sono mozzafiato e il personale è incredibilmente cortese."
+        },
+        {
+          "name": "Isabella Rodriguez",
+          "location": "Madrid, Spagna",
+          "comment": "Un'esperienza di lusso come nessun'altra! Le camere sono elegantemente arredate e la cena è indimenticabile."
+        },
+        {
+          "name": "David Thompson",
+          "location": "Toronto, Canada",
+          "comment": "Davvero di livello mondiale! Ogni momento in questo hotel è stato speciale. Non vedo l'ora di tornare per un altro soggiorno fantastico."
+        }
+      ]
     },
     "newsletterSection": {
       "title": "Iscriviti alla nostra newsletter",
