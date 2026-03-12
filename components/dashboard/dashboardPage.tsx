@@ -201,26 +201,23 @@ export function DashboardClient() {
   }, [orders]);
 
   const incomeDistributionData = useMemo(() => {
-    const approvedOrders = orders.filter((order) => order.bookingStatus === "approved");
-    const activeOrders = orders.filter(
-      (order) => order.bookingStatus === "approved" || order.bookingStatus === "pending"
+    // Only approved room bookings
+    const approvedRoomOrders = orders.filter(
+      (order) => order.bookingStatus === "approved" && order.orderType === "room"
     );
+    if (approvedRoomOrders.length === 0) return [];
 
-    // If nothing is approved yet, fallback to active bookings so chart is still meaningful.
-    const sourceOrders = approvedOrders.length > 0 ? approvedOrders : activeOrders;
-    const totalRevenue = sourceOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    const totalRevenue = approvedRoomOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    const roomRevenue = new Map<string, number>();
 
-    const sourceRevenue = new Map<string, number>();
-
-    sourceOrders.forEach((order) => {
-      const sourceName =
-        order.orderType === "room"
-          ? order.details.split(" • ")[0] || "Room"
-          : "Spa Services";
-      sourceRevenue.set(sourceName, (sourceRevenue.get(sourceName) || 0) + (order.totalPrice || 0));
+    approvedRoomOrders.forEach((order) => {
+      // Try to match the room name from details to the original room names
+      let matchedRoom = rooms.find(room => order.details.includes(room.name));
+      let roomName = matchedRoom ? matchedRoom.name : "Other";
+      roomRevenue.set(roomName, (roomRevenue.get(roomName) || 0) + (order.totalPrice || 0));
     });
 
-    return Array.from(sourceRevenue.entries())
+    return Array.from(roomRevenue.entries())
       .map(([name, amount], index) => ({
         name,
         value: totalRevenue > 0 ? Number(((amount / totalRevenue) * 100).toFixed(1)) : 0,

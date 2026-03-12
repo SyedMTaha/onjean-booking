@@ -17,14 +17,23 @@ interface RoomsClientProps {
 
 export default function RoomsClient({ locale }: RoomsClientProps) {
   const t = useTranslations();
-  // Use local rooms data directly
-  const mappedRooms = fallbackRooms.map(r => ({
-    ...r,
-    priceNumeric: parseInt(r.price.replace(/[R,]/g, ""), 10),
-    available: true
-  })) as Room[];
-  const rooms = mappedRooms;
-  const loading = false;
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRooms() {
+      setLoading(true);
+      try {
+        const dbRooms = await getAllRooms();
+        setRooms(dbRooms);
+      } catch (error) {
+        setRooms([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRooms();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">

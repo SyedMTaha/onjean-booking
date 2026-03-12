@@ -18,8 +18,8 @@ interface RoomForm {
   slug: string;
   price: string;
   totalUnits: string;
-  image: string;
-  imageList: string;
+  image: string | File;
+  imageList: string | File[];
   maxGuests: string;
   bedType: string;
   size: string;
@@ -85,6 +85,7 @@ export function RoomsManagementClient() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [rooms, setRooms] = useState<DbRoom[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,11 +129,13 @@ export function RoomsManagementClient() {
   const openAddModal = () => {
     setMode("add");
     setForm(getEmptyForm());
+    setIsAdding(false);
     setIsModalOpen(true);
   };
 
   const openEditModal = (room: DbRoom) => {
     setMode("edit");
+    setIsAdding(false);
     setForm({
       id: room.id,
       name: room.name,
@@ -154,7 +157,7 @@ export function RoomsManagementClient() {
     setIsModalOpen(true);
   };
 
-  const handleFormChange = (field: keyof RoomForm, value: string | boolean) => {
+  const handleFormChange = (field: keyof RoomForm, value: string | boolean | File | File[]) => {
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
       
@@ -168,7 +171,11 @@ export function RoomsManagementClient() {
   };
 
   const submitForm = async () => {
-    if (!form.name.trim() || !form.price.trim() || !form.image.trim()) {
+    if (
+      !form.name.trim() ||
+      !form.price.trim() ||
+      (typeof form.image === "string" ? !form.image.trim() : !form.image)
+    ) {
       toast.error("Name, price, and main image are required.");
       return;
     }
@@ -192,18 +199,57 @@ export function RoomsManagementClient() {
       return;
     }
 
-    const imageList = parseList(form.imageList);
-    const images = imageList.length > 0 ? imageList : [form.image.trim()];
-    if (!images.includes(form.image.trim())) {
-      images.unshift(form.image.trim());
+    let imageUrl = typeof form.image === "string" ? form.image.trim() : "";
+    // Get all rooms to determine next sequential ID
+    const allRooms = await getAllRooms();
+    const maxId = allRooms.reduce((max, room) => {
+      const idNum = parseInt(room.id, 10);
+      return !isNaN(idNum) && idNum > max ? idNum : max;
+    }, 0);
+    const nextId = String(maxId + 1);
+    // Generate folder name for new room
+    const folderName = `/rooms/r${nextId}-${slugify(form.name)}`;
+    // If the image is a File object, upload to backend API with folder
+    const imageKitUpload = async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", file.name);
+      formData.append("folder", folderName);
+      const res = await fetch("/api/imagekit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.url) throw new Error(data.error || "Image upload failed.");
+      return data.url;
+    };
+    // Check for File type using Object.prototype.toString
+    if (typeof form.image === "object" && form.image && Object.prototype.toString.call(form.image) === "[object File]") {
+      imageUrl = await imageKitUpload(form.image);
+    }
+
+    // Handle additional images
+    let images: string[] = [];
+    if (Array.isArray(form.imageList)) {
+      for (const imgFile of form.imageList) {
+        if (imgFile && Object.prototype.toString.call(imgFile) === "[object File]") {
+          images.push(await imageKitUpload(imgFile));
+        }
+      }
+    } else if (typeof form.imageList === "string" && form.imageList.length > 0) {
+      images = parseList(form.imageList);
+    }
+    if (!images.includes(imageUrl)) {
+      images.unshift(imageUrl);
     }
 
     const payload = {
+      id: nextId,
       name: form.name.trim(),
       slug: computedSlug,
       price: form.price.trim(),
       priceNumeric,
-      image: form.image.trim(),
+      image: imageUrl,
       images,
       maxGuests: guests,
       totalUnits,
@@ -218,6 +264,7 @@ export function RoomsManagementClient() {
     };
 
     setIsSaving(true);
+    if (mode === "add") setIsAdding(true);
     try {
       const result =
         mode === "add"
@@ -226,33 +273,55 @@ export function RoomsManagementClient() {
 
       if (!result.success) {
         toast.error(result.error || `Failed to ${mode} room.`);
+        setIsSaving(false);
+        setIsAdding(false);
         return;
       }
 
       toast.success(mode === "add" ? "Room added successfully." : "Room updated successfully.");
       setIsModalOpen(false);
       setForm(getEmptyForm());
+      // Immediately show new room in UI
+      if (mode === "add") {
+        const newId = (result as { roomId?: string }).roomId || payload.id;
+        setRooms(prev => [...prev, { ...payload, id: newId }]);
+      }
       await loadRooms();
     } catch (error) {
       console.error(error);
       toast.error(`Failed to ${mode} room.`);
     } finally {
       setIsSaving(false);
+      setIsAdding(false);
     }
   };
 
   const handleDelete = async (room: DbRoom) => {
-    const confirmed = window.confirm(`Delete ${room.name}? This cannot be undone.`);
-    if (!confirmed) return;
+    setDeleteConfirm({
+      open: true,
+      room,
+    });
+  };
 
-    const result = await deleteRoom(room.id);
+  // State for delete confirmation modal
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; room?: DbRoom }>({ open: false });
+
+  const confirmDeleteRoom = async () => {
+    if (!deleteConfirm.room) return;
+    setIsSaving(true);
+    // Optimistically remove room from UI
+    setRooms(prev => prev.filter(r => r.id !== deleteConfirm.room!.id));
+    setDeleteConfirm({ open: false });
+    const result = await deleteRoom(deleteConfirm.room.id);
     if (!result.success) {
       toast.error(result.error || "Failed to delete room.");
+      // Revert UI if deletion failed
+      await loadRooms();
+      setIsSaving(false);
       return;
     }
-
     toast.success("Room deleted.");
-    await loadRooms();
+    setIsSaving(false);
   };
 
   const handleToggleAvailability = async (room: DbRoom) => {
@@ -266,7 +335,7 @@ export function RoomsManagementClient() {
     await loadRooms();
   };
 
-  const filteredRooms = rooms.filter((room) => {
+  const filteredRooms = rooms.filter((room: DbRoom) => {
     const needle = search.trim().toLowerCase();
     if (needle.length === 0) return true;
 
@@ -281,11 +350,11 @@ export function RoomsManagementClient() {
 
   const totals = {
     total: rooms.length,
-    available: rooms.filter((r) => r.available).length,
-    unavailable: rooms.filter((r) => !r.available).length,
+    available: rooms.filter((r: DbRoom) => r.available).length,
+    unavailable: rooms.filter((r: DbRoom) => !r.available).length,
     avgPrice:
       rooms.length > 0
-        ? Math.round(rooms.reduce((sum, room) => sum + (room.priceNumeric || 0), 0) / rooms.length)
+        ? Math.round(rooms.reduce((sum: number, room: DbRoom) => sum + (room.priceNumeric || 0), 0) / rooms.length)
         : 0,
   };
 
@@ -307,6 +376,19 @@ export function RoomsManagementClient() {
 
   return (
     <div className="bg-[#F8FAFC] py-6 md:py-8">
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.open && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-md shadow-lg p-6 flex flex-col">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Room</h3>
+            <p className="text-gray-700 mb-6">Are you sure you want to delete <span className="font-bold">{deleteConfirm.room?.name}</span>? This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setDeleteConfirm({ open: false })}>Cancel</Button>
+              <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDeleteRoom}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 lg:px-8 space-y-6">
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Rooms Management</h1>
@@ -552,8 +634,7 @@ export function RoomsManagementClient() {
                         onChange={e => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const url = URL.createObjectURL(file);
-                            handleFormChange("image", url);
+                            handleFormChange("image", file);
                           } else {
                             handleFormChange("image", "");
                           }
@@ -563,7 +644,17 @@ export function RoomsManagementClient() {
                       />
                       {form.image && (
                         <div className="mt-2">
-                          <img src={form.image} alt="Preview" className="h-24 rounded-md border border-gray-200 object-cover" />
+                          <img
+                            src={
+                              typeof form.image === "object" && form.image && Object.prototype.toString.call(form.image) === "[object File]"
+                                ? URL.createObjectURL(form.image)
+                                : typeof form.image === "string"
+                                  ? form.image
+                                  : ""
+                            }
+                            alt="Preview"
+                            className="h-24 rounded-md border border-gray-200 object-cover"
+                          />
                         </div>
                       )}
                     </div>
@@ -578,8 +669,7 @@ export function RoomsManagementClient() {
                       onChange={e => {
                         const files = Array.from(e.target.files || []);
                         if (files.length > 0) {
-                          const urls = files.map(file => URL.createObjectURL(file));
-                          handleFormChange("imageList", urls.join(", "));
+                          handleFormChange("imageList", files);
                         } else {
                           handleFormChange("imageList", "");
                         }
@@ -588,9 +678,25 @@ export function RoomsManagementClient() {
                     />
                     {form.imageList && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {form.imageList.split(",").map((url, idx) => (
-                          <img key={idx} src={url.trim()} alt={`Preview ${idx + 1}`} className="h-16 rounded-md border border-gray-200 object-cover" />
-                        ))}
+                        {Array.isArray(form.imageList)
+                          ? form.imageList.map((file: File, idx: number) => (
+                              <img
+                                key={idx}
+                                src={URL.createObjectURL(file)}
+                                alt={`Preview ${idx + 1}`}
+                                className="h-16 rounded-md border border-gray-200 object-cover"
+                              />
+                            ))
+                          : typeof form.imageList === "string"
+                          ? form.imageList.split(",").map((url, idx) => (
+                              <img
+                                key={idx}
+                                src={url.trim()}
+                                alt={`Preview ${idx + 1}`}
+                                className="h-16 rounded-md border border-gray-200 object-cover"
+                              />
+                            ))
+                          : null}
                       </div>
                     )}
                     <p className="text-xs text-gray-500 mt-1">Select multiple images. They will be separated with commas.</p>
@@ -657,7 +763,7 @@ export function RoomsManagementClient() {
                     Cancel
                   </Button>
                   <Button onClick={submitForm} disabled={isSaving} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
-                    {isSaving ? "Saving..." : mode === "add" ? "Add Room" : "Save Changes"}
+                    {mode === "add" ? (isAdding ? "Adding..." : "Add Room") : (isSaving ? "Saving..." : "Save Changes")}
                   </Button>
                 </div>
               </div>

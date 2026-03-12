@@ -174,21 +174,21 @@ export async function getRoomById(roomId: string): Promise<Room | null> {
 /**
  * Add a new room to Firestore
  */
-export async function addRoom(room: Omit<Room, "id" | "createdAt" | "updatedAt">): Promise<{ success: boolean; roomId?: string; error?: string }> {
+export async function addRoom(room: Omit<Room, "createdAt" | "updatedAt">): Promise<{ success: boolean; roomId?: string; error?: string }> {
   try {
     await ensureRoomServiceAuth();
-    // Generate a unique document ID
+    // Use sequential ID for new room
     const roomsCollection = collection(db, ROOMS_COLLECTION);
-    const newRoomRef = doc(roomsCollection);
-    
+    const newRoomRef = doc(roomsCollection, room.id);
+
     const roomData = {
       ...room,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    
+
     await setDoc(newRoomRef, roomData);
-    
+
     return { success: true, roomId: newRoomRef.id };
   } catch (error) {
     console.error("Error adding room:", error);

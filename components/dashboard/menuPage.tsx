@@ -30,7 +30,7 @@ interface MenuItemForm {
   category: string;
   subcategory: string;
   price: string;
-  image: string;
+  image: string | File;
   description: string;
   available: boolean;
 }
@@ -67,6 +67,7 @@ export function MenuManagementClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [form, setForm] = useState<MenuItemForm>(getEmptyForm());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; item?: MenuItem }>({ open: false });
 
   const loadItems = async () => {
     setIsLoading(true);
@@ -129,12 +130,16 @@ export function MenuManagementClient() {
     setIsModalOpen(true);
   };
 
-  const handleFormChange = (field: keyof MenuItemForm, value: string | boolean) => {
+  const handleFormChange = (field: keyof MenuItemForm, value: string | boolean | File) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  function slugify(str: string) {
+    return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
   const submitForm = async () => {
-    if (!form.name.trim() || !form.category.trim() || !form.price.trim() || !form.image.trim()) {
+    if (!form.name.trim() || !form.category.trim() || !form.price.trim() || !form.image) {
       toast.error("Name, category, price and image are required.");
       return;
     }
@@ -147,22 +152,50 @@ export function MenuManagementClient() {
       toast.error("Price format is invalid. Example: R120");
       return;
     }
+    // Generate custom doc ID
+    const docId = `${slugify(form.category)}-${slugify(form.name)}`;
+    // Upload image to ImageKit if it's a File
+    let imageUrl = form.image;
+    if (typeof form.image === "object" && form.image instanceof File) {
+      const formData = new FormData();
+      formData.append("file", form.image);
+      formData.append("fileName", form.image.name);
+      let folder = "";
+      if (form.category === "Beverages" && form.subcategory.trim()) {
+        folder = `/menu/Beverages/${slugify(form.subcategory)}`;
+      } else {
+        folder = `/menu/${slugify(form.category)}`;
+      }
+      formData.append("folder", folder);
+      const res = await fetch("/api/imagekit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.url) {
+        toast.error(data.error || "Image upload failed.");
+        return;
+      }
+      imageUrl = data.url;
+    }
     const payload = {
       name: form.name.trim(),
       category: form.category.trim(),
-      subcategory: form.subcategory.trim() || undefined,
       price: form.price.trim(),
       priceNumeric,
-      image: form.image.trim(),
+      image: typeof imageUrl === "string" ? imageUrl : "",
       description: form.description.trim(),
       available: form.available,
+      ...(form.category === "Beverages" && form.subcategory.trim() && { subcategory: form.subcategory.trim() }),
     };
     setIsSaving(true);
     try {
-      const result =
-        mode === "add"
-          ? await addMenuItem(payload)
-          : await updateMenuItem(form.id, payload);
+      let result;
+      if (mode === "add") {
+        result = await addMenuItem(payload, docId); // Pass docId to service
+      } else {
+        result = await updateMenuItem(form.id, payload);
+      }
       if (!result.success) {
         toast.error(result.error || `Failed to ${mode} menu item.`);
         return;
@@ -179,16 +212,26 @@ export function MenuManagementClient() {
     }
   };
 
-  const handleDelete = async (item: MenuItem) => {
-    const confirmed = window.confirm(`Delete ${item.name}? This cannot be undone.`);
-    if (!confirmed) return;
-    const result = await deleteMenuItem(item.id);
+  const handleDelete = (item: MenuItem) => {
+    setDeleteConfirm({ open: true, item });
+  };
+
+  const confirmDeleteMenuItem = async () => {
+    if (!deleteConfirm.item) return;
+    setIsSaving(true);
+    // Optimistically remove item from UI
+    setItems(prev => prev.filter(i => i.id !== deleteConfirm.item!.id));
+    setDeleteConfirm({ open: false });
+    const result = await deleteMenuItem(deleteConfirm.item.id);
     if (!result.success) {
       toast.error(result.error || "Failed to delete menu item.");
+      // Revert UI if deletion failed
+      await loadItems();
+      setIsSaving(false);
       return;
     }
     toast.success("Menu item deleted.");
-    await loadItems();
+    setIsSaving(false);
   };
 
   const handleToggleAvailability = async (item: MenuItem) => {
@@ -411,8 +454,7 @@ export function MenuManagementClient() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const url = URL.createObjectURL(file);
-                          handleFormChange("image", url);
+                          handleFormChange("image", file);
                         } else {
                           handleFormChange("image", "");
                         }
@@ -421,7 +463,11 @@ export function MenuManagementClient() {
                     />
                     {form.image && (
                       <div className="mt-2">
-                        <img src={form.image} alt="Preview" className="h-24 rounded-md border border-black object-cover" />
+                        <img
+                          src={typeof form.image === "object" && form.image instanceof File ? URL.createObjectURL(form.image) : form.image}
+                          alt="Preview"
+                          className="h-24 rounded-md border border-black object-cover"
+                        />
                       </div>
                     )}
                   </div>
@@ -468,31 +514,24 @@ export function MenuManagementClient() {
                     <p className="text-xs text-gray-500 mt-1">Choose from: Light Meals, Dinner, Desserts, Beverages</p>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Subcategory
-                      {form.category === "Beverages" && <span className="text-red-500"> *</span>}
-                    </label>
-                    <Input
-                      placeholder="e.g., Hot Drinks"
-                      value={form.subcategory}
-                      onChange={(e) => handleFormChange("subcategory", e.target.value)}
-                      className={"text-gray-900 " + (form.category === "Beverages" && !form.subcategory.trim() ? "border-red-500" : "")}
-                    />
-                    {form.category === "Beverages" && !form.subcategory.trim() && (
-                      <p className="text-xs text-red-500 mt-1">Subcategory is required for Beverages.</p>
-                    )}
-                  </div>
+                  {form.category === "Beverages" && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Subcategory <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="e.g., Hot Drinks"
+                        value={form.subcategory}
+                        onChange={(e) => handleFormChange("subcategory", e.target.value)}
+                        className={"text-gray-900 " + (!form.subcategory.trim() ? "border-red-500" : "")}
+                      />
+                      {!form.subcategory.trim() && (
+                        <p className="text-xs text-red-500 mt-1">Subcategory is required for Beverages.</p>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Image URL *</label>
-                    <Input
-                      placeholder="https://example.com/image.jpg or /images/food.jpg"
-                      value={form.image}
-                      onChange={(e) => handleFormChange("image", e.target.value)}
-                      className="text-gray-900"
-                    />
-                  </div>
+
                 </div>
 
                 <div>
@@ -526,6 +565,21 @@ export function MenuManagementClient() {
                   {isSaving ? "Saving..." : mode === "add" ? "Add Item" : "Save Changes"}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.open && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-md shadow-lg p-6 flex flex-col">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Menu Item</h3>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete <span className="font-bold">{deleteConfirm.item?.name}</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setDeleteConfirm({ open: false })}>Cancel</Button>
+              <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDeleteMenuItem}>Delete</Button>
             </div>
           </div>
         </div>

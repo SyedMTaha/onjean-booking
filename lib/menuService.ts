@@ -148,12 +148,13 @@ export async function getAvailableMenuItems(): Promise<MenuItem[]> {
 }
 
 export async function addMenuItem(
-  item: Omit<MenuItem, "id" | "createdAt" | "updatedAt">
+  item: Omit<MenuItem, "id" | "createdAt" | "updatedAt">,
+  customId?: string
 ): Promise<{ success: boolean; itemId?: string; error?: string }> {
   try {
     await ensureMenuServiceAuth();
     const menuCollection = collection(db, MENU_COLLECTION);
-    const newItemRef = doc(menuCollection);
+    const newItemRef = customId ? doc(menuCollection, customId) : doc(menuCollection);
 
     await setDoc(newItemRef, {
       ...item,
