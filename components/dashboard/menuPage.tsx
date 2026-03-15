@@ -69,6 +69,20 @@ export function MenuManagementClient() {
   const [form, setForm] = useState<MenuItemForm>(getEmptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; item?: MenuItem }>({ open: false });
 
+  // ✅ Fix 1: moved inside component so it has access to setForm
+  const removeMainImage = () => {
+    setForm((prev: MenuItemForm) => ({ ...prev, image: "" }));
+  };
+
+  // ✅ Fix 2: price handler — strips non-digits and always prepends "R"
+  // User types "150" → stored and displayed as "R150"
+  // User types "R150" → stored as "R150" (R not doubled)
+  const handlePriceChange = (value: string) => {
+    const digits = value.replace(/[^\d]/g, "");
+    const formatted = digits ? `R${digits}` : "";
+    handleFormChange("price", formatted);
+  };
+
   const loadItems = async () => {
     setIsLoading(true);
     try {
@@ -152,9 +166,9 @@ export function MenuManagementClient() {
       toast.error("Price format is invalid. Example: R120");
       return;
     }
-    // Generate custom doc ID
+
     const docId = `${slugify(form.category)}-${slugify(form.name)}`;
-    // Upload image to ImageKit if it's a File
+
     let imageUrl = form.image;
     if (typeof form.image === "object" && form.image instanceof File) {
       const formData = new FormData();
@@ -178,21 +192,23 @@ export function MenuManagementClient() {
       }
       imageUrl = data.url;
     }
+
     const payload = {
       name: form.name.trim(),
       category: form.category.trim(),
-      price: form.price.trim(),
+      price: form.price.trim(), // already "R150" format
       priceNumeric,
       image: typeof imageUrl === "string" ? imageUrl : "",
       description: form.description.trim(),
       available: form.available,
       ...(form.category === "Beverages" && form.subcategory.trim() && { subcategory: form.subcategory.trim() }),
     };
+
     setIsSaving(true);
     try {
       let result;
       if (mode === "add") {
-        result = await addMenuItem(payload, docId); // Pass docId to service
+        result = await addMenuItem(payload, docId);
       } else {
         result = await updateMenuItem(form.id, payload);
       }
@@ -219,13 +235,11 @@ export function MenuManagementClient() {
   const confirmDeleteMenuItem = async () => {
     if (!deleteConfirm.item) return;
     setIsSaving(true);
-    // Optimistically remove item from UI
     setItems(prev => prev.filter(i => i.id !== deleteConfirm.item!.id));
     setDeleteConfirm({ open: false });
     const result = await deleteMenuItem(deleteConfirm.item.id);
     if (!result.success) {
       toast.error(result.error || "Failed to delete menu item.");
-      // Revert UI if deletion failed
       await loadItems();
       setIsSaving(false);
       return;
@@ -374,7 +388,6 @@ export function MenuManagementClient() {
                     </Badge>
                   </div>
                 </div>
-
                 <div className="p-5 space-y-4">
                   <div className="h-14">
                     <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{item.name}</h3>
@@ -419,6 +432,7 @@ export function MenuManagementClient() {
         </div>
       </div>
 
+      {/* Add / Edit Modal */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
@@ -430,7 +444,6 @@ export function MenuManagementClient() {
             className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col rounded-md"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Fixed Header */}
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">
                 {mode === "add" ? "Add Menu Item" : "Edit Menu Item"}
@@ -440,12 +453,11 @@ export function MenuManagementClient() {
               </Button>
             </div>
 
-            {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
-                  {/* ✅ Image Picker — styled to match Input fields */}
+                  {/* Image Picker */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Image *</label>
                     <input
@@ -453,25 +465,37 @@ export function MenuManagementClient() {
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          handleFormChange("image", file);
-                        } else {
-                          handleFormChange("image", "");
-                        }
+                        handleFormChange("image", file ?? "");
                       }}
-                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                     {form.image && (
-                      <div className="mt-2">
+                      <div className="mt-2 relative inline-block">
                         <img
-                          src={typeof form.image === "object" && form.image instanceof File ? URL.createObjectURL(form.image) : form.image}
+                          src={
+                            typeof form.image === "object" && form.image instanceof File
+                              ? URL.createObjectURL(form.image)
+                              : form.image
+                          }
                           alt="Preview"
                           className="h-24 rounded-md border border-black object-cover"
                         />
+                        <div className="mt-1 text-xs text-gray-500">
+                          {typeof form.image === "object" && form.image instanceof File ? form.image.name : null}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeMainImage}
+                          className="absolute top-1 right-1 bg-white rounded-full p-1 border border-gray-300 shadow hover:bg-gray-100"
+                          title="Remove image"
+                        >
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        </button>
                       </div>
                     )}
                   </div>
 
+                  {/* Item Name */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Item Name *</label>
                     <Input
@@ -482,30 +506,32 @@ export function MenuManagementClient() {
                     />
                   </div>
 
+                  {/* ✅ Price with forced R prefix */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Price *</label>
                     <Input
-                      placeholder="e.g., R120"
+                      placeholder="e.g., 150"
                       value={form.price}
-                      onChange={(e) => handleFormChange("price", e.target.value)}
+                      onChange={(e) => handlePriceChange(e.target.value)}
                       className="text-gray-900"
                     />
+                    {form.price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Saves as: <span className="font-semibold text-gray-700">{form.price}</span>
+                      </p>
+                    )}
                   </div>
 
-                  {/* ✅ Category Select — SelectTrigger now matches Input styling */}
+                  {/* Category */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Category *</label>
                     <Select value={form.category} onValueChange={(value) => handleFormChange("category", value)}>
-                      <SelectTrigger className="h-10 w-full text-gray-900 border-input bg-white rounded-md px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                      <SelectTrigger className="h-10 w-full text-gray-900 border-input bg-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                         <SelectValue placeholder="Choose category" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
                         {presetCategories.map((category) => (
-                          <SelectItem
-                            key={category}
-                            value={category}
-                            className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50"
-                          >
+                          <SelectItem key={category} value={category} className="text-gray-900 hover:bg-orange-50 focus:bg-orange-50">
                             {category}
                           </SelectItem>
                         ))}
@@ -514,6 +540,7 @@ export function MenuManagementClient() {
                     <p className="text-xs text-gray-500 mt-1">Choose from: Light Meals, Dinner, Desserts, Beverages</p>
                   </div>
 
+                  {/* Subcategory — only for Beverages */}
                   {form.category === "Beverages" && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -530,10 +557,9 @@ export function MenuManagementClient() {
                       )}
                     </div>
                   )}
-
-
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
                   <Input
@@ -546,7 +572,6 @@ export function MenuManagementClient() {
               </div>
             </div>
 
-            {/* Fixed Footer */}
             <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-md">
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -569,6 +594,7 @@ export function MenuManagementClient() {
           </div>
         </div>
       )}
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm.open && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">

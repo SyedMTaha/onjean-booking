@@ -58,6 +58,7 @@ function parseList(value: string): string[] {
     .filter((item) => item.length > 0);
 }
 
+// ✅ Fix: getEmptyForm now contains only data — no JSX
 function getEmptyForm(): RoomForm {
   return {
     id: "",
@@ -91,6 +92,35 @@ export function RoomsManagementClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [form, setForm] = useState<RoomForm>(getEmptyForm());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; room?: DbRoom }>({ open: false });
+
+  // Remove main image
+  const removeMainImage = () => {
+    setForm(prev => ({ ...prev, image: "" }));
+  };
+
+  // Remove additional image by index
+  const removeAdditionalImage = (idx: number) => {
+    setForm(prev => {
+      if (Array.isArray(prev.imageList)) {
+        const newList = prev.imageList.slice();
+        newList.splice(idx, 1);
+        return { ...prev, imageList: newList };
+      } else if (typeof prev.imageList === "string") {
+        const urls = prev.imageList.split(",").map(url => url.trim());
+        urls.splice(idx, 1);
+        return { ...prev, imageList: urls.join(", ") };
+      }
+      return prev;
+    });
+  };
+
+  // ✅ Same R prefix price logic as MenuManagementClient
+  const handlePriceChange = (value: string) => {
+    const digits = value.replace(/[^\d]/g, "");
+    const formatted = digits ? `R${digits}` : "";
+    handleFormChange("price", formatted);
+  };
 
   const loadRooms = async () => {
     setIsLoading(true);
@@ -108,14 +138,12 @@ export function RoomsManagementClient() {
 
   useEffect(() => {
     const hasSession = localStorage.getItem("dashboardAdminSession") === "true";
-
     if (!hasSession) {
       toast.error("Please sign in with admin credentials to access rooms.");
       router.push("/");
       setIsAuthLoading(false);
       return;
     }
-
     setIsAdminAuthenticated(true);
     setIsAuthLoading(false);
   }, [router]);
@@ -160,12 +188,9 @@ export function RoomsManagementClient() {
   const handleFormChange = (field: keyof RoomForm, value: string | boolean | File | File[]) => {
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
-      
-      // Auto-generate slug from name if name is being changed
       if (field === "name" && typeof value === "string") {
         updated.slug = slugify(value);
       }
-      
       return updated;
     });
   };
@@ -195,40 +220,35 @@ export function RoomsManagementClient() {
     const computedSlug = form.slug.trim() ? slugify(form.slug) : slugify(form.name);
     const priceNumeric = parseInt(form.price.replace(/[^\d]/g, ""), 10);
     if (Number.isNaN(priceNumeric)) {
-      toast.error("Price format is invalid. Example: R2,500");
+      toast.error("Price format is invalid. Example: R2500");
       return;
     }
 
     let imageUrl = typeof form.image === "string" ? form.image.trim() : "";
-    // Get all rooms to determine next sequential ID
+
     const allRooms = await getAllRooms();
     const maxId = allRooms.reduce((max, room) => {
       const idNum = parseInt(room.id, 10);
       return !isNaN(idNum) && idNum > max ? idNum : max;
     }, 0);
     const nextId = String(maxId + 1);
-    // Generate folder name for new room
     const folderName = `/rooms/r${nextId}-${slugify(form.name)}`;
-    // If the image is a File object, upload to backend API with folder
+
     const imageKitUpload = async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("fileName", file.name);
       formData.append("folder", folderName);
-      const res = await fetch("/api/imagekit", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/imagekit", { method: "POST", body: formData });
       const data = await res.json();
       if (!data.url) throw new Error(data.error || "Image upload failed.");
       return data.url;
     };
-    // Check for File type using Object.prototype.toString
+
     if (typeof form.image === "object" && form.image && Object.prototype.toString.call(form.image) === "[object File]") {
       imageUrl = await imageKitUpload(form.image);
     }
 
-    // Handle additional images
     let images: string[] = [];
     if (Array.isArray(form.imageList)) {
       for (const imgFile of form.imageList) {
@@ -243,8 +263,27 @@ export function RoomsManagementClient() {
       images.unshift(imageUrl);
     }
 
-    const payload = {
+    const addPayload = {
       id: nextId,
+      name: form.name.trim(),
+      slug: computedSlug,
+      price: form.price.trim(), // already "R2500" format
+      priceNumeric,
+      image: imageUrl,
+      images,
+      maxGuests: guests,
+      totalUnits,
+      bedType: form.bedType.trim(),
+      size: form.size.trim(),
+      description: form.description.trim(),
+      longDescription: form.longDescription.trim() || form.description.trim(),
+      amenities: parseList(form.amenities),
+      features: parseList(form.features),
+      view: form.view.trim() || "City View",
+      available: form.available,
+    };
+
+    const editPayload = {
       name: form.name.trim(),
       slug: computedSlug,
       price: form.price.trim(),
@@ -268,8 +307,8 @@ export function RoomsManagementClient() {
     try {
       const result =
         mode === "add"
-          ? await addRoom(payload)
-          : await updateRoom(form.id, payload);
+          ? await addRoom(addPayload)
+          : await updateRoom(form.id, editPayload);
 
       if (!result.success) {
         toast.error(result.error || `Failed to ${mode} room.`);
@@ -281,10 +320,9 @@ export function RoomsManagementClient() {
       toast.success(mode === "add" ? "Room added successfully." : "Room updated successfully.");
       setIsModalOpen(false);
       setForm(getEmptyForm());
-      // Immediately show new room in UI
       if (mode === "add") {
-        const newId = (result as { roomId?: string }).roomId || payload.id;
-        setRooms(prev => [...prev, { ...payload, id: newId }]);
+        const newId = (result as { roomId?: string }).roomId || addPayload.id;
+        setRooms(prev => [...prev, { ...addPayload, id: newId }]);
       }
       await loadRooms();
     } catch (error) {
@@ -297,30 +335,23 @@ export function RoomsManagementClient() {
   };
 
   const handleDelete = async (room: DbRoom) => {
-    setDeleteConfirm({
-      open: true,
-      room,
-    });
+    setDeleteConfirm({ open: true, room });
   };
-
-  // State for delete confirmation modal
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; room?: DbRoom }>({ open: false });
 
   const confirmDeleteRoom = async () => {
     if (!deleteConfirm.room) return;
     setIsSaving(true);
-    // Optimistically remove room from UI
     setRooms(prev => prev.filter(r => r.id !== deleteConfirm.room!.id));
     setDeleteConfirm({ open: false });
     const result = await deleteRoom(deleteConfirm.room.id);
     if (!result.success) {
       toast.error(result.error || "Failed to delete room.");
-      // Revert UI if deletion failed
       await loadRooms();
       setIsSaving(false);
       return;
     }
     toast.success("Room deleted.");
+    await loadRooms();
     setIsSaving(false);
   };
 
@@ -330,7 +361,6 @@ export function RoomsManagementClient() {
       toast.error(result.error || "Failed to update availability.");
       return;
     }
-
     toast.success(`Room marked as ${!room.available ? "available" : "unavailable"}.`);
     await loadRooms();
   };
@@ -338,7 +368,6 @@ export function RoomsManagementClient() {
   const filteredRooms = rooms.filter((room: DbRoom) => {
     const needle = search.trim().toLowerCase();
     if (needle.length === 0) return true;
-
     return (
       room.name.toLowerCase().includes(needle) ||
       room.slug.toLowerCase().includes(needle) ||
@@ -381,7 +410,9 @@ export function RoomsManagementClient() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-md shadow-lg p-6 flex flex-col">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Room</h3>
-            <p className="text-gray-700 mb-6">Are you sure you want to delete <span className="font-bold">{deleteConfirm.room?.name}</span>? This action cannot be undone.</p>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete <span className="font-bold">{deleteConfirm.room?.name}</span>? This action cannot be undone.
+            </p>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setDeleteConfirm({ open: false })}>Cancel</Button>
               <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDeleteRoom}>Delete</Button>
@@ -389,6 +420,7 @@ export function RoomsManagementClient() {
           </div>
         </div>
       )}
+
       <div className="container mx-auto px-4 lg:px-8 space-y-6">
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Rooms Management</h1>
@@ -405,7 +437,6 @@ export function RoomsManagementClient() {
               className="h-10 pl-10 placeholder:text-gray-400 text-gray-900 border-gray-300 bg-white rounded-xl"
             />
           </div>
-
           <Button className="h-10 bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white rounded-xl lg:ml-auto" onClick={openAddModal}>
             <Plus className="h-4 w-4 mr-2" />
             Add New Room
@@ -489,7 +520,7 @@ export function RoomsManagementClient() {
                   <div className="h-14">
                     <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{room.name}</h3>
                     <p className="text-xs text-gray-500 truncate">/{room.slug}</p>
-                      <p className="text-xs text-gray-400 mt-1">ID: {room.id}</p>
+                    <p className="text-xs text-gray-400 mt-1">ID: {room.id}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm h-24">
@@ -497,17 +528,14 @@ export function RoomsManagementClient() {
                       <span className="text-gray-500 text-xs mb-1">Guests</span>
                       <span className="font-semibold text-gray-900 truncate">{room.maxGuests} persons</span>
                     </div>
-
                     <div className="flex flex-col">
                       <span className="text-gray-500 text-xs mb-1">Bed Type</span>
                       <span className="font-semibold text-gray-900 truncate">{room.bedType}</span>
                     </div>
-
                     <div className="flex flex-col">
                       <span className="text-gray-500 text-xs mb-1">Size</span>
                       <span className="font-semibold text-gray-900 truncate">{room.size}</span>
                     </div>
-
                     <div className="flex flex-col">
                       <span className="text-gray-500 text-xs mb-1">View</span>
                       <span className="font-semibold text-gray-900 truncate">{room.view || "City"}</span>
@@ -517,9 +545,10 @@ export function RoomsManagementClient() {
                   <div className="pt-3 border-t border-gray-100">
                     <div className="flex items-baseline justify-between mb-3 h-8">
                       <span className="text-sm text-gray-600">Rate per night</span>
-                      <span className="text-2xl font-bold text-gray-900">{room.price}</span>
+                      <span className="text-2xl font-bold text-gray-900">
+                        {room.price.startsWith("R") ? room.price : `R${room.price}`}
+                      </span>
                     </div>
-
                     <div className="grid grid-cols-3 gap-2">
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 border-blue-200" onClick={() => openEditModal(room)}>
                         <Edit3 className="h-3 w-3 mr-1" />
@@ -528,19 +557,13 @@ export function RoomsManagementClient() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className={`text-xs bg-white border px-1 ${room.available ? 'hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200' : 'hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200'}`}
+                        className={`text-xs bg-white border px-1 ${room.available ? "hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200" : "hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200"}`}
                         onClick={() => handleToggleAvailability(room)}
                       >
                         {room.available ? (
-                          <>
-                            <XCircle className="h-3 w-3" />
-                            <span className="ml-1 hidden xl:inline">Off</span>
-                          </>
+                          <><XCircle className="h-3 w-3" /><span className="ml-1 hidden xl:inline">Off</span></>
                         ) : (
-                          <>
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span className="ml-1 hidden xl:inline">On</span>
-                          </>
+                          <><CheckCircle2 className="h-3 w-3" /><span className="ml-1 hidden xl:inline">On</span></>
                         )}
                       </Button>
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border-red-200" onClick={() => handleDelete(room)}>
@@ -559,39 +582,64 @@ export function RoomsManagementClient() {
             className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
             onClick={() => setIsModalOpen(false)}
             tabIndex={-1}
-            onKeyDown={e => {
-              if (e.key === "Escape") setIsModalOpen(false);
-            }}
+            onKeyDown={e => { if (e.key === "Escape") setIsModalOpen(false); }}
           >
             <div
-              className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-900 flex flex-col rounded-md"
+              className="w-full max-w-3xl max-h-[90vh] bg-white border-gray-200 flex flex-col rounded-md"
               onClick={e => e.stopPropagation()}
             >
-              {/* Fixed Header */}
+              {/* Header */}
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">{mode === "add" ? "Add New Room" : "Edit Room"}</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {mode === "add" ? "Add New Room" : "Edit Room"}
+                </h2>
                 <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
                   Close
                 </Button>
               </div>
 
-              {/* Scrollable Form Body */}
+              {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Room Name *</label>
-                      <Input placeholder="e.g., Deluxe Suite" value={form.name} onChange={(e) => handleFormChange("name", e.target.value)} className="text-gray-900" />
+                      <Input
+                        placeholder="e.g., Deluxe Suite"
+                        value={form.name}
+                        onChange={(e) => handleFormChange("name", e.target.value)}
+                        className="text-gray-900"
+                      />
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">URL Slug (Auto-generated)</label>
-                      <Input placeholder="Auto-generated from room name" value={form.slug} disabled className="text-gray-900 bg-gray-50 cursor-not-allowed" />
-                      <p className="text-xs text-gray-500 mt-1">Used in web address: /rooms/{form.slug || 'url-slug'}</p>
+                      <Input
+                        placeholder="Auto-generated from room name"
+                        value={form.slug}
+                        disabled
+                        className="text-gray-900 bg-gray-50 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Used in web address: /rooms/{form.slug || "url-slug"}</p>
                     </div>
+
+                    {/* ✅ Price field with forced R prefix */}
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Price per Night *</label>
-                      <Input placeholder="e.g., R2,500" value={form.price} onChange={(e) => handleFormChange("price", e.target.value)} className="text-gray-900" />
+                      <Input
+                        placeholder="e.g., 2500"
+                        value={form.price}
+                        onChange={(e) => handlePriceChange(e.target.value)}
+                        className="text-gray-900"
+                      />
+                      {form.price && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Saves as: <span className="font-semibold text-gray-700">{form.price}</span>
+                        </p>
+                      )}
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Total Units *</label>
                       <Input
@@ -603,6 +651,7 @@ export function RoomsManagementClient() {
                         className="text-gray-900"
                       />
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Max Guests *</label>
                       <Input
@@ -614,18 +663,38 @@ export function RoomsManagementClient() {
                         className="text-gray-900"
                       />
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Bed Type</label>
-                      <Input placeholder="e.g., King Bed" value={form.bedType} onChange={(e) => handleFormChange("bedType", e.target.value)} className="text-gray-900" />
+                      <Input
+                        placeholder="e.g., King Bed"
+                        value={form.bedType}
+                        onChange={(e) => handleFormChange("bedType", e.target.value)}
+                        className="text-gray-900"
+                      />
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Room Size</label>
-                      <Input placeholder="e.g., 25 m²" value={form.size} onChange={(e) => handleFormChange("size", e.target.value)} className="text-gray-900" />
+                      <Input
+                        placeholder="e.g., 25 m²"
+                        value={form.size}
+                        onChange={(e) => handleFormChange("size", e.target.value)}
+                        className="text-gray-900"
+                      />
                     </div>
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">View</label>
-                      <Input placeholder="e.g., Ocean View" value={form.view} onChange={(e) => handleFormChange("view", e.target.value)} className="text-gray-900" />
+                      <Input
+                        placeholder="e.g., Ocean View"
+                        value={form.view}
+                        onChange={(e) => handleFormChange("view", e.target.value)}
+                        className="text-gray-900"
+                      />
                     </div>
+
+                    {/* Main Image */}
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Main Image *</label>
                       <input
@@ -633,20 +702,15 @@ export function RoomsManagementClient() {
                         accept="image/*"
                         onChange={e => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            handleFormChange("image", file);
-                          } else {
-                            handleFormChange("image", "");
-                          }
+                          handleFormChange("image", file ?? "");
                         }}
-                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                       {form.image && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative inline-block">
                           <img
                             src={
-                              typeof form.image === "object" && form.image && Object.prototype.toString.call(form.image) === "[object File]"
+                              typeof form.image === "object" && Object.prototype.toString.call(form.image) === "[object File]"
                                 ? URL.createObjectURL(form.image)
                                 : typeof form.image === "string"
                                   ? form.image
@@ -655,11 +719,25 @@ export function RoomsManagementClient() {
                             alt="Preview"
                             className="h-24 rounded-md border border-gray-200 object-cover"
                           />
+                          <div className="mt-1 text-xs text-gray-500">
+                            {typeof form.image === "object" && Object.prototype.toString.call(form.image) === "[object File]"
+                              ? (form.image as File).name
+                              : null}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeMainImage}
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 border border-gray-300 shadow hover:bg-gray-100"
+                            title="Remove image"
+                          >
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
 
+                  {/* Additional Images */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Additional Images</label>
                     <input
@@ -668,85 +746,62 @@ export function RoomsManagementClient() {
                       multiple
                       onChange={e => {
                         const files = Array.from(e.target.files || []);
-                        if (files.length > 0) {
-                          handleFormChange("imageList", files);
-                        } else {
-                          handleFormChange("imageList", "");
-                        }
+                        handleFormChange("imageList", files.length > 0 ? files : "");
                       }}
-                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                     {form.imageList && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {Array.isArray(form.imageList)
                           ? form.imageList.map((file: File, idx: number) => (
-                              <img
-                                key={idx}
-                                src={URL.createObjectURL(file)}
-                                alt={`Preview ${idx + 1}`}
-                                className="h-16 rounded-md border border-gray-200 object-cover"
-                              />
+                              <div key={idx} className="relative inline-block">
+                                <img src={URL.createObjectURL(file)} alt={`Preview ${idx + 1}`} className="h-16 rounded-md border border-gray-200 object-cover" />
+                                <div className="mt-1 text-xs text-gray-500">{file.name}</div>
+                                <button type="button" onClick={() => removeAdditionalImage(idx)} className="absolute top-1 right-1 bg-white rounded-full p-1 border border-gray-300 shadow hover:bg-gray-100" title="Remove image">
+                                  <XCircle className="h-4 w-4 text-red-500" />
+                                </button>
+                              </div>
                             ))
                           : typeof form.imageList === "string"
                           ? form.imageList.split(",").map((url, idx) => (
-                              <img
-                                key={idx}
-                                src={url.trim()}
-                                alt={`Preview ${idx + 1}`}
-                                className="h-16 rounded-md border border-gray-200 object-cover"
-                              />
+                              <div key={idx} className="relative inline-block">
+                                <img src={url.trim()} alt={`Preview ${idx + 1}`} className="h-16 rounded-md border border-gray-200 object-cover" />
+                                <button type="button" onClick={() => removeAdditionalImage(idx)} className="absolute top-1 right-1 bg-white rounded-full p-1 border border-gray-300 shadow hover:bg-gray-100" title="Remove image">
+                                  <XCircle className="h-4 w-4 text-red-500" />
+                                </button>
+                              </div>
                             ))
                           : null}
                       </div>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">Select multiple images. They will be separated with commas.</p>
+                    <p className="text-xs text-gray-500 mt-1">Select multiple images for the room gallery.</p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Amenities</label>
-                    <Input
-                      placeholder="e.g., WiFi, Air Conditioning, Mini Bar"
-                      value={form.amenities}
-                      onChange={(e) => handleFormChange("amenities", e.target.value)}
-                      className="text-gray-900"
-                    />
+                    <Input placeholder="e.g., WiFi, Air Conditioning, Mini Bar" value={form.amenities} onChange={(e) => handleFormChange("amenities", e.target.value)} className="text-gray-900" />
                     <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Features</label>
-                    <Input
-                      placeholder="e.g., Balcony, Sea View, Non-Smoking"
-                      value={form.features}
-                      onChange={(e) => handleFormChange("features", e.target.value)}
-                      className="text-gray-900"
-                    />
+                    <Input placeholder="e.g., Balcony, Sea View, Non-Smoking" value={form.features} onChange={(e) => handleFormChange("features", e.target.value)} className="text-gray-900" />
                     <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Short Description</label>
-                    <Input
-                      placeholder="Brief room description"
-                      value={form.description}
-                      onChange={(e) => handleFormChange("description", e.target.value)}
-                      className="text-gray-900"
-                    />
+                    <Input placeholder="Brief room description" value={form.description} onChange={(e) => handleFormChange("description", e.target.value)} className="text-gray-900" />
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Long Description</label>
-                    <Input
-                      placeholder="Detailed room description"
-                      value={form.longDescription}
-                      onChange={(e) => handleFormChange("longDescription", e.target.value)}
-                      className="text-gray-900"
-                    />
+                    <Input placeholder="Detailed room description" value={form.longDescription} onChange={(e) => handleFormChange("longDescription", e.target.value)} className="text-gray-900" />
                   </div>
                 </div>
               </div>
 
-              {/* Fixed Footer */}
+              {/* Footer */}
               <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-md">
                 <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                   <input
@@ -757,7 +812,6 @@ export function RoomsManagementClient() {
                   />
                   <span className="font-medium">Mark as Available</span>
                 </label>
-
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
                     Cancel
