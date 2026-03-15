@@ -248,6 +248,25 @@ export function RoomsManagementClient() {
       formData.append("fileName", file.name);
       formData.append("folder", folderName);
       const res = await fetch("/api/imagekit", { method: "POST", body: formData });
+
+      // Toast logic for errors
+      if (res.status === 413) {
+        toast.error("File too large. Please upload an image under 10MB.");
+        throw new Error("File too large");
+      }
+      if (res.status === 415) {
+        toast.error("Invalid file type. Only JPG, JPEG, and PNG images are allowed.");
+        throw new Error("Invalid file type");
+      }
+      if (res.status === 400) {
+        toast.error("No file provided.");
+        throw new Error("No file provided");
+      }
+      if (res.status === 500) {
+        toast.error("Upload failed. Please try again.");
+        throw new Error("Upload failed");
+      }
+
       const data = await res.json();
       if (!data.url) throw new Error(data.error || "Image upload failed.");
       return data.url;

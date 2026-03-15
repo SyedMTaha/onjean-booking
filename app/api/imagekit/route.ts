@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import ImageKit from "@imagekit/nodejs";
 
@@ -17,6 +16,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
   }
 
+  // File type validation (accept only jpg, jpeg, png)
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+  if (file.type && !allowedTypes.includes(file.type)) {
+    return NextResponse.json({ error: "Invalid file type. Only JPG, JPEG, and PNG images are allowed." }, { status: 415 });
+  }
+
+  // File size validation (10MB limit)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size && file.size > maxSize) {
+    return NextResponse.json({ error: "File too large. Please upload an image under 10MB." }, { status: 413 });
+  }
+
   try {
     const uploadResponse = await imagekit.files.upload({
       file,
@@ -28,3 +39,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || "Upload failed." }, { status: 500 });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
