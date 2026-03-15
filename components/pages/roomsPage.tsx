@@ -104,9 +104,20 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                         {t('roomsPage.roomId')}: {room.id}
                       </Badge>
                       {/* Guest Badge - Top Right */}
-                      <Badge className="absolute top-4 right-4 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                        {room.maxGuests} {t('roomsPage.guests')}
-                      </Badge>
+                      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
+                          {room.maxGuests} {t('roomsPage.guests')}
+                        </Badge>
+                        <Badge
+                          className={
+                            room.available
+                              ? "bg-green-100 text-green-700 border-0"
+                              : "bg-red-100 text-red-700 border-0"
+                          }
+                        >
+                          {room.available ? t('roomsPage.available') : t('roomsPage.unavailable')}
+                        </Badge>
+                      </div>
                       {/* Room Type */}
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 pr-24 mt-4">{room.name}</h3>
                       {/* Bed Type */}

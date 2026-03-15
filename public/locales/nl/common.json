@@ -11,6 +11,8 @@
     "viewDetails": "Bekijk details",
     "bookNow": "Nu boeken",
     "noRooms": "Momenteel geen kamers beschikbaar.",
+    "available": "Beschikbaar",
+    "unavailable": "Niet beschikbaar",
     "amenitiesTitle": "Alle kamers bevatten",
     "amenitiesSubtitle": "Standaard voorzieningen in elke kamer",
     "amenities": {

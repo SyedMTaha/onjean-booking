@@ -122,6 +122,14 @@ export function RoomsManagementClient() {
     handleFormChange("price", formatted);
   };
 
+  // ✅ Room size handler — strips non-digits and appends " m²"
+  // User types "25" → stored as "25 m²"
+  const handleSizeChange = (value: string) => {
+    const digits = value.replace(/[^\d]/g, "");
+    const formatted = digits ? `${digits} m²` : "";
+    handleFormChange("size", formatted);
+  };
+
   const loadRooms = async () => {
     setIsLoading(true);
     try {
@@ -677,11 +685,16 @@ export function RoomsManagementClient() {
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">Room Size</label>
                       <Input
-                        placeholder="e.g., 25 m²"
+                        placeholder="e.g., 25"
                         value={form.size}
-                        onChange={(e) => handleFormChange("size", e.target.value)}
+                        onChange={(e) => handleSizeChange(e.target.value)}
                         className="text-gray-900"
                       />
+                      {form.size && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Saves as: <span className="font-semibold text-gray-700">{form.size}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>

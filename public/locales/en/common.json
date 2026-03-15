@@ -11,6 +11,8 @@
         "viewDetails": "View Details",
         "bookNow": "Book Now",
         "noRooms": "No rooms available at the moment.",
+        "available": "Available",
+        "unavailable": "Unavailable",
         "amenitiesTitle": "All Rooms Include",
         "amenitiesSubtitle": "Standard amenities in every room",
         "amenities": {

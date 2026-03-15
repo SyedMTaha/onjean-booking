@@ -11,6 +11,8 @@
     "viewDetails": "Vedi dettagli",
     "bookNow": "Prenota ora",
     "noRooms": "Nessuna camera disponibile al momento.",
+    "available": "Disponibile",
+    "unavailable": "Non disponibile",
     "amenitiesTitle": "Tutte le camere includono",
     "amenitiesSubtitle": "Servizi standard in ogni camera",
     "amenities": {

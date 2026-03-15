@@ -11,6 +11,8 @@
     "viewDetails": "Voir les détails",
     "bookNow": "Réserver",
     "noRooms": "Aucune chambre disponible pour le moment.",
+    "available": "Disponible",
+    "unavailable": "Indisponible",
     "amenitiesTitle": "Toutes les chambres incluent",
     "amenitiesSubtitle": "Équipements standards dans chaque chambre",
     "amenities": {
