@@ -253,7 +253,7 @@ export function Navigation() {
                         <Link href="/booking" className="text-gray-200 hover:text-white hover:bg-gray-800">My Bookings</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/cart" className="text-gray-200 hover:text-white hover:bg-gray-800">My Cart</Link>
+                        <Link href="/order" className="text-gray-200 hover:text-white hover:bg-gray-800">My Orders</Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -388,11 +388,11 @@ export function Navigation() {
                         My Bookings
                       </Link>
                       <Link
-                        href="/cart"
+                        href="/order"
                         onClick={() => setMobileMenuOpen(false)}
                         className="block w-full border border-gray-400 text-gray-100 hover:bg-gray-800 uppercase text-sm text-center rounded-md py-2"
                       >
-                        My Cart
+                        My Orders
                       </Link>
                     </>
                   )}

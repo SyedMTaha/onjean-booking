@@ -37,6 +37,7 @@ const navItems: NavItem[] = [
   { path: "/dashboard/bookings", label: "Bookings", icon: Calendar },
   { path: "/dashboard/rooms", label: "Rooms", icon: Bed },
   { path: "/dashboard/menu", label: "Menu", icon: Utensils },
+  { path: "/dashboard/orders", label: "Orders", icon: Menu },
   { path: "/dashboard/revenue", label: "Revenue", icon: DollarSign },
   { path: "/dashboard/customers", label: "Customers", icon: Users },
   { path: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -138,14 +139,13 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
-            
             return (
               <Link
                 key={item.path}
                 href={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   active
-                    ? "bg-blue-600 text-white"
+                    ? "bg-[#155DFC] text-white"
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 } ${!isOpen && "justify-center lg:px-2"}`}
               >

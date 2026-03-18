@@ -332,7 +332,7 @@ export function CustomersManagementClient() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search customers by name, email, or phone..."
+              placeholder="Search customers by name, email"
               className="h-10 pl-10 placeholder:text-gray-400 text-gray-900 border-gray-300 bg-white rounded-xl"
             />
           </div>
