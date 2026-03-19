@@ -1,7 +1,7 @@
 import { getAllBookings, updateBookingStatus } from "@/lib/bookingService";
 import { getAllSpaBookings, updateSpaBookingStatus } from "@/lib/spaBookingService";
 
-export type OrderType = "room" | "spa";
+export type OrderType = "room" | "spa" | "food";
 
 export interface DashboardOrder {
   id: string;

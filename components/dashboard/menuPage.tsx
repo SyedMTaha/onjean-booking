@@ -69,14 +69,10 @@ export function MenuManagementClient() {
   const [form, setForm] = useState<MenuItemForm>(getEmptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; item?: MenuItem }>({ open: false });
 
-  // ✅ Fix 1: moved inside component so it has access to setForm
   const removeMainImage = () => {
     setForm((prev: MenuItemForm) => ({ ...prev, image: "" }));
   };
 
-  // ✅ Fix 2: price handler — strips non-digits and always prepends "R"
-  // User types "150" → stored and displayed as "R150"
-  // User types "R150" → stored as "R150" (R not doubled)
   const handlePriceChange = (value: string) => {
     const digits = value.replace(/[^\d]/g, "");
     const formatted = digits ? `R${digits}` : "";
@@ -118,9 +114,7 @@ export function MenuManagementClient() {
   }, [router]);
 
   useEffect(() => {
-    if (isAdminAuthenticated) {
-      loadItems();
-    }
+    if (isAdminAuthenticated) loadItems();
   }, [isAdminAuthenticated]);
 
   const openAddModal = () => {
@@ -168,54 +162,44 @@ export function MenuManagementClient() {
     }
 
     const docId = `${slugify(form.category)}-${slugify(form.name)}`;
-
     let imageUrl = form.image;
+
     if (typeof form.image === "object" && form.image instanceof File) {
       const formData = new FormData();
       formData.append("file", form.image);
       formData.append("fileName", form.image.name);
-      let folder = "";
-      if (form.category === "Beverages" && form.subcategory.trim()) {
-        folder = `/menu/Beverages/${slugify(form.subcategory)}`;
-      } else {
-        folder = `/menu/${slugify(form.category)}`;
-      }
+      const folder =
+        form.category === "Beverages" && form.subcategory.trim()
+          ? `/menu/Beverages/${slugify(form.subcategory)}`
+          : `/menu/${slugify(form.category)}`;
       formData.append("folder", folder);
-      const res = await fetch("/api/imagekit", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/imagekit", { method: "POST", body: formData });
       const data = await res.json();
-      if (!data.url) {
-        toast.error(data.error || "Image upload failed.");
-        return;
-      }
+      if (!data.url) { toast.error(data.error || "Image upload failed."); return; }
       imageUrl = data.url;
     }
 
     const payload = {
       name: form.name.trim(),
       category: form.category.trim(),
-      price: form.price.trim(), // already "R150" format
+      price: form.price.trim(),
       priceNumeric,
       image: typeof imageUrl === "string" ? imageUrl : "",
       description: form.description.trim(),
       available: form.available,
-      ...(form.category === "Beverages" && form.subcategory.trim() && { subcategory: form.subcategory.trim() }),
+      ...(form.category === "Beverages" && form.subcategory.trim() && {
+        subcategory: form.subcategory.trim(),
+      }),
     };
 
     setIsSaving(true);
     try {
-      let result;
-      if (mode === "add") {
-        result = await addMenuItem(payload, docId);
-      } else {
-        result = await updateMenuItem(form.id, payload);
-      }
-      if (!result.success) {
-        toast.error(result.error || `Failed to ${mode} menu item.`);
-        return;
-      }
+      const result =
+        mode === "add"
+          ? await addMenuItem(payload, docId)
+          : await updateMenuItem(form.id, payload);
+
+      if (!result.success) { toast.error(result.error || `Failed to ${mode} menu item.`); return; }
       toast.success(mode === "add" ? "Menu item added." : "Menu item updated.");
       setIsModalOpen(false);
       setForm(getEmptyForm());
@@ -228,9 +212,7 @@ export function MenuManagementClient() {
     }
   };
 
-  const handleDelete = (item: MenuItem) => {
-    setDeleteConfirm({ open: true, item });
-  };
+  const handleDelete = (item: MenuItem) => setDeleteConfirm({ open: true, item });
 
   const confirmDeleteMenuItem = async () => {
     if (!deleteConfirm.item) return;
@@ -241,19 +223,15 @@ export function MenuManagementClient() {
     if (!result.success) {
       toast.error(result.error || "Failed to delete menu item.");
       await loadItems();
-      setIsSaving(false);
-      return;
+    } else {
+      toast.success("Menu item deleted.");
     }
-    toast.success("Menu item deleted.");
     setIsSaving(false);
   };
 
   const handleToggleAvailability = async (item: MenuItem) => {
     const result = await toggleMenuItemAvailability(item.id, !item.available);
-    if (!result.success) {
-      toast.error(result.error || "Failed to update availability.");
-      return;
-    }
+    if (!result.success) { toast.error(result.error || "Failed to update availability."); return; }
     toast.success(`Item marked as ${!item.available ? "available" : "unavailable"}.`);
     await loadItems();
   };
@@ -263,9 +241,7 @@ export function MenuManagementClient() {
     if (!needle) return items;
     return items.filter((item) =>
       [item.name, item.category, item.subcategory || "", item.description]
-        .join(" ")
-        .toLowerCase()
-        .includes(needle)
+        .join(" ").toLowerCase().includes(needle)
     );
   }, [items, search]);
 
@@ -295,61 +271,14 @@ export function MenuManagementClient() {
   return (
     <div className="bg-[#F8FAFC] py-6 md:py-8">
       <div className="container mx-auto px-4 lg:px-8 space-y-6">
+
+        {/* Header */}
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Menu Management</h1>
           <p className="text-gray-600 mt-1">Manage food and beverage items visible on the website menu</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Available</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.available}</p>
-              </div>
-              <div className="h-11 w-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Unavailable</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.unavailable}</p>
-              </div>
-              <div className="h-11 w-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
-                <XCircle className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Categories</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.categories}</p>
-              </div>
-              <div className="h-11 w-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                <ChefHat className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.total}</p>
-              </div>
-              <div className="h-11 w-11 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center">
-                <Utensils className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
-        </div>
-
+        {/* Search + Add */}
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           <div className="relative w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -366,6 +295,56 @@ export function MenuManagementClient() {
           </Button>
         </div>
 
+        {/* Stat cards */}  
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Available</p>
+                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.available}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Unavailable</p>
+                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.unavailable}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+                <XCircle className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Categories</p>
+                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.categories}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                <ChefHat className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Items</p>
+                <p className="text-3xl font-semibold text-gray-900 mt-2">{totals.total}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center">
+                <Utensils className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+        </div>
+        
+
+        {/* ✅ Fix: menu item cards now have their own properly closed grid wrapper */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="col-span-full text-center py-8 text-gray-500">Loading menu items...</div>
@@ -405,8 +384,7 @@ export function MenuManagementClient() {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 border-blue-200" onClick={() => openEditModal(item)}>
-                        <Edit3 className="h-3 w-3 mr-1" />
-                        Edit
+                        <Edit3 className="h-3 w-3 mr-1" />Edit
                       </Button>
                       <Button
                         size="sm"
@@ -414,11 +392,10 @@ export function MenuManagementClient() {
                         className={`text-xs bg-white border px-1 ${item.available ? "hover:bg-amber-50 text-amber-600 hover:text-amber-700 border-amber-200" : "hover:bg-green-50 text-green-600 hover:text-green-700 border-green-200"}`}
                         onClick={() => handleToggleAvailability(item)}
                       >
-                        {item.available ? (
-                          <><XCircle className="h-3 w-3" /><span className="ml-1 hidden xl:inline">Off</span></>
-                        ) : (
-                          <><CheckCircle2 className="h-3 w-3" /><span className="ml-1 hidden xl:inline">On</span></>
-                        )}
+                        {item.available
+                          ? <><XCircle className="h-3 w-3" /><span className="ml-1 hidden xl:inline">Off</span></>
+                          : <><CheckCircle2 className="h-3 w-3" /><span className="ml-1 hidden xl:inline">On</span></>
+                        }
                       </Button>
                       <Button size="sm" variant="outline" className="text-xs bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border-red-200" onClick={() => handleDelete(item)}>
                         <Trash2 className="h-3 w-3" />
@@ -430,7 +407,10 @@ export function MenuManagementClient() {
             ))
           )}
         </div>
+        {/* ✅ End menu item cards grid */}
+
       </div>
+      {/* ✅ End container — modal portals correctly outside */}
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
@@ -463,10 +443,7 @@ export function MenuManagementClient() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        handleFormChange("image", file ?? "");
-                      }}
+                      onChange={(e) => handleFormChange("image", e.target.files?.[0] ?? "")}
                       className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-gray-900 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                     {form.image && (
@@ -474,20 +451,20 @@ export function MenuManagementClient() {
                         <img
                           src={
                             typeof form.image === "object" && form.image instanceof File
-                              ? URL.createObjectURL(form.image)
-                              : form.image
+                              ? URL.createObjectURL(form.image as File)
+                              : (form.image as string)
                           }
                           alt="Preview"
                           className="h-24 rounded-md border border-black object-cover"
                         />
                         <div className="mt-1 text-xs text-gray-500">
-                          {typeof form.image === "object" && form.image instanceof File ? form.image.name : null}
+                          {typeof form.image === "object" && form.image instanceof File
+                            ? (form.image as File).name : null}
                         </div>
                         <button
                           type="button"
                           onClick={removeMainImage}
                           className="absolute top-1 right-1 bg-white rounded-full p-1 border border-gray-300 shadow hover:bg-gray-100"
-                          title="Remove image"
                         >
                           <XCircle className="h-5 w-5 text-red-500" />
                         </button>
@@ -506,7 +483,7 @@ export function MenuManagementClient() {
                     />
                   </div>
 
-                  {/* ✅ Price with forced R prefix */}
+                  {/* Price */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Price *</label>
                     <Input
@@ -540,7 +517,7 @@ export function MenuManagementClient() {
                     <p className="text-xs text-gray-500 mt-1">Choose from: Light Meals, Dinner, Desserts, Beverages</p>
                   </div>
 
-                  {/* Subcategory — only for Beverages */}
+                  {/* Subcategory — Beverages only */}
                   {form.category === "Beverages" && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -583,9 +560,7 @@ export function MenuManagementClient() {
                 <span className="font-medium">Mark as Available</span>
               </label>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
-                  Cancel
-                </Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancel</Button>
                 <Button onClick={submitForm} disabled={isSaving} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
                   {isSaving ? "Saving..." : mode === "add" ? "Add Item" : "Save Changes"}
                 </Button>
@@ -601,7 +576,9 @@ export function MenuManagementClient() {
           <div className="w-full max-w-md bg-white rounded-md shadow-lg p-6 flex flex-col">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Menu Item</h3>
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete <span className="font-bold">{deleteConfirm.item?.name}</span>? This action cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-bold">{deleteConfirm.item?.name}</span>?{" "}
+              This action cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setDeleteConfirm({ open: false })}>Cancel</Button>

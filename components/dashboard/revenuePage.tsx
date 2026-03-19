@@ -48,12 +48,25 @@ export function RevenueManagementClient() {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [orders, setOrders] = useState<DashboardOrder[]>([]);
+  const [foodOrders, setFoodOrders] = useState<any[]>([]);
 
+  // Fetch both dashboard orders and food orders from Firestore
   const fetchRevenueData = async () => {
     setIsDataLoading(true);
     try {
+      // Room and spa orders
       const allOrders = await getDashboardOrders();
       setOrders(allOrders);
+
+      // Food orders from Firestore
+      const { db } = await import("@/lib/firebase");
+      const { getDocs, collection } = await import("firebase/firestore");
+      const foodOrdersSnapshot = await getDocs(collection(db, "foodOrders"));
+      const fetchedFoodOrders = foodOrdersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setFoodOrders(fetchedFoodOrders);
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch revenue data.");
@@ -83,8 +96,24 @@ export function RevenueManagementClient() {
   }, [isAdminAuthenticated]);
 
   const approvedOrders = useMemo(
-    () => orders.filter((o) => o.bookingStatus === "approved"),
-    [orders]
+    () => {
+      // Combine approved room/spa orders and approved food orders
+      const approvedRoomSpa = orders.filter((o) => o.bookingStatus === "approved");
+      const approvedFood = foodOrders.filter((o) => o.paymentStatus === "succeeded");
+      // Map food orders to DashboardOrder shape
+      const mappedFoodOrders = approvedFood.map((item: any) => ({
+        id: item.id,
+        orderType: "food" as import("@/lib/dashboardService").OrderType,
+        bookingStatus: "approved",
+        customerName: item.name || "Unknown Guest",
+        customerEmail: item.phone || "-",
+        createdAt: item.createdAt,
+        totalPrice: item.items?.reduce((sum: number, i: any) => sum + i.price * i.quantity, 0) || 0,
+        details: `${item.orderType || "Food"} • ${item.roomNumber || "-"}`,
+      }));
+      return [...approvedRoomSpa, ...mappedFoodOrders];
+    },
+    [orders, foodOrders]
   );
 
   const monthlyData = useMemo(() => {
@@ -140,20 +169,27 @@ export function RevenueManagementClient() {
     const currentRoomRevenue = currentOrders
       .filter((order) => order.orderType === "room")
       .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    const currentFoodRevenue = currentOrders
+      .filter((order) => order.orderType === "food")
+      .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
     const currentServiceRevenue = currentOrders
       .filter((order) => order.orderType === "spa")
       .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
     const previousRoomRevenue = previousOrders
       .filter((order) => order.orderType === "room")
       .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    const previousFoodRevenue = previousOrders
+      .filter((order) => order.orderType === "food")
+      .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
     const previousServiceRevenue = previousOrders
       .filter((order) => order.orderType === "spa")
       .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
 
-    const totalRevenue = currentRoomRevenue + currentServiceRevenue;
-    const previousTotalRevenue = previousRoomRevenue + previousServiceRevenue;
+    const totalRevenue = currentRoomRevenue + currentFoodRevenue + currentServiceRevenue;
+    const previousTotalRevenue = previousRoomRevenue + previousFoodRevenue + previousServiceRevenue;
     const totalRevenueChange = calcPercentChange(totalRevenue, previousTotalRevenue);
     const roomRevenueChange = calcPercentChange(currentRoomRevenue, previousRoomRevenue);
+    const foodRevenueChange = calcPercentChange(currentFoodRevenue, previousFoodRevenue);
     const serviceRevenueChange = calcPercentChange(currentServiceRevenue, previousServiceRevenue);
 
     const avgPerBooking = currentOrders.length > 0 ? totalRevenue / currentOrders.length : 0;
@@ -171,6 +207,12 @@ export function RevenueManagementClient() {
         change: roomRevenueChange,
       },
       {
+        source: "Food Orders",
+        amount: currentFoodRevenue,
+        percentage: totalRevenue > 0 ? (currentFoodRevenue / totalRevenue) * 100 : 0,
+        change: foodRevenueChange,
+      },
+      {
         source: "Spa Services",
         amount: currentServiceRevenue,
         percentage: totalRevenue > 0 ? (currentServiceRevenue / totalRevenue) * 100 : 0,
@@ -183,6 +225,8 @@ export function RevenueManagementClient() {
       totalRevenueChange,
       roomRevenue: currentRoomRevenue,
       roomRevenueChange,
+      foodRevenue: currentFoodRevenue,
+      foodRevenueChange,
       serviceRevenue: currentServiceRevenue,
       serviceRevenueChange,
       avgPerBooking,
@@ -256,23 +300,23 @@ export function RevenueManagementClient() {
             <p className="text-2xl font-bold text-gray-900 mt-1">{CURRENCY}{revenueMetrics.roomRevenue.toLocaleString()}</p>
           </Card>
 
-          {/* Service Revenue */}
+          {/* Food Revenue */}
           <Card className="p-4 bg-white border border-gray-200 hover:shadow-md transition-all">
             <div className="flex items-start justify-between mb-4">
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Utensils className="h-6 w-6 text-purple-600" />
+              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <Utensils className="h-6 w-6 text-green-600" />
               </div>
-              <div className="flex items-center gap-1 text-purple-600">
-                {revenueMetrics.serviceRevenueChange >= 0 ? (
+              <div className="flex items-center gap-1 text-green-600">
+                {revenueMetrics.foodRevenueChange >= 0 ? (
                   <TrendingUp className="h-4 w-4" />
                 ) : (
                   <TrendingDown className="h-4 w-4" />
                 )}
-                <span className="text-xs font-medium">{revenueMetrics.serviceRevenueChange >= 0 ? "+" : ""}{revenueMetrics.serviceRevenueChange.toFixed(1)}%</span>
+                <span className="text-xs font-medium">{revenueMetrics.foodRevenueChange >= 0 ? "+" : ""}{revenueMetrics.foodRevenueChange.toFixed(1)}%</span>
               </div>
             </div>
-            <p className="text-xs text-gray-600">Service Revenue</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{CURRENCY}{revenueMetrics.serviceRevenue.toLocaleString()}</p>
+            <p className="text-xs text-gray-600">Food Revenue</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{CURRENCY}{revenueMetrics.foodRevenue.toLocaleString()}</p>
           </Card>
 
           {/* Avg Per Booking */}

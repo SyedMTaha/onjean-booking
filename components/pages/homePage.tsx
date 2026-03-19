@@ -189,7 +189,10 @@ export function HomeClient() {
           .map(id => allRooms.find(room => room.available && String(room.id) === id))
           .filter(Boolean) as Room[];
         if (prioritizedRooms.length === 0) {
-          toast.warning("All rooms are currently unavailable");
+          // Prevent duplicate toast by checking if rooms are already set to empty
+          if (rooms.length === 0) {
+            toast.warning("All rooms are currently unavailable", { duration: 3000 });
+          }
         }
         setRooms(prioritizedRooms);
       } catch (error) {
