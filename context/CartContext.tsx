@@ -44,12 +44,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const { user } = useAuth();
 
-  const getUserCartCacheKey = (userId: string) => `cart:${userId}`;
+  const getUserCartCacheKey = (userId?: string) => userId ? `cart:${userId}` : `cart:guest`;
 
-  const readLocalCart = (userId: string): CartItem[] => {
+  const readLocalCart = (userId?: string): CartItem[] => {
     const cached = localStorage.getItem(getUserCartCacheKey(userId));
     if (!cached) return [];
-
     try {
       return JSON.parse(cached) as CartItem[];
     } catch (error) {
@@ -58,22 +57,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const writeLocalCart = (userId: string, cartItems: CartItem[]) => {
+  const writeLocalCart = (cartItems: CartItem[], userId?: string) => {
     localStorage.setItem(getUserCartCacheKey(userId), JSON.stringify(cartItems));
+  };
+  const clearLocalCart = (userId?: string) => {
+    localStorage.removeItem(getUserCartCacheKey(userId));
   };
 
   // Load cart from Firestore for signed-in users and keep a per-user local cache fallback.
   useEffect(() => {
     const loadCart = async () => {
       if (!user) {
-        // Cart is sign-in only.
-        setItems([]);
+        // Anonymous user: load cart from guest localStorage
+        setItems(readLocalCart());
         setIsLoaded(true);
         return;
       }
-
+      // Logged-in user: merge guest cart if exists
+      const guestCart = readLocalCart();
       const cachedItems = readLocalCart(user.uid);
-
+      let mergedItems = cachedItems;
+      if (guestCart.length > 0) {
+        // Merge guest cart into user cart (avoid duplicates)
+        const ids = new Set(cachedItems.map(i => i.id));
+        mergedItems = [...cachedItems, ...guestCart.filter(i => !ids.has(i.id))];
+        writeLocalCart(mergedItems, user.uid);
+        clearLocalCart(); // Remove guest cart
+      }
       try {
         const dbItems = await getUserCartItems(user.uid);
         const mappedDbItems: CartItem[] = dbItems.map((item) => ({
@@ -84,15 +94,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image: item.image,
           description: item.description,
         }));
-
         if (mappedDbItems.length > 0) {
           setItems(mappedDbItems);
-          writeLocalCart(user.uid, mappedDbItems);
-        } else if (cachedItems.length > 0) {
-          // Recover from cache when DB is empty, then re-sync in background.
-          setItems(cachedItems);
+          writeLocalCart(mappedDbItems, user.uid);
+        } else if (mergedItems.length > 0) {
+          setItems(mergedItems);
           await Promise.all(
-            cachedItems.map((item) =>
+            mergedItems.map((item) =>
               upsertCartItem({
                 userId: user.uid,
                 itemId: item.id,
@@ -108,32 +116,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setItems([]);
         }
       } catch (error) {
-        // Some users may not have Firestore cart permissions; fallback to cached cart quietly.
         if (!isPermissionDeniedError(error)) {
           console.error("Failed to load cart from database:", error);
         }
-        // Preserve UX if DB read fails temporarily.
-        setItems(cachedItems);
+        setItems(mergedItems);
       }
-
       setIsLoaded(true);
     };
-
     loadCart();
   }, [user]);
 
   // Mirror signed-in cart locally as a fallback cache.
   useEffect(() => {
-    if (isLoaded && user) {
-      writeLocalCart(user.uid, items);
+    if (!isLoaded) return;
+    if (user) {
+      writeLocalCart(items, user.uid);
+    } else {
+      writeLocalCart(items);
     }
   }, [items, isLoaded, user]);
 
   const addToCart = (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
-    if (!user) {
-      return;
-    }
-
     setItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id);
       const nextItems = existingItem
@@ -141,35 +144,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           i.id === item.id ? { ...i, quantity: i.quantity + (item.quantity || 1) } : i
           )
         : [...prevItems, { ...item, quantity: item.quantity || 1 }];
-
-      const nextItem = nextItems.find((i) => i.id === item.id);
-      if (nextItem) {
-        upsertCartItem({
-          userId: user.uid,
-          itemId: nextItem.id,
-          name: nextItem.name,
-          price: nextItem.price,
-          quantity: nextItem.quantity,
-          image: nextItem.image,
-          description: nextItem.description,
-        }).catch((error) => {
-          console.error("Failed to persist cart item:", error);
-        });
+      if (user) {
+        const nextItem = nextItems.find((i) => i.id === item.id);
+        if (nextItem) {
+          upsertCartItem({
+            userId: user.uid,
+            itemId: nextItem.id,
+            name: nextItem.name,
+            price: nextItem.price,
+            quantity: nextItem.quantity,
+            image: nextItem.image,
+            description: nextItem.description,
+          }).catch((error) => {
+            console.error("Failed to persist cart item:", error);
+          });
+        }
       }
-
       return nextItems;
     });
   };
 
   const removeFromCart = (id: string) => {
-    if (!user) {
-      return;
+    if (user) {
+      removeCartItemByItemId(user.uid, id).catch((error) => {
+        console.error("Failed to remove cart item:", error);
+      });
     }
-
-    removeCartItemByItemId(user.uid, id).catch((error) => {
-      console.error("Failed to remove cart item:", error);
-    });
-
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
@@ -182,39 +182,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const nextItems = prevItems.map((item) =>
         item.id === id ? { ...item, quantity } : item
       );
-
-      if (!user) {
-        return nextItems;
+      if (user) {
+        const updated = nextItems.find((item) => item.id === id);
+        if (updated) {
+          upsertCartItem({
+            userId: user.uid,
+            itemId: updated.id,
+            name: updated.name,
+            price: updated.price,
+            quantity: updated.quantity,
+            image: updated.image,
+            description: updated.description,
+          }).catch((error) => {
+            console.error("Failed to update cart quantity:", error);
+          });
+        }
       }
-
-      const updated = nextItems.find((item) => item.id === id);
-      if (updated) {
-        upsertCartItem({
-          userId: user.uid,
-          itemId: updated.id,
-          name: updated.name,
-          price: updated.price,
-          quantity: updated.quantity,
-          image: updated.image,
-          description: updated.description,
-        }).catch((error) => {
-          console.error("Failed to update cart quantity:", error);
-        });
-      }
-
       return nextItems;
     });
   };
 
   const clearCart = () => {
-    if (!user) {
-      return;
+    if (user) {
+      clearUserCart(user.uid).catch((error) => {
+        console.error("Failed to clear cart:", error);
+      });
+      clearLocalCart(user.uid);
+    } else {
+      clearLocalCart();
     }
-
-    clearUserCart(user.uid).catch((error) => {
-      console.error("Failed to clear cart:", error);
-    });
-
     setItems([]);
   };
 

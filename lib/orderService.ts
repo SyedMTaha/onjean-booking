@@ -1,3 +1,5 @@
+import { auth } from "@/lib/firebase";
+import { signInAnonymously } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
@@ -34,7 +36,17 @@ export async function saveFoodOrder(
   totalPrice: number,
   paymentId: string
 ): Promise<string> {
+  // Ensure authentication in browser
+  if (typeof window !== "undefined" && auth && !auth.currentUser) {
+    try {
+      await signInAnonymously(auth);
+    } catch (error) {
+      console.error("Anonymous sign-in failed for food order", error);
+      throw new Error("Authentication required to place order.");
+    }
+  }
   try {
+    console.log("saveFoodOrder called", { userId, db });
     const orderData: FoodOrder = {
       userId,
       userEmail,

@@ -235,7 +235,7 @@ export function MenuClient() {
               <span className="text-gray-600 font-medium">Total</span>
               <span className="text-xl font-bold text-gray-900">R{cartTotal.toFixed(2)}</span>
             </div>
-            <Link href="/cart" onClick={() => setDrawerOpen(false)} className="block">
+            <Link href="/order" onClick={() => setDrawerOpen(false)} className="block">
               <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-base font-semibold">
                 Proceed to Order
               </Button>
