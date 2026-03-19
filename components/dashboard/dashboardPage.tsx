@@ -70,9 +70,11 @@ function getStatusBadgeClass(status: string) {
   return "bg-amber-100 text-amber-700 border-amber-300";
 }
 
-function getOrderTypeBadgeClass(orderType: "room" | "spa") {
+function getOrderTypeBadgeClass(orderType: "room" | "spa" | "food") {
   if (orderType === "room") return "bg-blue-100 text-blue-700 border-blue-300";
-  return "bg-violet-100 text-violet-700 border-violet-300";
+  if (orderType === "spa") return "bg-violet-100 text-violet-700 border-violet-300";
+  if (orderType === "food") return "bg-yellow-100 text-yellow-700 border-yellow-300";
+  return "bg-gray-100 text-gray-700 border-gray-300";
 }
 
 export function DashboardClient() {

@@ -822,7 +822,7 @@ export function RoomsManagementClient() {
               {/* Footer */}
               <div className="p-6 border-t border-gray-200 flex items-center justify-end bg-gray-50 rounded-b-md gap-2">
                 <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancel</Button>
-                <Button onClick={submitForm} disabled={isSaving} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
+                <Button onClick={submitForm} disabled={isSaving || (mode === "add" && isAdding)} className="bg-[#2B7FFF] hover:bg-[#1f5dcc] text-white">
                   {mode === "add" ? (isAdding ? "Adding..." : "Add Room") : (isSaving ? "Saving..." : "Save Changes")}
                 </Button>
               </div>

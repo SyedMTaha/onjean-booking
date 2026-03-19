@@ -191,7 +191,7 @@ export function HomeClient() {
         if (prioritizedRooms.length === 0) {
           // Prevent duplicate toast by checking if rooms are already set to empty
           if (rooms.length === 0) {
-            toast.warning("All rooms are currently unavailable", { duration: 3000 });
+            toast.warning("All rooms are currently unavailable", { duration: 2000 });
           }
         }
         setRooms(prioritizedRooms);

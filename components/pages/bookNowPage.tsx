@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { sendRoomBookingEmail } from "@/lib/emailService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -268,6 +269,16 @@ export function BookingClient() {
 
       const reference = "BK" + Math.random().toString(36).substr(2, 9).toUpperCase();
       setBookingReference(reference);
+      await sendRoomBookingEmail({
+        customerName: `${draft.firstName} ${draft.lastName}`,
+        customerEmail: draft.email,
+        roomName: draft.roomType,
+        checkIn: draft.checkInDate,
+        checkOut: draft.checkOutDate,
+        guests: draft.guests,
+        totalPrice: draft.totalPrice,
+        bookingId: reference,
+      });
 
       // Clean up session storage and URL params
       sessionStorage.removeItem(PENDING_BOOKING_KEY);

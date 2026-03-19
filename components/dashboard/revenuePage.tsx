@@ -104,7 +104,7 @@ export function RevenueManagementClient() {
       const mappedFoodOrders = approvedFood.map((item: any) => ({
         id: item.id,
         orderType: "food" as import("@/lib/dashboardService").OrderType,
-        bookingStatus: "approved",
+        bookingStatus: "approved" as "approved",
         customerName: item.name || "Unknown Guest",
         customerEmail: item.phone || "-",
         createdAt: item.createdAt,
