@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,8 @@ export function BookingClient() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { user } = useAuth();
+
+  const hasVerifiedPayment = useRef(false);
 
   useEffect(() => {
     const loadRoomTypes = async () => {
@@ -292,7 +294,7 @@ export function BookingClient() {
         window.location.href = "/booking";
       }, 1500);
 
-      window.history.replaceState({}, "", "/book-now");
+      
     } catch (error) {
       console.error("Booking completion error:", error);
       let message = error instanceof Error ? error.message : "Failed to complete booking. Please contact support with your payment proof.";
@@ -307,67 +309,76 @@ export function BookingClient() {
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get("payment");
+  const params = new URLSearchParams(window.location.search);
+  const paymentStatus = params.get("payment");
 
-    if (!paymentStatus) {
-      return;
-    }
+  if (!paymentStatus) return;
 
-    if (paymentStatus === "cancelled") {
-      toast.error("Payment was cancelled. You can try again.");
-      window.history.replaceState({}, "", "/book-now");
-      return;
-    }
+  // ✅ If user is still null Firebase auth hasn't resolved yet — wait
+  if (user === null) return;
 
-    if (paymentStatus === "failed") {
-      toast.error("Payment failed. Please try again.");
-      window.history.replaceState({}, "", "/book-now");
-      return;
-    }
+  // ✅ Guard — prevent double execution when Firebase fires auth twice
+  if (hasVerifiedPayment.current) return;
 
-    if (paymentStatus !== "success") {
-      return;
-    }
+  if (paymentStatus === "cancelled") {
+    toast.error("Payment was cancelled. You can try again.");
+    window.history.replaceState({}, "", "/book-now");
+    return;
+  }
 
-    const checkoutId = sessionStorage.getItem(PENDING_CHECKOUT_ID_KEY);
-    if (!checkoutId) {
-      toast.error("Could not verify payment session. Please contact support if you were charged.");
-      window.history.replaceState({}, "", "/book-now");
-      return;
-    }
+  if (paymentStatus === "failed") {
+    toast.error("Payment failed. Please try again.");
+    window.history.replaceState({}, "", "/book-now");
+    return;
+  }
 
-    const verifyCheckout = async () => {
-      try {
-        setIsProcessing(true);
+  if (paymentStatus !== "success") return;
 
-        const response = await fetch('/api/payments?checkoutId=' + encodeURIComponent(checkoutId));
-        const data = await response.json();
+  const checkoutId = sessionStorage.getItem(PENDING_CHECKOUT_ID_KEY);
+  if (!checkoutId) {
+    toast.error("Could not verify payment session. Please contact support if you were charged.");
+    window.history.replaceState({}, "", "/book-now");
+    return;
+  }
 
-        if (!response.ok) {
-          throw new Error(data?.error || "Failed to verify payment");
-        }
+  // ✅ Mark true BEFORE async call so no re-run can sneak in
+  hasVerifiedPayment.current = true;
 
-        if (data?.status !== "completed" || !data?.paymentId) {
-          throw new Error("Payment is not completed yet. Please refresh in a moment.");
-        }
+  const verifyCheckout = async () => {
+    try {
+      setIsProcessing(true);
 
-        await completePendingBooking(data.paymentId);
-      } catch (error) {
-        console.error("Payment verification error:", error);
-        let message = error instanceof Error ? error.message : "Failed to verify payment status";
-        if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
-          toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
-        } else {
-          toast.error(message);
-        }
-      } finally {
-        setIsProcessing(false);
+      const response = await fetch('/api/payments?checkoutId=' + encodeURIComponent(checkoutId));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to verify payment");
       }
-    };
 
-    verifyCheckout();
-  }, [user]);
+      // ✅ Accept all possible Yoco success status values
+      const successStatuses = ["completed", "succeeded", "successful", "paid"];
+      if (!successStatuses.includes(data?.status)) {
+        throw new Error("Payment is not completed yet. Please refresh in a moment.");
+      }
+
+      await completePendingBooking(data.paymentId || checkoutId);
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      // ✅ Reset guard on error so user can retry
+      hasVerifiedPayment.current = false;
+      let message = error instanceof Error ? error.message : "Failed to verify payment status";
+      if (typeof message === 'string' && (message.includes('AUTH_DISABLED') || message.includes('Anonymous sign-in is disabled'))) {
+        toast.error('Sign-in is required to book.', { id: 'book-signin-required' });
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  verifyCheckout();
+}, [user]);
 
   const handleNextStep = () => {
     if (step === 1) {

@@ -37,6 +37,7 @@ export async function sendRoomBookingEmail(data: {
 }
 
 export async function sendFoodOrderEmail(data: {
+  customerEmail: string;
   customerName: string;
   customerPhone: string;
   orderType: string;
@@ -55,6 +56,7 @@ export async function sendFoodOrderEmail(data: {
       SERVICE_ID,
       "template_food_order",
       {
+        customer_email: data.customerEmail,
         customer_name: data.customerName,
         customer_phone: data.customerPhone,
         order_type: data.orderType,

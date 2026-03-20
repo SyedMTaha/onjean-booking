@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "@/components/SearchBar";
 import { getAllRooms, Room } from "@/lib/roomService";
+import { rooms as staticRooms } from "@/data/rooms";
 
 type Testimonial = {
   name: string;
@@ -126,149 +127,19 @@ export function HomeClient() {
   }, [t]);
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        setLoading(true);
-        const allRooms = await getAllRooms();
-        if (allRooms.length === 0) {
-          // Use fallback dummy data if database is empty
-          const fallbackRooms = [
-            {
-              id: "fallback-1",
-              name: "Deluxe Double Room",
-              slug: "deluxe-double-room",
-              price: "R1,800",
-              priceNumeric: 1800,
-              image: "/rooms/r3-deluxe/deluxe-1.jpg",
-              maxGuests: 2,
-              bedType: "1 Double Bed",
-              size: "30 m²",
-              view: "Garden View",
-              description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
-              amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker"],
-              available: true
-            },
-            {
-              id: "fallback-2",
-              name: "Deluxe Double Room with Bath",
-              slug: "deluxe-double-room-with-bath",
-              price: "R2,100",
-              priceNumeric: 2100,
-              image: "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg",
-              maxGuests: 2,
-              bedType: "1 Double Bed",
-              size: "25 m²",
-              view: "Garden View",
-              description: "25 m² Deluxe Double Room with bath, private bathroom, minibar, coffee machine.",
-              amenities: ["Bath", "Private Bathroom", "Flat-screen TV"],
-              available: true
-            },
-            {
-              id: "fallback-3",
-              name: "Family Double Room",
-              slug: "family-double-room",
-              price: "R2,500",
-              priceNumeric: 2500,
-              image: "/rooms/r1-family/family-6.jpg",
-              maxGuests: 4,
-              bedType: "2 Double Beds",
-              size: "25 m²",
-              view: "Garden View",
-              description: "25 m² Family Double Room with 2 double beds, perfect for families.",
-              amenities: ["Private Bathroom", "Flat-screen TV", "Board Games"],
-              available: true
-            }
-          ] as Room[];
-          setRooms(fallbackRooms);
-          return;
-        }
-        // Only show available rooms and limit to 3 for home page
-        // Show rooms with id 1, 2, and 3 if available
-        const prioritizedIds = ["1", "2", "3"];
-        const prioritizedRooms = prioritizedIds
-          .map(id => allRooms.find(room => room.available && String(room.id) === id))
-          .filter(Boolean) as Room[];
-        if (prioritizedRooms.length === 0) {
-          // Prevent duplicate toast by checking if rooms are already set to empty
-          if (rooms.length === 0) {
-            toast.warning("All rooms are currently unavailable", { duration: 2000 });
-          }
-        }
-        setRooms(prioritizedRooms);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load rooms";
-        // Check for specific error types
-        const isAuthDisabled = errorMessage === 'AUTH_DISABLED';
-        const isAuthError = errorMessage.startsWith('AUTH_ERROR:');
-        const isPermissionError = errorMessage === 'PERMISSION_DENIED';
-        // Use fallback on error
-        const fallbackRooms = [
-          {
-            id: "fallback-1",
-            name: "Deluxe Double Room",
-            slug: "deluxe-double-room",
-            price: "R1,800",
-            priceNumeric: 1800,
-            image: "/rooms/r3-deluxe/deluxe-6.jpg",
-            maxGuests: 2,
-            bedType: "1 Double Bed",
-            size: "30 m²",
-            view: "Garden View",
-            description: "Comfy Deluxe Double Room with 1 double bed, private bathroom, and garden views.",
-            amenities: ["Garden View", "Streaming TV", "Tea/Coffee Maker"],
-            available: true
-          },
-          {
-            id: "fallback-2",
-            name: "Deluxe Double Room with Bath",
-            slug: "deluxe-double-room-with-bath",
-            price: "R2,100",
-            priceNumeric: 2100,
-            image: "/rooms/r2-deluxe-bath/deluxe-bath-7.jpg",
-            maxGuests: 2,
-            bedType: "1 Double Bed",
-            size: "25 m²",
-            view: "Garden View",
-            description: "25 m² Deluxe Double Room with bath, private bathroom, minibar, coffee machine.",
-            amenities: ["Bath", "Private Bathroom", "Flat-screen TV"],
-            available: true
-          },
-          {
-            id: "fallback-3",
-            name: "Family Double Room",
-            slug: "family-double-room",
-            price: "R2,500",
-            priceNumeric: 2500,
-            image: "/rooms/r1-family/family-3.jpg",
-            maxGuests: 4,
-            bedType: "2 Double Beds",
-            size: "25 m²",
-            view: "Garden View",
-            description: "25 m² Family Double Room with 2 double beds, perfect for families.",
-            amenities: ["Private Bathroom", "Flat-screen TV", "Board Games"],
-            available: true
-          }
-        ] as Room[];
-        setRooms(fallbackRooms);
-        // Only log in development mode, no user-facing errors for auth issues
-        if (process.env.NODE_ENV === 'development') {
-          if (isAuthDisabled) {
-            console.info('ℹ️ Firebase anonymous auth is disabled. Using sample data. Enable it in Firebase Console > Authentication > Sign-in method > Anonymous.');
-          } else if (isAuthError) {
-            console.warn('⚠️ Firebase authentication error:', errorMessage);
-          } else if (isPermissionError) {
-            console.error('❌ Firestore permission denied. Check your Firestore rules.');
-          } else {
-            console.error('❌ Error loading rooms:', errorMessage);
-          }
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRooms();
-  }, []);
+  // Use staticRooms from data/rooms.ts for home page
+  // ✅ Cast to Room from roomService to satisfy TypeScript
+  // priceNumeric and available are added as defaults since staticRooms doesn't have them
+  setLoading(true);
+  setRooms(
+    staticRooms.slice(0, 3).map(room => ({
+      ...room,
+      priceNumeric: parseInt(room.price.replace(/[^\d]/g, ""), 10) || 0,
+      available: true,
+    })) as Room[]
+  );
+  setLoading(false);
+}, []);
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();

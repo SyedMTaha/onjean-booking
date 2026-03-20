@@ -16,6 +16,7 @@ import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveFoodOrder, NewFoodOrderData } from "@/lib/foodOrderService";
+import { sendFoodOrderEmail } from "@/lib/emailService";
 
 // ── Must match OrderPage exactly ──────────────────────────────────────────────
 const PENDING_ORDER_KEY = "pendingFoodOrderDraft";
@@ -43,11 +44,30 @@ export function MenuClient() {
   const router = useRouter();
   const { user } = useAuth();
   const { addToCart, items, removeFromCart, updateQuantity, clearCart } = useCart();
+  // Clear cart and sessionStorage keys
+  const handleClearCart = () => {
+    clearCart();
+    sessionStorage.removeItem(PENDING_ORDER_KEY);
+    sessionStorage.removeItem(PENDING_ORDER_CHECKOUT_ID_KEY);
+    toast.success("Cart cleared.");
+  };
+  // Ensure cart is cleared if sessionStorage is empty (after clearing from myordersPage)
+  useEffect(() => {
+    if (!sessionStorage.getItem("pendingFoodOrderDraft") && items.length > 0) {
+      clearCart();
+    }
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState("Beverages");
   const [menuItemsByCategory, setMenuItemsByCategory] = useState<Record<string, MenuDisplayItem[]>>(localMenuItemsByCategory);
   const visibleItems = menuItemsByCategory[selectedCategory] || [];
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isCompletingOrder, setIsCompletingOrder] = useState(false);
+  const [cartCountState, setCartCountState] = useState(items.reduce((sum: number, item: any) => sum + item.quantity, 0));
+
+  // Ensure cart badge updates when cart is cleared from other pages
+  useEffect(() => {
+    setCartCountState(items.reduce((sum: number, item: any) => sum + item.quantity, 0));
+  }, [items]);
 
   // ── useEffect 1: existing toast for room booking / prev order success ─────
   useEffect(() => {
@@ -150,6 +170,31 @@ export function MenuClient() {
       const saveResult = await saveFoodOrder(user.uid, orderData);
       console.log("[MenuClient] Saved. orderId:", saveResult.orderId);
 
+
+        console.log("[EmailJS] Sending food order email with data:", {
+        customerName: draft.userName,
+        customerPhone: draft.customerPhone,
+        orderType: draft.orderType,
+        roomNumber: draft.roomNumber,
+        items: draft.items,
+        totalAmount: draft.totalPrice,
+        orderId: saveResult.orderId,
+        specialInstructions: draft.specialInstructions,
+      });
+      
+      // ✅ Step 5.5 — Send email notification
+      await sendFoodOrderEmail({
+        customerName: draft.userName,
+        customerEmail: draft.userEmail,
+        customerPhone: draft.customerPhone,
+        orderType: draft.orderType,
+        roomNumber: draft.roomNumber || undefined,
+        items: draft.items,
+        totalAmount: draft.totalPrice,
+        orderId: saveResult.orderId,
+        specialInstructions: draft.specialInstructions || undefined,
+      });
+
       // Step 6 — Clean up
       sessionStorage.removeItem(PENDING_ORDER_KEY);
       sessionStorage.removeItem(PENDING_ORDER_CHECKOUT_ID_KEY);
@@ -251,10 +296,7 @@ export function MenuClient() {
     (sum: number, item: any) => sum + item.price * item.quantity,
     0
   );
-  const cartCount = items.reduce(
-    (sum: number, item: any) => sum + item.quantity,
-    0
-  );
+  const cartCount = cartCountState;
 
   const MenuCard = ({ item, index }: { item: MenuDisplayItem; index: number }) => (
     <div
@@ -415,6 +457,13 @@ export function MenuClient() {
             >
               Continue browsing
             </button>
+            {/* <Button
+              variant="outline"
+              className="w-full mt-2 border-red-300 text-red-700 bg-red-50 hover:bg-red-100 py-2 text-sm rounded-xl border-2 font-semibold"
+              onClick={handleClearCart}
+            >
+              Clear Cart
+            </Button> */}
           </div>
         )}
       </div>

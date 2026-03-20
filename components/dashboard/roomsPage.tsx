@@ -390,6 +390,53 @@ export function RoomsManagementClient() {
     });
   };
 
+  // ✅ Compress image before uploading — reduces 10MB to ~0.5-1MB
+const compressImage = (file: File, maxWidthPx = 1200, quality = 0.8): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      // Calculate new dimensions keeping aspect ratio
+      let width = img.width;
+      let height = img.height;
+      if (width > maxWidthPx) {
+        height = Math.round((height * maxWidthPx) / width);
+        width = maxWidthPx;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; } // fallback to original if canvas fails
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          const compressed = new File([blob], file.name, {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          console.log(
+            `[compress] ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressed.size / 1024 / 1024).toFixed(2)}MB`
+          );
+          resolve(compressed);
+        },
+        "image/jpeg",
+        quality // 0.8 = 80% quality — good balance of size vs visual quality
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback
+    img.src = url;
+  });
+};
+
+
   const submitForm = async () => {
     if (!form.name.trim() || !form.price.trim() || (typeof form.image === "string" ? !form.image.trim() : !form.image)) {
       toast.error("Name, price, and main image are required."); return;
@@ -409,76 +456,93 @@ export function RoomsManagementClient() {
     const priceNumeric  = parseInt(form.price.replace(/[^\d]/g, ""), 10);
     if (Number.isNaN(priceNumeric)) { toast.error("Price format is invalid. Example: R2500"); return; }
 
+    // ✅ Fix: set button state IMMEDIATELY after validation passes
+    // so user sees "Adding..." / "Saving..." right away before any async work
+    setIsSaving(true);
+    if (mode === "add") setIsAdding(true);
+
     let imageUrl = typeof form.image === "string" ? form.image.trim() : "";
 
-    const allRooms  = await getAllRooms();
+    // ✅ Fix: use rooms already in state instead of calling getAllRooms() again
+
+    // getAllRooms() was causing an extra network round trip on every add
+    const allRooms  = rooms;
     const maxId     = allRooms.reduce((max, r) => { const n = parseInt(r.id, 10); return !isNaN(n) && n > max ? n : max; }, 0);
     const nextId    = String(maxId + 1);
     const folder    = `/rooms/r${nextId}-${slugify(form.name)}`;
 
     const ikUpload = async (file: File) => {
+      const compressed = await compressImage(file);
+
       const fd = new FormData();
-      fd.append("file", file); fd.append("fileName", file.name); fd.append("folder", folder);
+      fd.append("file", compressed); fd.append("fileName", compressed.name); fd.append("folder", folder);
       const res  = await fetch("/api/imagekit", { method: "POST", body: fd });
       const data = await res.json();
       if (!data.url) throw new Error(data.error || "Image upload failed.");
       return data.url as string;
     };
 
-    if (typeof form.image === "object" && Object.prototype.toString.call(form.image) === "[object File]") {
-      imageUrl = await ikUpload(form.image as File);
-    }
-
-    let images: string[] = [];
-    if (Array.isArray(form.imageList)) {
-      for (const f of form.imageList)
-        if (Object.prototype.toString.call(f) === "[object File]") images.push(await ikUpload(f as File));
-    } else if (typeof form.imageList === "string" && form.imageList.length > 0) {
-      images = parseList(form.imageList);
-    }
-    if (!images.includes(imageUrl)) images.unshift(imageUrl);
-
-    // Derive a simple boolean `available` for backwards compat
-    const available = form.availability.daysOfWeek.length > 0 || form.availability.dateRanges.length > 0;
-
-    const basePayload = {
-      name: form.name.trim(),
-      slug: computedSlug,
-      price: form.price.trim(),
-      priceNumeric,
-      image: imageUrl,
-      images,
-      maxGuests: guests,
-      totalUnits,
-      bedType: form.bedType.trim(),
-      size: form.size.trim(),
-      description: form.description.trim(),
-      longDescription: form.longDescription.trim() || form.description.trim(),
-      amenities: parseList(form.amenities),
-      features: parseList(form.features),
-      view: form.view.trim() || "City View",
-      available,
-      availability: form.availability, // full schedule saved to DB
-    };
-
-    setIsSaving(true);
-    if (mode === "add") setIsAdding(true);
+     // ✅ Single try/catch wraps EVERYTHING — image upload + Firestore save
+    // This ensures the button always resets even if ImageKit fails
     try {
+      if (typeof form.image === "object" && Object.prototype.toString.call(form.image) === "[object File]") {
+        imageUrl = await ikUpload(form.image as File);
+      }
+
+      let images: string[] = [];
+      if (Array.isArray(form.imageList)) {
+        for (const f of form.imageList)
+          if (Object.prototype.toString.call(f) === "[object File]") images.push(await ikUpload(f as File));
+      } else if (typeof form.imageList === "string" && form.imageList.length > 0) {
+        images = parseList(form.imageList);
+      }
+      if (!images.includes(imageUrl)) images.unshift(imageUrl);
+
+      const available = form.availability.daysOfWeek.length > 0 || form.availability.dateRanges.length > 0;
+
+      const basePayload = {
+        name: form.name.trim(),
+        slug: computedSlug,
+        price: form.price.trim(),
+        priceNumeric,
+        image: imageUrl,
+        images,
+        maxGuests: guests,
+        totalUnits,
+        bedType: form.bedType.trim(),
+        size: form.size.trim(),
+        description: form.description.trim(),
+        longDescription: form.longDescription.trim() || form.description.trim(),
+        amenities: parseList(form.amenities),
+        features: parseList(form.features),
+        view: form.view.trim() || "City View",
+        available,
+        availability: form.availability,
+      };
+
       const result = mode === "add"
         ? await addRoom({ id: nextId, ...basePayload })
         : await updateRoom(form.id, basePayload);
 
-      if (!result.success) { toast.error(result.error || `Failed to ${mode} room.`); return; }
+      if (!result.success) {
+        toast.error(result.error || `Failed to ${mode} room.`);
+        return;
+      }
 
       toast.success(mode === "add" ? "Room added successfully." : "Room updated successfully.");
       setIsModalOpen(false);
       setForm(getEmptyForm());
       await loadRooms();
+
     } catch (error) {
       console.error(error);
-      toast.error(`Failed to ${mode} room.`);
+      // ✅ Specific error message for image upload vs save failure
+      const message = error instanceof Error ? error.message : `Failed to ${mode} room.`;
+      toast.error(message);
     } finally {
-      setIsSaving(false); setIsAdding(false);
+      // ✅ Always resets — whether upload failed, save failed, or succeeded
+      setIsSaving(false);
+      setIsAdding(false);
     }
   };
 
