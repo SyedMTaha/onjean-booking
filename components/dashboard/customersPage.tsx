@@ -385,7 +385,7 @@ export function CustomersManagementClient() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-600">Avg. Lifetime Value</p>
-                <p className="text-3xl font-semibold text-purple-600 mt-2">${totals.avgLifetimeValue.toLocaleString()}</p>
+                <p className="text-3xl font-semibold text-purple-600 mt-2">R{totals.avgLifetimeValue.toLocaleString()}</p>
               </div>
               <div className="h-11 w-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
                 <Users className="h-5 w-5" />
