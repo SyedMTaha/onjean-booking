@@ -56,12 +56,15 @@ function getNextAvailableDate(availability: AvailabilitySchedule) {
 // ── Imports ────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Users, Maximize, Wifi, Tv, Coffee, Maximize2 } from "lucide-react";
 import { getAllRooms, Room as BaseRoom } from "@/lib/roomService";
+import { rooms as staticRooms } from "@/data/rooms";
 
 // ── Extended Room type with availability ───────────────────────────────────────
 interface Room extends BaseRoom {
@@ -77,8 +80,18 @@ const EMPTY_AVAILABILITY: AvailabilitySchedule = { dateRanges: [], daysOfWeek: [
 
 export default function RoomsClient({ locale }: RoomsClientProps) {
   const t = useTranslations();
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleBookNow = (room: Room) => {
+    if (!user || user.isAnonymous) {
+      toast.error("Please sign in to book a room.");
+      return;
+    }
+
+    window.location.href = `/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`;
+  };
 
   useEffect(() => {
     async function fetchRooms() {
@@ -94,7 +107,14 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
           }))
         );
       } catch {
-        setRooms([]);
+        setRooms(
+          staticRooms.map((room) => ({
+            ...room,
+            priceNumeric: Number.parseInt(room.price.replace(/[^\d]/g, ""), 10) || 0,
+            available: true,
+            availability: EMPTY_AVAILABILITY,
+          }))
+        );
       } finally {
         setLoading(false);
       }
@@ -276,14 +296,13 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                                 {t("roomsPage.viewDetails")}
                               </Button>
                             </Link>
-                            <Link
-                              href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`}
-                              className="flex-1"
+                            <Button
+                              type="button"
+                              onClick={() => handleBookNow(room)}
+                              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
                             >
-                              <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-                                {t("roomsPage.bookNow")}
-                              </Button>
-                            </Link>
+                              {t("roomsPage.bookNow")}
+                            </Button>
                           </div>
                         </div>
                       </div>

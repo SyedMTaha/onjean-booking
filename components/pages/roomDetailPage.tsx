@@ -9,6 +9,8 @@ import { ArrowLeft, Users, Maximize, Bed, Eye, Check, Wifi, Trees, Bath, Wine, T
 import { getAllRooms, Room } from "@/lib/roomService";
 import { rooms as fallbackRooms } from "@/data/rooms";
 import { useState, useEffect, useMemo } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface RoomDetailClientProps {
   room: Room;
@@ -44,10 +46,20 @@ const getFacilityIcon = (facility: string) => {
 
 export function RoomDetailClient({ room }: RoomDetailClientProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(room.images?.[0] || room.image);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const shouldExpandInfoCards = room.slug === "deluxe-double-room-with-extra-bed";
+
+  const handleBookNow = (roomToBook: Room) => {
+    if (!user || user.isAnonymous) {
+      toast.error("Please sign in to book a room.");
+      return;
+    }
+
+    window.location.href = `/book-now?roomId=${encodeURIComponent(roomToBook.id)}&room=${encodeURIComponent(roomToBook.name)}`;
+  };
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -324,14 +336,13 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
-                  <Link
-                    href={`/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`}
-                    className="block"
+                  <Button
+                    type="button"
+                    onClick={() => handleBookNow(room)}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   >
-                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-                      Book Now
-                    </Button>
-                  </Link>
+                    Book Now
+                  </Button>
                   <Button
                     variant="outline"
                     className="w-full bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -417,14 +428,13 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                           View
                         </Button>
                       </Link>
-                      <Link
-                        href={`/book-now?roomId=${encodeURIComponent(similarRoom.id)}&room=${encodeURIComponent(similarRoom.name)}`}
-                        className="flex-1"
+                      <Button
+                        type="button"
+                        onClick={() => handleBookNow(similarRoom)}
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm"
                       >
-                        <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm">
-                          Book
-                        </Button>
-                      </Link>
+                        Book
+                      </Button>
                     </div>
                   </div>
                 </Card>

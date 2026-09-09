@@ -11,7 +11,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { getAllRooms } from "@/lib/roomService";
+import { getAllRooms, Room } from "@/lib/roomService";
 
 export interface BookingData {
   // Dates & Room
@@ -64,6 +64,11 @@ export interface RoomAvailability {
   isSoldOut: boolean;
 }
 
+interface RoomSchedule {
+  dateRanges?: Array<{ from: string; to: string }>;
+  daysOfWeek?: string[];
+}
+
 const ACTIVE_BOOKING_STATUSES: Array<BookingData["bookingStatus"]> = ["pending", "approved"];
 
 async function ensureBookingAvailabilityAuth(): Promise<void> {
@@ -109,6 +114,40 @@ function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date): bool
   return startA < endB && startB < endA;
 }
 
+function isRoomOpenForStay(room: Room, checkInDate: Date, checkOutDate: Date): boolean {
+  if (room.available === false) return false;
+
+  const schedule = (room as Room & { availability?: RoomSchedule }).availability;
+  if (!schedule) return true;
+
+  const dateRanges = schedule.dateRanges || [];
+  const daysOfWeek = schedule.daysOfWeek || [];
+  if (dateRanges.length === 0 && daysOfWeek.length === 0) return false;
+
+  const allowedDays = new Set(daysOfWeek);
+  const cursor = new Date(checkInDate);
+  cursor.setHours(0, 0, 0, 0);
+  const end = new Date(checkOutDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (cursor < end) {
+    const dayName = cursor.toLocaleDateString("en-US", { weekday: "long" });
+    const dayAllowed = allowedDays.size === 0 || allowedDays.has(dayName);
+    const dateAllowed =
+      dateRanges.length === 0 ||
+      dateRanges.some((range) => {
+        const from = new Date(`${range.from}T00:00:00`);
+        const to = new Date(`${range.to}T23:59:59`);
+        return cursor >= from && cursor <= to;
+      });
+
+    if (!dayAllowed || !dateAllowed) return false;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return true;
+}
+
 /**
  * Save a booking to Firestore
  * @param userId - The user's UID
@@ -117,6 +156,15 @@ function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date): bool
  */
 export async function saveBooking(userId: string, bookingData: NewBookingData) {
   try {
+    const availability = await validateRoomAvailability(
+      bookingData.roomId,
+      bookingData.checkInDate,
+      bookingData.checkOutDate
+    );
+    if (!availability.isAvailable) {
+      throw new Error(availability.message || "Selected room is unavailable for these dates.");
+    }
+
     const bookingRef = await addDoc(collection(db, "roomBookings"), {
       ...bookingData,
       userId,
@@ -163,6 +211,19 @@ export async function getRoomAvailabilityForRange(
 
     for (const room of rooms) {
       const roomTotalUnits = room.totalUnits && room.totalUnits > 0 ? room.totalUnits : 1;
+
+      if (!isRoomOpenForStay(room, checkInDate, checkOutDate)) {
+        availabilityMap[room.id] = {
+          roomId: room.id,
+          roomName: room.name,
+          slug: room.slug,
+          totalUnits: roomTotalUnits,
+          bookedUnits: roomTotalUnits,
+          availableUnits: 0,
+          isSoldOut: true,
+        };
+        continue;
+      }
 
       const overlappingBookings = activeBookings.filter((booking) => {
         const bookingRoomId = String(booking.roomId || "");
