@@ -12,10 +12,10 @@ import { getDefaultAdminCredentials, verifyAdminCredentials } from "@/lib/adminS
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSwitchToSignUp: () => void;
+  adminOnly?: boolean;
 }
 
-export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalProps) {
+export function SignInModal({ isOpen, onClose, adminOnly = false }: SignInModalProps) {
   const router = useRouter();
   const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -99,6 +99,10 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
       } catch (adminError) {
         console.error("Admin verification error:", adminError);
         // Continue to regular authentication if admin check fails
+      }
+
+      if (adminOnly) {
+        throw new Error("Only administrator credentials can access this area.");
       }
 
       // If not admin, proceed with regular Firebase authentication
@@ -208,8 +212,8 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-500">Sign in to your account</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{adminOnly ? "Admin Access" : "Welcome Back"}</h2>
+          <p className="text-gray-500">{adminOnly ? "Sign in with administrator credentials" : "Sign in to your account"}</p>
         </div>
 
         {/* Form */}
@@ -295,18 +299,6 @@ export function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalPr
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <button
-              type="button"
-              onClick={onSwitchToSignUp}
-              className="text-amber-600 hover:text-amber-700 font-semibold"
-            >
-              Sign Up
-            </button>
-          </p>
-        </div>
       </div>
     </div>
   );

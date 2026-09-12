@@ -1,0 +1,2 @@
+export const LITTLE_HOTELIER_BOOKING_URL =
+  process.env.NEXT_PUBLIC_LITTLE_HOTELIER_BOOKING_URL || "/book-now";

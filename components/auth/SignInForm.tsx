@@ -5,7 +5,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,14 +103,6 @@ export function SignInForm() {
           </Button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <p className="text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link href="/signup" className="text-amber-600 hover:text-amber-700 font-semibold">
-              Sign Up
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

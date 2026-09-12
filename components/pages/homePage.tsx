@@ -12,7 +12,6 @@ import { Star, Coffee, Utensils, ChevronRight, Clock, CheckCircle2, Sparkles, Sh
 import { FaAward, FaArrowRight } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { SearchBar } from "@/components/SearchBar";
 import { getAllRooms, Room } from "@/lib/roomService";
 import { rooms as staticRooms } from "@/data/rooms";
 
@@ -175,11 +174,6 @@ export function HomeClient() {
                 <p className="text-base md:text-lg lg:text-xl mb-6 md:mb-10 text-gray-200 max-w-2xl mx-auto font-light px-4">
                   {t("home.hero.subtitle")}
                 </p>
-              </div>
-
-              {/* Search Bar */}
-              <div className="mb-6 md:mb-8">
-                <SearchBar />
               </div>
 
               <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 px-4">

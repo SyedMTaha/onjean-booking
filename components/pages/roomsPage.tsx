@@ -56,15 +56,14 @@ function getNextAvailableDate(availability: AvailabilitySchedule) {
 // ── Imports ────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Users, Maximize, Wifi, Tv, Coffee, Maximize2 } from "lucide-react";
 import { getAllRooms, Room as BaseRoom } from "@/lib/roomService";
 import { rooms as staticRooms } from "@/data/rooms";
+import { LITTLE_HOTELIER_BOOKING_URL } from "@/lib/littleHotelier";
 
 // ── Extended Room type with availability ───────────────────────────────────────
 interface Room extends BaseRoom {
@@ -80,17 +79,11 @@ const EMPTY_AVAILABILITY: AvailabilitySchedule = { dateRanges: [], daysOfWeek: [
 
 export default function RoomsClient({ locale }: RoomsClientProps) {
   const t = useTranslations();
-  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const handleBookNow = (room: Room) => {
-    if (!user || user.isAnonymous) {
-      toast.error("Please sign in to book a room.");
-      return;
-    }
-
-    window.location.href = `/book-now?roomId=${encodeURIComponent(room.id)}&room=${encodeURIComponent(room.name)}`;
+  const handleBookNow = () => {
+    window.location.href = LITTLE_HOTELIER_BOOKING_URL;
   };
 
   useEffect(() => {
@@ -298,7 +291,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                             </Link>
                             <Button
                               type="button"
-                              onClick={() => handleBookNow(room)}
+                              onClick={handleBookNow}
                               className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
                             >
                               {t("roomsPage.bookNow")}
