@@ -124,6 +124,17 @@ export function Footer() {
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-6 pt-4 text-center text-gray-400">
           <p>&copy; 2026 78 On Jean. All rights reserved.</p>
+          <p className="mt-2 text-sm">
+            Powered by{" "}
+            <a
+              href="https://www.fiverr.com/zohaibuxguru/create-hubspot-website-full-stack-development-for-you?context_referrer=search_gigs_with_modalities&source=top-bar&ref_ctx_id=a2828129c8984ad195693243fb17b910&pckg_id=1&pos=10&context_type=auto&funnel=a2828129c8984ad195693243fb17b910&seller_online=true&imp_id=71ec5036-d5f1-4b1f-a179-661cce6a6945"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 hover:text-white underline underline-offset-2 transition-colors"
+            >
+              zohaibuxguru
+            </a>
+          </p>
         </div>
       </div>
     </footer>

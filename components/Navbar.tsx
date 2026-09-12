@@ -312,24 +312,14 @@ export function Navigation() {
             ))}
             <div className="pt-2 border-t border-gray-700">
               {!isAuthenticatedUser ? (
-                <div className="flex gap-2 px-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsSignInOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex-1 border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 uppercase"
-                  >
-                    Sign In
-                  </Button>
+                <div className="px-4">
                   <Button
                     variant="outline"
                     onClick={() => {
                       setIsAdminLoginOpen(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-1 border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 uppercase"
+                    className="w-full border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 uppercase"
                   >
                     Admin
                   </Button>

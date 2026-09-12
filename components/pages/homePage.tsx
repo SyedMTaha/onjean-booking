@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getAllRooms, Room } from "@/lib/roomService";
 import { rooms as staticRooms } from "@/data/rooms";
+import { LITTLE_HOTELIER_BOOKING_URL } from "@/lib/littleHotelier";
 
 type Testimonial = {
   name: string;
@@ -177,7 +178,12 @@ export function HomeClient() {
               </div>
 
               <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 px-4">
-                <Link href="/book-now" className="w-full sm:w-auto">
+                <Link
+                  href={LITTLE_HOTELIER_BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
                   <Button size="default" className="w-full sm:w-auto bg-gray-900 hover:bg-black text-white px-6 py-3">
                     {t("home.hero.bookButton")}
                     <ChevronRight className="ml-2 w-4 h-4" />
@@ -322,7 +328,11 @@ export function HomeClient() {
                         <span className="text-3xl text-amber-600">{room.price}</span>
                         <span className="text-gray-500 text-sm ml-2">{t("home.roomsSection.perNight")}</span>
                       </div>
-                      <Link href="/book-now">
+                      <Link
+                        href={LITTLE_HOTELIER_BOOKING_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Button className="bg-amber-600 hover:bg-amber-700">
                           {t("book_now")}
                         </Button>
