@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { SignInModal } from "./auth/SignInModal";
-import { SignUpModal } from "./auth/SignUpModal";
+import { LITTLE_HOTELIER_BOOKING_URL } from "@/lib/littleHotelier";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -33,7 +33,7 @@ const playfair = Playfair_Display({
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
-  const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const pathname = usePathname();
@@ -62,7 +62,7 @@ export function Navigation() {
   const navLinks = [
     { path: `/${currentLocale}`, label: "Home" },
     { path: `/${currentLocale}/rooms`, label: "Rooms" },
-    { path: `/${currentLocale}/book-now`, label: "Book Now" },
+    { path: LITTLE_HOTELIER_BOOKING_URL, label: "Book Now", external: true },
     { path: `/${currentLocale}/spa`, label: "Spa" },
     { path: `/${currentLocale}/menu`, label: "Menu" },
     { path: `/${currentLocale}/gallery`, label: "Gallery" },
@@ -171,6 +171,7 @@ export function Navigation() {
                 <Link
                   key={link.path}
                   href={link.path}
+                  {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={`relative px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors after:absolute after:left-2 after:right-2 after:-bottom-0.5 after:h-px after:bg-[linear-gradient(to_right,transparent,#9ca3af,transparent)] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 ${
                     isActive(link.path)
                       ? "text-gray-100 after:scale-x-100"
@@ -268,10 +269,10 @@ export function Navigation() {
               <div className="hidden md:flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setIsSignUpOpen(true)}
+                  onClick={() => setIsAdminLoginOpen(true)}
                   className="border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 hover:text-white uppercase"
                 >
-                  Sign Up
+                  Admin
                 </Button>
               </div>
             )}
@@ -298,6 +299,7 @@ export function Navigation() {
               <Link
                 key={link.path}
                 href={link.path}
+                {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-2 rounded-lg text-sm font-medium uppercase tracking-[0.12em] transition-colors ${
                   isActive(link.path)
@@ -324,12 +326,12 @@ export function Navigation() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setIsSignUpOpen(true);
+                      setIsAdminLoginOpen(true);
                       setMobileMenuOpen(false);
                     }}
                     className="flex-1 border-gray-400 bg-transparent text-gray-100 hover:bg-gray-800 uppercase"
                   >
-                    Sign Up
+                    Admin
                   </Button>
                 </div>
               ) : (
@@ -412,20 +414,12 @@ export function Navigation() {
 
       {/* Modals */}
       <SignInModal
-        isOpen={isSignInOpen}
-        onClose={() => setIsSignInOpen(false)}
-        onSwitchToSignUp={() => {
+        isOpen={isSignInOpen || isAdminLoginOpen}
+        onClose={() => {
           setIsSignInOpen(false);
-          setIsSignUpOpen(true);
+          setIsAdminLoginOpen(false);
         }}
-      />
-      <SignUpModal
-        isOpen={isSignUpOpen}
-        onClose={() => setIsSignUpOpen(false)}
-        onSwitchToSignIn={() => {
-          setIsSignUpOpen(false);
-          setIsSignInOpen(true);
-        }}
+        adminOnly={isAdminLoginOpen}
       />
     </nav>
   );

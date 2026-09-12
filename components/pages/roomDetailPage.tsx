@@ -9,8 +9,7 @@ import { ArrowLeft, Users, Maximize, Bed, Eye, Check, Wifi, Trees, Bath, Wine, T
 import { getAllRooms, Room } from "@/lib/roomService";
 import { rooms as fallbackRooms } from "@/data/rooms";
 import { useState, useEffect, useMemo } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
+import { LITTLE_HOTELIER_BOOKING_URL } from "@/lib/littleHotelier";
 
 interface RoomDetailClientProps {
   room: Room;
@@ -46,19 +45,13 @@ const getFacilityIcon = (facility: string) => {
 
 export function RoomDetailClient({ room }: RoomDetailClientProps) {
   const router = useRouter();
-  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(room.images?.[0] || room.image);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const shouldExpandInfoCards = room.slug === "deluxe-double-room-with-extra-bed";
 
-  const handleBookNow = (roomToBook: Room) => {
-    if (!user || user.isAnonymous) {
-      toast.error("Please sign in to book a room.");
-      return;
-    }
-
-    window.location.href = `/book-now?roomId=${encodeURIComponent(roomToBook.id)}&room=${encodeURIComponent(roomToBook.name)}`;
+  const handleBookNow = () => {
+    window.location.href = LITTLE_HOTELIER_BOOKING_URL;
   };
 
   useEffect(() => {
@@ -338,7 +331,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                 <div className="border-t border-gray-200 pt-6 space-y-3">
                   <Button
                     type="button"
-                    onClick={() => handleBookNow(room)}
+                    onClick={handleBookNow}
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   >
                     Book Now
@@ -430,7 +423,7 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
                       </Link>
                       <Button
                         type="button"
-                        onClick={() => handleBookNow(similarRoom)}
+                        onClick={handleBookNow}
                         className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm"
                       >
                         Book
