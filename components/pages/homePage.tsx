@@ -264,7 +264,9 @@ export function HomeClient() {
                 {t("home.roomsSection.description")}
               </p>
             </div>
-            <Link href="/rooms">
+            <Link href={LITTLE_HOTELIER_BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer">
               <Button variant="outline" className="border-2 bg-gray-900  hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors">
                 {t("home.roomsSection.viewAllRooms")} <ChevronRight className="ml-2 w-4 h-4" />
               </Button>

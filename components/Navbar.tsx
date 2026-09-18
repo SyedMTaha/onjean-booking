@@ -61,7 +61,6 @@ export function Navigation() {
   const currentLocale = pathname.split("/")[1] || "en";
   const navLinks = [
     { path: `/${currentLocale}`, label: "Home" },
-    { path: `/${currentLocale}/rooms`, label: "Rooms" },
     { path: LITTLE_HOTELIER_BOOKING_URL, label: "Book Now", external: true },
     { path: `/${currentLocale}/spa`, label: "Spa" },
     { path: `/${currentLocale}/menu`, label: "Menu" },
