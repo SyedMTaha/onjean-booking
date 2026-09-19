@@ -438,8 +438,8 @@ const compressImage = (file: File, maxWidthPx = 1200, quality = 0.8): Promise<Fi
 
 
   const submitForm = async () => {
-    if (!form.name.trim() || !form.price.trim() || (typeof form.image === "string" ? !form.image.trim() : !form.image)) {
-      toast.error("Name, price, and main image are required."); return;
+    if (!form.name.trim() || (typeof form.image === "string" ? !form.image.trim() : !form.image)) {
+      toast.error("Name and main image are required."); return;
     }
     const guests = parseInt(form.maxGuests, 10);
     if (Number.isNaN(guests) || guests < 1) { toast.error("Max guests must be at least 1."); return; }
@@ -453,8 +453,9 @@ const compressImage = (file: File, maxWidthPx = 1200, quality = 0.8): Promise<Fi
     }
 
     const computedSlug  = form.slug.trim() ? slugify(form.slug) : slugify(form.name);
-    const priceNumeric  = parseInt(form.price.replace(/[^\d]/g, ""), 10);
-    if (Number.isNaN(priceNumeric)) { toast.error("Price format is invalid. Example: R2500"); return; }
+    const priceDigits   = form.price.replace(/[^\d]/g, "");
+    if (priceDigits && Number.isNaN(parseInt(priceDigits, 10))) { toast.error("Price format is invalid. Example: R2500"); return; }
+    const priceNumeric  = priceDigits ? parseInt(priceDigits, 10) : 0;
 
     // ✅ Fix: set button state IMMEDIATELY after validation passes
     // so user sees "Adding..." / "Saving..." right away before any async work
@@ -761,7 +762,7 @@ const compressImage = (file: File, maxWidthPx = 1200, quality = 0.8): Promise<Fi
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Price per Night *</label>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Price per Night</label>
                       <Input placeholder="e.g., 2500" value={form.price} onChange={e => handlePriceChange(e.target.value)} className="text-gray-900" />
                       {form.price && <p className="text-xs text-gray-500 mt-1">Saves as: <span className="font-semibold text-gray-700">{form.price}</span></p>}
                     </div>

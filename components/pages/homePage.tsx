@@ -189,10 +189,15 @@ export function HomeClient() {
                     <ChevronRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href="/rooms" className="w-full sm:w-auto">
-                  <Button 
-                    size="default" 
-                    variant="outline" 
+                <Link
+                  href={LITTLE_HOTELIER_BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button
+                    size="default"
+                    variant="outline"
                     className="w-full sm:w-auto bg-transparent hover:bg-white text-white hover:text-[#000B1C] border-white px-6 py-3 transition-all duration-300"
                     style={{ borderWidth: '1.5px' }}
                   >
@@ -327,8 +332,8 @@ export function HomeClient() {
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t mt-auto">
                       <div>
-                        <span className="text-3xl text-amber-600">{room.price}</span>
-                        <span className="text-gray-500 text-sm ml-2">{t("home.roomsSection.perNight")}</span>
+                        {/* <span className="text-3xl text-amber-600">{room.price}</span>
+                        <span className="text-gray-500 text-sm ml-2">{t("home.roomsSection.perNight")}</span> */}
                       </div>
                       <Link
                         href={LITTLE_HOTELIER_BOOKING_URL}
@@ -336,7 +341,7 @@ export function HomeClient() {
                         rel="noopener noreferrer"
                       >
                         <Button className="bg-amber-600 hover:bg-amber-700">
-                          {t("book_now")}
+                          View Details
                         </Button>
                       </Link>
                     </div>
