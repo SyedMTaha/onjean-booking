@@ -301,13 +301,13 @@ export function RoomDetailClient({ room }: RoomDetailClientProps) {
             {/* ── Right Column - Booking Card ── */}
             <div className="lg:col-span-1">
               <Card className="p-6 bg-white border-gray-200 sticky top-20">
-                <div className="mb-6">
+                {/* <div className="mb-6">
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-4xl font-bold text-amber-600">{room.price}</span>
                     <span className="text-gray-500">/ night</span>
                   </div>
                   <p className="text-sm text-gray-600">Best available rate</p>
-                </div>
+                </div> */}
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-sm">

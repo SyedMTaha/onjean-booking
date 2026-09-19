@@ -220,9 +220,9 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                           <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
                             {room.maxGuests} {t("roomsPage.guests")}
                           </Badge>
-                          <Badge className={availBadgeClass}>
+                          {/* <Badge className={availBadgeClass}>
                             {availLabel}
-                          </Badge>
+                          </Badge> */}
                         </div>
 
                         {/* Room name */}
@@ -267,7 +267,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
 
                         {/* Price + Buttons */}
                         <div className="mt-auto pt-4 border-t border-gray-200">
-                          <div className="flex items-center justify-between mb-4">
+                          {/* <div className="flex items-center justify-between mb-4">
                             <div>
                               <span className="text-3xl font-bold text-amber-600">
                                 {room.price}
@@ -276,7 +276,7 @@ export default function RoomsClient({ locale }: RoomsClientProps) {
                                 {t("roomsPage.perNight")}
                               </span>
                             </div>
-                          </div>
+                          </div> */}
                           <div className="flex gap-3">
                             <Link
                               href={`/${locale}/rooms/${room.slug}`}
